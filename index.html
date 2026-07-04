@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Global Migration Hub | Trusted Visa & Immigration Consultancy</title>
+<meta name="description" content="Global Migration Hub provides expert work permit services, up-to-date immigration news, and a secure client portal to track your visa status." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          background: '#ffffff',
+          foreground: '#23283a',
+          card: '#ffffff',
+          primary: { DEFAULT: '#1e2b52', foreground: '#fcfcfc' },
+          secondary: { DEFAULT: '#f2f4f7', foreground: '#1e2b52' },
+          muted: { DEFAULT: '#f2f4f7', foreground: '#6b7280' },
+          accent: { DEFAULT: '#c9a04d', foreground: '#262b3d' },
+          destructive: '#dc2626',
+          border: '#e0e3ea',
+        },
+        fontFamily: {
+          sans: ['Inter', 'sans-serif'],
+          serif: ['"Source Serif 4"', 'serif'],
+        },
+      },
+    },
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; }
+  .font-serif { font-family: 'Source Serif 4', serif; }
+</style>
+</head>
+<body class="bg-background text-foreground antialiased">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
+  <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+    <a href="#top" class="flex items-center gap-2.5">
+      <span class="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+        <i data-lucide="globe" class="size-5"></i>
+      </span>
+      <span class="font-serif text-lg font-semibold leading-tight text-foreground">Global Migration Hub</span>
+    </a>
+    <nav class="hidden items-center gap-8 md:flex">
+      <a href="#services" class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Work Permits</a>
+      <a href="#news" class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Immigration News</a>
+      <a href="#contact" class="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Contact</a>
+    </nav>
+    <div class="hidden md:block">
+      <button type="button" onclick="openStatusModal()" class="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/80">
+        Check Status
+      </button>
+    </div>
+    <button type="button" onclick="toggleMobileMenu()" aria-label="Open menu" class="inline-flex items-center justify-center rounded-md p-2 text-foreground md:hidden">
+      <i data-lucide="menu" class="size-6"></i>
+    </button>
+  </div>
+  <div id="mobileMenu" class="hidden border-t border-border bg-background md:hidden">
+    <nav class="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4">
+      <a href="#services" class="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-primary">Work Permits</a>
+      <a href="#news" class="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-primary">Immigration News</a>
+      <a href="#contact" class="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-primary">Contact</a>
+      <button type="button" onclick="openStatusModal()" class="mt-2 h-10 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground">Check Status</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Hero -->
+  <section id="top" class="relative overflow-hidden bg-primary text-primary-foreground">
+    <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8 lg:py-24">
+      <div>
+        <span class="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-medium">
+          <i data-lucide="shield-check" class="size-4 text-accent"></i>
+          Licensed & regulated immigration advisors
+        </span>
+        <h1 class="mt-6 text-balance font-serif text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
+          Your trusted partner for global immigration
+        </h1>
+        <p class="mt-5 max-w-xl text-base leading-relaxed text-primary-foreground/80 sm:text-lg">
+          From work permits to permanent residency, Global Migration Hub guides individuals and businesses through every step of the visa process with clarity, speed, and complete transparency.
+        </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+          <button type="button" onclick="openStatusModal()" class="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-accent px-7 text-base font-medium text-accent-foreground hover:bg-accent/90">
+            Check Visa Status
+            <i data-lucide="arrow-right" class="size-4"></i>
+          </button>
+          <a href="#services" class="inline-flex h-12 items-center justify-center rounded-lg border border-primary-foreground/30 bg-transparent px-7 text-base font-medium text-primary-foreground hover:bg-primary-foreground/10">
+            Explore Services
+          </a>
+        </div>
+        <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-primary-foreground/15 pt-8">
+          <div><dd><span class="block font-serif text-2xl font-semibold sm:text-3xl">25k+</span><span class="mt-1 block text-xs text-primary-foreground/70 sm:text-sm">Visas processed</span></dd></div>
+          <div><dd><span class="block font-serif text-2xl font-semibold sm:text-3xl">60+</span><span class="mt-1 block text-xs text-primary-foreground/70 sm:text-sm">Countries served</span></dd></div>
+          <div><dd><span class="block font-serif text-2xl font-semibold sm:text-3xl">98%</span><span class="mt-1 block text-xs text-primary-foreground/70 sm:text-sm">Approval rate</span></dd></div>
+        </dl>
+      </div>
+      <div class="relative">
+        <div class="overflow-hidden rounded-2xl border border-primary-foreground/15 shadow-2xl">
+          <img src="images/hero-immigration.png" alt="Immigration consultants advising clients in a modern office" class="h-full w-full object-cover" />
+        </div>
+        <div class="absolute -bottom-5 left-4 right-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 py-3 text-foreground shadow-lg sm:left-6 sm:right-auto sm:gap-6">
+          <div class="flex items-center gap-2"><i data-lucide="clock" class="size-5 text-primary"></i><span class="text-sm font-medium">Fast processing</span></div>
+          <div class="flex items-center gap-2"><i data-lucide="award" class="size-5 text-primary"></i><span class="text-sm font-medium">Expert advisors</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section id="services" class="scroll-mt-20 bg-background py-16 sm:py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <span class="text-sm font-semibold uppercase tracking-wider text-accent-foreground">What we offer</span>
+        <h2 class="mt-3 text-balance font-serif text-3xl font-semibold text-foreground sm:text-4xl">Work Permit Services</h2>
+        <p class="mt-4 text-base leading-relaxed text-muted-foreground">
+          Comprehensive immigration solutions designed for professionals and employers navigating the complexities of global mobility.
+        </p>
+      </div>
+      <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="servicesGrid"></div>
+    </div>
+  </section>
+
+  <!-- Countries -->
+  <section id="countries" class="scroll-mt-20 bg-background py-16 sm:py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <span class="text-sm font-semibold uppercase tracking-wider text-accent-foreground">Where we work</span>
+        <h2 class="mt-3 text-balance font-serif text-3xl font-semibold text-foreground sm:text-4xl">Popular Destinations</h2>
+        <p class="mt-4 text-base leading-relaxed text-muted-foreground">
+          Explore visa pathways across our most requested destinations. Our advisors guide you through every step of your relocation.
+        </p>
+      </div>
+      <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="countriesGrid"></div>
+    </div>
+  </section>
+
+  <!-- News -->
+  <section id="news" class="scroll-mt-20 bg-secondary py-16 sm:py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+        <div class="max-w-2xl">
+          <span class="text-sm font-semibold uppercase tracking-wider text-accent-foreground">Stay informed</span>
+          <h2 class="mt-3 text-balance font-serif text-3xl font-semibold text-foreground sm:text-4xl">Immigration News</h2>
+          <p class="mt-4 text-base leading-relaxed text-muted-foreground">
+            The latest policy changes, processing updates, and expert guidance to keep your application on track.
+          </p>
+        </div>
+        <a href="#news" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+          View all updates <i data-lucide="arrow-up-right" class="size-4"></i>
+        </a>
+      </div>
+      <div class="mt-12 grid gap-6 md:grid-cols-3" id="newsGrid"></div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="scroll-mt-20 bg-primary py-16 text-primary-foreground sm:py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
+        <div>
+          <span class="text-sm font-semibold uppercase tracking-wider text-accent">Get in touch</span>
+          <h2 class="mt-3 text-balance font-serif text-3xl font-semibold sm:text-4xl">Contact our advisors</h2>
+          <p class="mt-4 max-w-lg text-base leading-relaxed text-primary-foreground/80">
+            Have a question about your eligibility or application? Book a confidential consultation with a licensed immigration advisor today.
+          </p>
+          <ul class="mt-10 space-y-6">
+            <li class="flex items-start gap-4">
+              <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/10 text-accent"><i data-lucide="mail" class="size-5"></i></span>
+              <div><p class="text-sm text-primary-foreground/70">Email</p><a href="mailto:hello@globalmigrationhub.com" class="text-base font-medium hover:underline">hello@globalmigrationhub.com</a></div>
+            </li>
+            <li class="flex items-start gap-4">
+              <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/10 text-accent"><i data-lucide="phone" class="size-5"></i></span>
+              <div><p class="text-sm text-primary-foreground/70">Phone</p><a href="tel:+15550182290" class="text-base font-medium hover:underline">+1 (555) 018-2290</a></div>
+            </li>
+            <li class="flex items-start gap-4">
+              <span class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/10 text-accent"><i data-lucide="map-pin" class="size-5"></i></span>
+              <div><p class="text-sm text-primary-foreground/70">Office</p><p class="text-base font-medium">120 Harbor Avenue, Suite 500</p></div>
+            </li>
+          </ul>
+        </div>
+        <div class="rounded-2xl border border-primary-foreground/15 bg-background p-6 text-foreground shadow-xl sm:p-8">
+          <form id="contactForm" onsubmit="handleContactSubmit(event)" class="space-y-5">
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label class="block text-sm font-medium text-foreground">Full name</label>
+                <input type="text" required placeholder="Jane Doe" class="mt-2 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-foreground">Email</label>
+                <input type="email" required placeholder="jane@email.com" class="mt-2 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-foreground">Subject</label>
+              <input type="text" placeholder="Visa enquiry" class="mt-2 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-foreground">How can we help?</label>
+              <textarea rows="4" required placeholder="Tell us about your situation…" class="mt-2 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"></textarea>
+            </div>
+            <button type="submit" class="h-12 w-full rounded-lg bg-primary text-base font-medium text-primary-foreground hover:bg-primary/80">Send Message</button>
+          </form>
+          <div id="contactSuccess" class="hidden flex-col items-center justify-center py-12 text-center">
+            <i data-lucide="check-circle-2" class="size-12 text-primary"></i>
+            <h3 class="mt-4 font-serif text-xl font-semibold">Message sent</h3>
+            <p class="mt-2 text-sm text-muted-foreground">Thank you. One of our advisors will be in touch within one business day.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="border-t border-border bg-background">
+  <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <div class="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground"><i data-lucide="globe" class="size-5"></i></span>
+          <span class="font-serif text-lg font-semibold text-foreground">Global Migration Hub</span>
+        </div>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+          Licensed immigration advisors helping individuals and businesses move across borders with confidence.
+        </p>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-foreground">Services</h3>
+        <ul class="mt-4 space-y-3">
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Skilled Worker Visas</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Employer Sponsorship</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Family Permits</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Compliance & Renewals</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-foreground">Company</h3>
+        <ul class="mt-4 space-y-3">
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">About Us</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Our Advisors</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Immigration News</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Careers</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold text-foreground">Support</h3>
+        <ul class="mt-4 space-y-3">
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Client Portal</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Contact</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Privacy Policy</a></li>
+          <li><a href="#top" class="text-sm text-muted-foreground hover:text-primary">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 sm:flex-row">
+      <p class="text-sm text-muted-foreground">© <span id="year"></span> Global Migration Hub. All rights reserved.</p>
+      <p class="text-xs text-muted-foreground">Regulated by the Office of the Immigration Services Commissioner.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Visa Status Modal -->
+<div id="statusModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
+  <button type="button" aria-label="Close dialog" onclick="closeStatusModal()" class="absolute inset-0 h-full w-full cursor-default bg-primary/40 backdrop-blur-sm"></button>
+  <div class="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+    <div class="flex items-start justify-between gap-4 border-b border-border p-6">
+      <div>
+        <div class="flex items-center gap-2 text-primary"><i data-lucide="lock" class="size-5"></i><span class="text-sm font-semibold">Secure lookup</span></div>
+        <h2 class="mt-2 font-serif text-2xl font-semibold text-foreground">Check your visa status</h2>
+      </div>
+      <button type="button" onclick="closeStatusModal()" aria-label="Close" class="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"><i data-lucide="x" class="size-5"></i></button>
+    </div>
+    <div class="max-h-[70vh] overflow-y-auto p-6">
+      <p class="text-sm leading-relaxed text-muted-foreground">
+        Enter your passport number to securely view real-time updates on your application.
+      </p>
+      <form onsubmit="handleStatusLookup(event)" class="mt-5">
+        <label class="block text-sm font-medium text-foreground">Passport Number</label>
+        <input id="passportInput" type="text" autocomplete="off" placeholder="Enter your passport number" class="mt-2 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" />
+        <p id="statusError" class="mt-2 hidden items-center gap-1.5 text-sm text-destructive"></p>
+        <button type="submit" class="mt-5 h-12 w-full rounded-lg bg-primary text-base font-medium text-primary-foreground hover:bg-primary/80">Enquire Now</button>
+      </form>
+      <p class="mt-5 flex items-start gap-2 text-xs text-muted-foreground">
+        <i data-lucide="shield-check" class="mt-0.5 size-4 shrink-0 text-primary"></i>
+        Demo passport numbers: P1234567, P7654321, P9012345.
+      </p>
+      <div id="statusResult" class="mt-6 hidden border-t border-border pt-6"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  function toggleMobileMenu() {
+    document.getElementById('mobileMenu').classList.toggle('hidden');
+  }
+
+  function openStatusModal() {
+    document.getElementById('statusModal').classList.remove('hidden');
+    document.getElementById('statusModal').classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeStatusModal() {
+    document.getElementById('statusModal').classList.add('hidden');
+    document.getElementById('statusModal').classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+
+  const RECORDS = {
+    'P1234567': { name: 'A. Okafor', visaType: 'Skilled Worker Visa', status: 'In Review', tone: 'bg-secondary text-primary', updated: 'July 2, 2026',
+      steps: [['Application received','done'],['Documents verified','done'],['Under review by caseworker','current'],['Decision issued','upcoming']] },
+    'P7654321': { name: 'L. Fernández', visaType: 'Intra-Company Transfer', status: 'Approved', tone: 'bg-primary text-primary-foreground', updated: 'June 29, 2026',
+      steps: [['Application received','done'],['Documents verified','done'],['Reviewed by caseworker','done'],['Decision issued — Approved','done']] },
+    'P9012345': { name: 'R. Haddad', visaType: 'Family Dependant Permit', status: 'Action Required', tone: 'bg-accent text-accent-foreground', updated: 'July 1, 2026',
+      steps: [['Application received','done'],['Additional documents requested','current'],['Documents verified','upcoming'],['Decision issued','upcoming']] },
+  };
+
+  function handleStatusLookup(e) {
+    e.preventDefault();
+    const key = document.getElementById('passportInput').value.trim().toUpperCase();
+    const errorEl = document.getElementById('statusError');
+    const resultEl = document.getElementById('statusResult');
+    if (!key) {
+      errorEl.textContent = 'Please enter your passport number.';
+      errorEl.classList.remove('hidden'); errorEl.classList.add('flex');
+      resultEl.classList.add('hidden');
+      return;
+    }
+    const record = RECORDS[key];
+    if (!record) {
+      errorEl.textContent = 'No record found for that passport number. Please check and try again.';
+      errorEl.classList.remove('hidden'); errorEl.classList.add('flex');
+      resultEl.classList.add('hidden');
+      return;
+    }
+    errorEl.classList.add('hidden');
+    const stepsHtml = record.steps.map(([label, state]) => {
+      const icon = state === 'done' ? 'check-circle-2' : state === 'current' ? 'clock' : 'circle';
+      const textClass = state === 'upcoming' ? 'text-sm text-muted-foreground' : 'text-sm font-medium text-foreground';
+      return `<li class="flex items-start gap-3"><i data-lucide="${icon}" class="mt-0.5 size-5 shrink-0 text-primary"></i><span class="${textClass}">${label}</span></li>`;
+    }).join('');
+    resultEl.innerHTML = `
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p class="font-serif text-lg font-semibold text-foreground">${record.visaType}</p>
+          <p class="text-sm text-muted-foreground">Applicant: ${record.name}</p>
+        </div>
+        <span class="rounded-full px-3 py-1 text-xs font-semibold ${record.tone}">${record.status}</span>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">Last updated ${record.updated}</p>
+      <ol class="mt-6 space-y-4">${stepsHtml}</ol>
+    `;
+    resultEl.classList.remove('hidden');
+    lucide.createIcons();
+  }
+
+  function handleContactSubmit(e) {
+    e.preventDefault();
+    document.getElementById('contactForm').classList.add('hidden');
+    const success = document.getElementById('contactSuccess');
+    success.classList.remove('hidden');
+    success.classList.add('flex');
+    lucide.createIcons();
+  }
+
+  // Services
+  const services = [
+    ['briefcase', 'Skilled Worker Visas', 'End-to-end support for skilled worker applications, including eligibility assessment, sponsorship, and document preparation.'],
+    ['building-2', 'Employer Sponsorship', 'Help businesses obtain sponsor licenses and stay compliant while hiring international talent with confidence.'],
+    ['plane', 'Intra-Company Transfers', 'Relocate your key employees across borders smoothly with our specialist intra-company transfer guidance.'],
+    ['graduation-cap', 'Graduate & Talent Routes', 'Tailored pathways for graduates, researchers, and highly skilled individuals seeking new opportunities abroad.'],
+    ['users', 'Family Dependant Permits', 'Bring your loved ones with you. We handle dependant applications so your family stays together.'],
+    ['file-check', 'Compliance & Renewals', 'Ongoing compliance checks, permit renewals, and extension support to keep your status secure.'],
+  ];
+  document.getElementById('servicesGrid').innerHTML = services.map(([icon, title, desc]) => `
+    <article class="group rounded-xl border border-border bg-card p-6 transition-shadow hover:shadow-md">
+      <span class="flex size-12 items-center justify-center rounded-lg bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+        <i data-lucide="${icon}" class="size-6"></i>
+      </span>
+      <h3 class="mt-5 font-serif text-xl font-semibold text-foreground">${title}</h3>
+      <p class="mt-2.5 text-sm leading-relaxed text-muted-foreground">${desc}</p>
+    </article>
+  `).join('');
+
+  // Countries
+  const countries = [
+    ['United Kingdom', 'Skilled Worker · Student · Family', 'images/countries/united-kingdom.png'],
+    ['Canada', 'Express Entry · Study Permit · PNP', 'images/countries/canada.png'],
+    ['Australia', 'Skilled Independent · Work · Student', 'images/countries/australia.png'],
+    ['United States', 'H-1B · L-1 · Green Card', 'images/countries/united-states.png'],
+    ['Germany', 'EU Blue Card · Job Seeker · Student', 'images/countries/germany.png'],
+    ['United Arab Emirates', 'Golden Visa · Employment · Investor', 'images/countries/united-arab-emirates.png'],
+  ];
+  document.getElementById('countriesGrid').innerHTML = countries.map(([name, types, img]) => `
+    <article class="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl shadow-md transition-shadow hover:shadow-xl">
+      <img src="${img}" alt="${name}" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      <div aria-hidden="true" class="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-primary/10"></div>
+      <div class="relative flex flex-col gap-4 p-6">
+        <div>
+          <h3 class="text-balance font-serif text-2xl font-bold text-primary-foreground sm:text-3xl">${name}</h3>
+          <p class="mt-1.5 text-sm font-medium text-primary-foreground/80">${types}</p>
+        </div>
+        <button type="button" onclick="openStatusModal()" class="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90">
+          Enquire Now <i data-lucide="arrow-right" class="size-4"></i>
+        </button>
+      </div>
+    </article>
+  `).join('');
+
+  // News
+  const articles = [
+    ['Policy Update', 'June 28, 2026', 'New skilled worker salary thresholds take effect this quarter', 'Employers should review updated minimum salary requirements before submitting sponsorship applications for the upcoming intake.'],
+    ['Processing Times', 'June 15, 2026', 'Priority visa services expanded to eight additional countries', 'Applicants in newly added regions can now access expedited decision timelines for select work and family visa categories.'],
+    ['Guidance', 'June 02, 2026', 'What the digital ID rollout means for permit holders', 'A practical guide to transitioning from physical documents to digital immigration status and what you need to prepare.'],
+  ];
+  document.getElementById('newsGrid').innerHTML = articles.map(([cat, date, title, excerpt]) => `
+    <article class="flex flex-col rounded-xl border border-border bg-card p-6 transition-shadow hover:shadow-md">
+      <div class="flex items-center gap-3 text-xs">
+        <span class="rounded-full bg-secondary px-2.5 py-1 font-medium text-primary">${cat}</span>
+        <time class="text-muted-foreground">${date}</time>
+      </div>
+      <h3 class="mt-4 font-serif text-lg font-semibold leading-snug text-foreground">${title}</h3>
+      <p class="mt-2.5 flex-1 text-sm leading-relaxed text-muted-foreground">${excerpt}</p>
+      <a href="#news" class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">Read more <i data-lucide="arrow-up-right" class="size-4"></i></a>
+    </article>
+  `).join('');
+
+  lucide.createIcons();
+</script>
+</body>
+</html>
