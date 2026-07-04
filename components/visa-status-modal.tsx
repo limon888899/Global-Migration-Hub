@@ -19,7 +19,6 @@ import {
   ShieldCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getApplications } from "@/lib/admin/data"
 import { effectiveStage, STAGE_LABELS, type Application } from "@/lib/admin/types"
 
 type ModalContextValue = {
@@ -70,9 +69,9 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
     }
   }, [onClose])
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    const key = passport.trim().toUpperCase()
+    const key = passport.trim()
     if (!key) {
       setError("Please enter your passport number.")
       setResult(null)
@@ -80,19 +79,22 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
     }
     setLoading(true)
     setError("")
-    setTimeout(() => {
-      const match = getApplications().find(
-        (app) => app.passportNumber.trim().toUpperCase() === key,
-      )
-      if (match) {
-        setResult(match)
+    try {
+      const res = await fetch(`/api/visa-status?passport=${encodeURIComponent(key)}`)
+      if (res.ok) {
+        const app = (await res.json()) as Application
+        setResult(app)
         setError("")
       } else {
         setResult(null)
         setError("No record found for that passport number. Please check and try again.")
       }
+    } catch {
+      setResult(null)
+      setError("Something went wrong. Please try again.")
+    } finally {
       setLoading(false)
-    }, 400)
+    }
   }
 
   const stage = result ? effectiveStage(result) : null
