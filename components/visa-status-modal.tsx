@@ -19,63 +19,8 @@ import {
   ShieldCheck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-type Step = {
-  label: string
-  state: "done" | "current" | "upcoming"
-}
-
-type ApplicationRecord = {
-  name: string
-  visaType: string
-  status: string
-  statusTone: "progress" | "approved" | "action"
-  updated: string
-  steps: Step[]
-}
-
-// Demo records — in production this would be a secure, authenticated API lookup.
-const RECORDS: Record<string, ApplicationRecord> = {
-  "P1234567": {
-    name: "A. Okafor",
-    visaType: "Skilled Worker Visa",
-    status: "In Review",
-    statusTone: "progress",
-    updated: "July 2, 2026",
-    steps: [
-      { label: "Application received", state: "done" },
-      { label: "Documents verified", state: "done" },
-      { label: "Under review by caseworker", state: "current" },
-      { label: "Decision issued", state: "upcoming" },
-    ],
-  },
-  "P7654321": {
-    name: "L. Fernández",
-    visaType: "Intra-Company Transfer",
-    status: "Approved",
-    statusTone: "approved",
-    updated: "June 29, 2026",
-    steps: [
-      { label: "Application received", state: "done" },
-      { label: "Documents verified", state: "done" },
-      { label: "Reviewed by caseworker", state: "done" },
-      { label: "Decision issued — Approved", state: "done" },
-    ],
-  },
-  "P9012345": {
-    name: "R. Haddad",
-    visaType: "Family Dependant Permit",
-    status: "Action Required",
-    statusTone: "action",
-    updated: "July 1, 2026",
-    steps: [
-      { label: "Application received", state: "done" },
-      { label: "Additional documents requested", state: "current" },
-      { label: "Documents verified", state: "upcoming" },
-      { label: "Decision issued", state: "upcoming" },
-    ],
-  },
-}
+import { getApplications } from "@/lib/admin/data"
+import { effectiveStage, STAGE_LABELS, type Application } from "@/lib/admin/types"
 
 type ModalContextValue = {
   open: () => void
@@ -108,11 +53,10 @@ export function VisaStatusModalProvider({ children }: { children: ReactNode }) {
 
 function VisaStatusModal({ onClose }: { onClose: () => void }) {
   const [passport, setPassport] = useState("")
-  const [result, setResult] = useState<ApplicationRecord | null>(null)
+  const [result, setResult] = useState<Application | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // Close on Escape and lock body scroll while open.
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose()
@@ -136,19 +80,40 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
     }
     setLoading(true)
     setError("")
-    // Simulate a secure lookup
     setTimeout(() => {
-      const record = RECORDS[key]
-      if (record) {
-        setResult(record)
+      const match = getApplications().find(
+        (app) => app.passportNumber.trim().toUpperCase() === key,
+      )
+      if (match) {
+        setResult(match)
         setError("")
       } else {
         setResult(null)
         setError("No record found for that passport number. Please check and try again.")
       }
       setLoading(false)
-    }, 500)
+    }, 400)
   }
+
+  const stage = result ? effectiveStage(result) : null
+
+  const steps =
+    result &&
+    (stage === "rejected"
+      ? [
+          { label: "Application received", state: "done" as const },
+          { label: "Documents verified", state: "done" as const },
+          { label: "Reviewed by caseworker", state: "done" as const },
+          { label: "Decision issued — Rejected", state: "done" as const },
+        ]
+      : STAGE_LABELS.map((label, i) => ({
+          label,
+          state: (typeof stage === "number" && i < stage
+            ? "done"
+            : typeof stage === "number" && i === stage
+              ? "current"
+              : "upcoming") as "done" | "current" | "upcoming",
+        })))
 
   return (
     <div
@@ -157,7 +122,6 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
       aria-modal="true"
       aria-labelledby="visa-modal-title"
     >
-      {/* Background overlay — clicking it closes the popup */}
       <button
         type="button"
         aria-label="Close dialog"
@@ -165,7 +129,6 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
         className="absolute inset-0 h-full w-full cursor-default bg-primary/40 backdrop-blur-sm"
       />
 
-      {/* Floating centered card */}
       <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
         <div className="flex items-start justify-between gap-4 border-b border-border p-6">
           <div>
@@ -232,28 +195,41 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
 
           <p className="mt-5 flex items-start gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-            Bank-grade encryption on every lookup. Demo passport numbers: P1234567,
-            P7654321, P9012345.
+            Bank-grade encryption on every lookup. Enter the passport number used on
+            your application.
           </p>
 
-          {result && (
+          {result && steps && (
             <div className="mt-6 border-t border-border pt-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-serif text-lg font-semibold text-foreground">
                     {result.visaType}
                   </p>
-                  <p className="text-sm text-muted-foreground">Applicant: {result.name}</p>
+                  <p className="text-sm text-muted-foreground">Applicant: {result.fullName}</p>
                 </div>
-                <StatusBadge tone={result.statusTone} label={result.status} />
+                <StatusBadge
+                  tone={stage === "rejected" ? "action" : stage === 3 ? "approved" : "progress"}
+                  label={stage === "rejected" ? "Rejected" : STAGE_LABELS[stage as number]}
+                />
               </div>
 
+              {stage === "rejected" && result.statusNote && (
+                <p className="mt-3 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                  {result.statusNote}
+                </p>
+              )}
+
               <p className="mt-2 text-xs text-muted-foreground">
-                Last updated {result.updated}
+                Submitted {new Date(result.submittedAt).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
               </p>
 
               <ol className="mt-6 space-y-4">
-                {result.steps.map((step) => (
+                {steps.map((step) => (
                   <li key={step.label} className="flex items-start gap-3">
                     {step.state === "done" ? (
                       <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
@@ -282,7 +258,7 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-function StatusBadge({ tone, label }: { tone: ApplicationRecord["statusTone"]; label: string }) {
+function StatusBadge({ tone, label }: { tone: "progress" | "approved" | "action"; label: string }) {
   const styles =
     tone === "approved"
       ? "bg-primary text-primary-foreground"
