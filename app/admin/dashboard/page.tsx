@@ -35,14 +35,17 @@ export default function AdminDashboardPage() {
   const [search, setSearch] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn()) {
       router.replace("/admin/login")
       return
     }
-    setApps(getApplications())
-    setReady(true)
+    getApplications().then((data) => {
+      setApps(data)
+      setReady(true)
+    })
   }, [router])
 
   const filtered = useMemo(() => {
@@ -65,34 +68,37 @@ export default function AdminDashboardPage() {
     return counts
   }, [apps])
 
-  function refresh() {
-    setApps(getApplications())
+  async function refresh() {
+    setRefreshing(true)
+    const data = await getApplications()
+    setApps(data)
+    setRefreshing(false)
   }
 
-  function handleCreate(input: NewApplicationInput) {
-    addApplication(input)
-    refresh()
+  async function handleCreate(input: NewApplicationInput) {
+    await addApplication(input)
+    await refresh()
   }
 
-  function handleUpdateStatus(id: string, status: ManualStatus, note: string) {
-    updateApplication(id, { manualStatus: status, statusNote: note })
-    refresh()
+  async function handleUpdateStatus(id: string, status: ManualStatus, note: string) {
+    await updateApplication(id, { manualStatus: status, statusNote: note })
+    await refresh()
   }
 
-  function handleSaveNotes(id: string, notes: string) {
-    updateApplication(id, { internalNotes: notes })
-    refresh()
+  async function handleSaveNotes(id: string, notes: string) {
+    await updateApplication(id, { internalNotes: notes })
+    await refresh()
   }
 
-  function handleDelete(id: string) {
-    deleteApplication(id)
+  async function handleDelete(id: string) {
+    await deleteApplication(id)
     setSelectedId(null)
-    refresh()
+    await refresh()
   }
 
-  function handleAddDocument(id: string, name: string) {
-    addDocument(id, name)
-    refresh()
+  async function handleAddDocument(id: string, name: string) {
+    await addDocument(id, name)
+    await refresh()
   }
 
   const selectedApp = apps.find((a) => a.id === selectedId) ?? null
@@ -126,6 +132,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        {refreshing && <p className="mb-3 text-xs text-muted-foreground">Syncing…</p>}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {[
             { label: "Total Applications", value: stats.total },
