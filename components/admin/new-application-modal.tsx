@@ -4,6 +4,7 @@ import { useState } from "react"
 import { X, Upload, Image as ImageIcon, FileText, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { AppDocument, DocumentCategory, NewApplicationInput } from "@/lib/admin/types"
+import { DESTINATION_COUNTRIES } from "@/lib/countries"
 
 const MAX_FILE_BYTES = 800 * 1024 // 800 KB per file — keep uploads small
 
