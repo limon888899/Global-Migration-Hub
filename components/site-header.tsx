@@ -40,7 +40,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden md:block">
-          <Button type="button" onClick={openStatusModal} className="h-10 px-5">
+          <Button type="button" onClick={() => openStatusModal()} className="h-10 px-5">
             Check Status
           </Button>
         </div>
