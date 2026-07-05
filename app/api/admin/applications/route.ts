@@ -21,12 +21,12 @@ export async function POST(request: Request) {
 
   const newApp: Application = {
     ...input,
+    documents: input.documents ?? [],
     id: `app_${Date.now()}`,
     submittedAt: new Date().toISOString(),
     manualStatus: "auto",
     statusNote: "",
     internalNotes: "",
-    documents: [],
   }
 
   const updated = [newApp, ...apps]
