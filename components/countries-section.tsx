@@ -38,7 +38,13 @@ const countryDetails: Record<string, { visaTypes: string; image: string; alt: st
   },
 }
 
-const countries = DESTINATION_COUNTRIES.map((name) => ({ name, ...countryDetails[name] }))
+const countries = DESTINATION_COUNTRIES.map((name) => ({
+  name,
+  ...countryDetails[name],
+}))
+
+export function CountriesSection() {
+  const { open } = useVisaStatusModal()
 
   return (
     <section id="countries" className="scroll-mt-20 bg-background py-16 sm:py-24">
