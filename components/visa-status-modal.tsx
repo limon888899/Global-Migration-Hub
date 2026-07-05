@@ -36,7 +36,7 @@ import {
 } from "@/lib/admin/types"
 
 type ModalContextValue = {
-  open: () => void
+  open: (expectedCountry?: string) => void
   close: () => void
 }
 
@@ -52,14 +52,18 @@ export function useVisaStatusModal() {
 
 export function VisaStatusModalProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [expectedCountry, setExpectedCountry] = useState<string | null>(null)
 
-  const open = useCallback(() => setIsOpen(true), [])
+  const open = useCallback((country?: string) => {
+    setExpectedCountry(country ?? null)
+    setIsOpen(true)
+  }, [])
   const close = useCallback(() => setIsOpen(false), [])
 
   return (
     <VisaStatusModalContext.Provider value={{ open, close }}>
       {children}
-      {isOpen && <VisaStatusModal onClose={close} />}
+      {isOpen && <VisaStatusModal onClose={close} expectedCountry={expectedCountry} />}
     </VisaStatusModalContext.Provider>
   )
 }
@@ -81,7 +85,13 @@ function isPdfDataUrl(url?: string) {
   return Boolean(url && url.startsWith("data:application/pdf"))
 }
 
-function VisaStatusModal({ onClose }: { onClose: () => void }) {
+function VisaStatusModal({
+  onClose,
+  expectedCountry,
+}: {
+  onClose: () => void
+  expectedCountry: string | null
+}) {
   const [passport, setPassport] = useState("")
   const [result, setResult] = useState<Application | null>(null)
   const [error, setError] = useState("")
@@ -111,14 +121,23 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
     setLoading(true)
     setError("")
     try {
-      const res = await fetch(`/api/visa-status?passport=${encodeURIComponent(key)}`)
+      const params = new URLSearchParams({ passport: key })
+      if (expectedCountry) params.set("country", expectedCountry)
+      const res = await fetch(`/api/visa-status?${params.toString()}`)
       if (res.ok) {
         const app = (await res.json()) as Application
         setResult(app)
         setError("")
       } else {
+        const body = await res.json().catch(() => null)
         setResult(null)
-        setError("No record found for that passport number. Please check and try again.")
+        if (body?.error === "country_mismatch" && expectedCountry) {
+          setError(
+            `No ${expectedCountry} application was found for that passport number. Please check the country you applied for and try again.`,
+          )
+        } else {
+          setError("No record found for that passport number. Please check and try again.")
+        }
       }
     } catch {
       setResult(null)
@@ -190,8 +209,9 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
           {!result ? (
             <div key="search-form" className="animate-in fade-in-0 slide-in-from-left-3 duration-300">
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Enter your passport number to securely view real-time updates on your
-                application. Your information stays private and encrypted.
+                {expectedCountry
+                  ? `Enter your passport number to check your ${expectedCountry} application status. Your information stays private and encrypted.`
+                  : "Enter your passport number to securely view real-time updates on your application. Your information stays private and encrypted."}
               </p>
 
               <form onSubmit={handleSubmit} className="mt-5" noValidate>
