@@ -85,7 +85,7 @@ const countries = DESTINATION_COUNTRIES.map((name) => ({ name, ...countryDetails
                 </div>
                 <button
                   type="button"
-                  onClick={open}
+                  onClick={() => open(country.name)}
                   className="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
                   aria-label={`Enquire now about visas for ${country.name}`}
                 >
