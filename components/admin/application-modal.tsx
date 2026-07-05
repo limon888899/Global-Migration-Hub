@@ -10,6 +10,15 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
 }
 
+/** Converts an ISO datetime string to the "yyyy-MM-ddTHH:mm" format required by <input type="datetime-local">. */
+function toDateTimeLocalValue(iso: string) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ""
+  const offsetMs = d.getTimezoneOffset() * 60000
+  return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
 export function ApplicationModal({
   app,
   onClose,
@@ -17,6 +26,7 @@ export function ApplicationModal({
   onSaveNotes,
   onDelete,
   onAddDocument,
+  onUpdateSubmittedAt,
 }: {
   app: Application
   onClose: () => void
@@ -24,15 +34,26 @@ export function ApplicationModal({
   onSaveNotes: (id: string, notes: string) => void
   onDelete: (id: string) => void
   onAddDocument: (id: string, name: string) => void
+  onUpdateSubmittedAt: (id: string, submittedAt: string) => void
 }) {
   const [statusSelect, setStatusSelect] = useState<ManualStatus>(app.manualStatus)
   const [statusNote, setStatusNote] = useState(app.statusNote)
   const [internalNotes, setInternalNotes] = useState(app.internalNotes)
+  const [submittedInput, setSubmittedInput] = useState(toDateTimeLocalValue(app.submittedAt))
+  const [dateSaved, setDateSaved] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  function handleSaveSubmittedDate() {
+    if (!submittedInput) return
+    const iso = new Date(submittedInput).toISOString()
+    onUpdateSubmittedAt(app.id, iso)
+    setDateSaved(true)
+    setTimeout(() => setDateSaved(false), 1500)
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in-0 duration-200">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-300">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h3 className="font-serif text-lg font-semibold text-foreground">Application Details</h3>
           <button
@@ -67,7 +88,6 @@ export function ApplicationModal({
                   ["Destination", app.destinationCountry],
                   ["Visa Type", app.visaType],
                   ["Travel Date", formatDate(app.travelDate)],
-                  ["Submitted", formatDate(app.submittedAt)],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
@@ -75,6 +95,27 @@ export function ApplicationModal({
                   </div>
                 ))}
               </dl>
+            </div>
+
+            <div className="mt-4 rounded-md border border-dashed border-border p-3">
+              <label htmlFor="submittedAtInput" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Submitted Date (editable)
+              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  id="submittedAtInput"
+                  type="datetime-local"
+                  value={submittedInput}
+                  onChange={(e) => setSubmittedInput(e.target.value)}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+                <Button type="button" onClick={handleSaveSubmittedDate} className="h-9 px-4 text-sm">
+                  {dateSaved ? "Saved ✓" : "Save Date"}
+                </Button>
+              </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Currently showing on the applicant&apos;s profile as: {formatDate(app.submittedAt)}
+              </p>
             </div>
           </section>
 
