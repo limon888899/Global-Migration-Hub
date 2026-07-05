@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server"
-import { redis } from "@/lib/admin/redis"
+import { getRedis } from "@/lib/admin/redis"
 import type { Application, NewApplicationInput } from "@/lib/admin/types"
+
 export const dynamic = "force-dynamic"
 
 const KEY = "gmh:applications"
 
 export async function GET() {
-  const apps = (await redis.get<Application[]>(KEY)) ?? []
+  const redis = await getRedis()
+  const raw = await redis.get(KEY)
+  const apps: Application[] = raw ? JSON.parse(raw) : []
   return NextResponse.json(apps)
 }
 
 export async function POST(request: Request) {
   const input = (await request.json()) as NewApplicationInput
-  const apps = (await redis.get<Application[]>(KEY)) ?? []
+  const redis = await getRedis()
+  const raw = await redis.get(KEY)
+  const apps: Application[] = raw ? JSON.parse(raw) : []
 
   const newApp: Application = {
     ...input,
@@ -25,7 +30,7 @@ export async function POST(request: Request) {
   }
 
   const updated = [newApp, ...apps]
-  await redis.set(KEY, updated)
+  await redis.set(KEY, JSON.stringify(updated))
 
   return NextResponse.json(newApp, { status: 201 })
 }
