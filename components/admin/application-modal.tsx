@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Application, ManualStatus } from "@/lib/admin/types"
+import { DOCUMENT_CATEGORY_LABELS, type Application, type ManualStatus } from "@/lib/admin/types"
 
 function formatDate(iso: string) {
   if (!iso) return "—"
@@ -48,24 +48,34 @@ export function ApplicationModal({
         <div className="space-y-6 px-6 py-5">
           <section>
             <h4 className="mb-3 text-sm font-semibold text-foreground">Applicant Information</h4>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-              {[
-                ["Full Name", app.fullName],
-                ["Passport No.", app.passportNumber],
-                ["Nationality", app.nationality],
-                ["Email", app.email],
-                ["Phone", app.phone],
-                ["Destination", app.destinationCountry],
-                ["Visa Type", app.visaType],
-                ["Travel Date", formatDate(app.travelDate)],
-                ["Submitted", formatDate(app.submittedAt)],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
-                  <dd className="font-medium text-foreground">{value || "—"}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+                {app.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
+                ) : (
+                  <span className="text-xs text-muted-foreground">No photo</span>
+                )}
+              </div>
+              <dl className="grid flex-1 grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                {[
+                  ["Full Name", app.fullName],
+                  ["Passport No.", app.passportNumber],
+                  ["Nationality", app.nationality],
+                  ["Email", app.email],
+                  ["Phone", app.phone],
+                  ["Destination", app.destinationCountry],
+                  ["Visa Type", app.visaType],
+                  ["Travel Date", formatDate(app.travelDate)],
+                  ["Submitted", formatDate(app.submittedAt)],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+                    <dd className="font-medium text-foreground">{value || "—"}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </section>
 
           <section>
@@ -112,7 +122,10 @@ export function ApplicationModal({
               <ul className="space-y-1.5 text-sm">
                 {app.documents.map((doc) => (
                   <li key={doc.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
-                    <span className="text-foreground">{doc.name}</span>
+                    <span className="text-foreground">
+                      {doc.category ? `${DOCUMENT_CATEGORY_LABELS[doc.category]} — ` : ""}
+                      {doc.name}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {doc.addedBy === "admin" ? "Added by staff" : "From applicant"} · {formatDate(doc.addedAt)}
                     </span>
