@@ -2,9 +2,27 @@ export type ManualStatus = "auto" | "0" | "1" | "2" | "3" | "rejected"
 
 export const STAGE_LABELS = ["Submitted", "Processing", "Document Verified", "Visa Approved"] as const
 
+export type DocumentCategory =
+  | "passport_copy"
+  | "job_letter"
+  | "medical_certificate"
+  | "fingerprint"
+  | "other"
+
+export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
+  passport_copy: "Passport Copy",
+  job_letter: "Job Letter",
+  medical_certificate: "Medical Certificate",
+  fingerprint: "Fingerprint Form",
+  other: "Other Document",
+}
+
 export interface AppDocument {
   id: string
   name: string
+  category?: DocumentCategory
+  /** Base64 data URL of the uploaded file, so it can be previewed/downloaded. */
+  dataUrl?: string
   addedBy: "applicant" | "admin"
   addedAt: string
 }
@@ -19,6 +37,8 @@ export interface Application {
   destinationCountry: string
   visaType: string
   travelDate: string
+  /** Base64 data URL of the applicant's photo, set by the admin. */
+  photoUrl: string
   submittedAt: string
   manualStatus: ManualStatus
   statusNote: string
@@ -28,7 +48,7 @@ export interface Application {
 
 export type NewApplicationInput = Omit<
   Application,
-  "id" | "submittedAt" | "manualStatus" | "statusNote" | "internalNotes" | "documents"
+  "id" | "submittedAt" | "manualStatus" | "statusNote" | "internalNotes"
 >
 
 /**
