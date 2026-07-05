@@ -89,6 +89,11 @@ export default function AdminDashboardPage() {
     await updateApplication(id, { internalNotes: notes })
     await refresh()
   }
+  
+  async function handleUpdateSubmittedAt(id: string, submittedAt: string) {
+    await updateApplication(id, { submittedAt })
+    await refresh()
+  }
 
   async function handleDelete(id: string) {
     await deleteApplication(id)
@@ -218,6 +223,7 @@ export default function AdminDashboardPage() {
           onSaveNotes={handleSaveNotes}
           onDelete={handleDelete}
           onAddDocument={handleAddDocument}
+          onUpdateSubmittedAt={handleUpdateSubmittedAt}
         />
       )}
 
