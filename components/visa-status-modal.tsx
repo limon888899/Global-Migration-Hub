@@ -23,7 +23,6 @@ import {
   Globe,
   Plane,
   FileText,
-  Eye,
   User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -96,6 +95,7 @@ function VisaStatusModal({
   const [result, setResult] = useState<Application | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const resultStage = result ? effectiveStage(result) : null
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -169,41 +169,71 @@ function VisaStatusModal({
 
       <div
         className={`relative z-10 w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 ${
-          result ? "max-w-xl" : "max-w-md"
+          result ? "max-w-2xl" : "max-w-md"
         }`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-border p-6">
-          <div>
-            {result ? (
+        {result ? (
+          <div className="relative bg-gradient-to-br from-primary to-primary/80 px-6 pb-7 pt-6 text-primary-foreground">
+            <div className="flex items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={handleNewSearch}
-                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                className="flex items-center gap-1.5 text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground"
               >
                 <ArrowLeft className="size-4" /> Search another passport
               </button>
-            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="rounded-md p-1.5 text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="mt-5 flex items-center gap-4">
+              <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-primary-foreground/30 bg-primary-foreground/10 text-lg font-semibold shadow-lg">
+                {result.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={result.photoUrl} alt={result.fullName} className="size-full object-cover" />
+                ) : (
+                  <span>{initials(result.fullName) || <User className="size-7" />}</span>
+                )}
+              </div>
+              <div>
+                <h2 id="visa-modal-title" className="font-serif text-2xl font-semibold">
+                  {result.fullName}
+                </h2>
+                <p className="text-sm text-primary-foreground/70">Passport: {result.passportNumber}</p>
+                <StatusBadge
+                  tone={resultStage === "rejected" ? "action" : resultStage === 3 ? "approved" : "progress"}
+                  label={resultStage === "rejected" ? "Rejected" : STAGE_LABELS[resultStage as number]}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start justify-between gap-4 border-b border-border p-6">
+            <div>
               <div className="flex items-center gap-2 text-primary">
                 <Lock className="size-5" aria-hidden="true" />
                 <span className="text-sm font-semibold">Secure lookup</span>
               </div>
-            )}
-            <h2
-              id="visa-modal-title"
-              className="mt-2 font-serif text-2xl font-semibold text-foreground"
+              <h2 id="visa-modal-title" className="mt-2 font-serif text-2xl font-semibold text-foreground">
+                Check your visa status
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
-              {result ? "Applicant Profile" : "Check your visa status"}
-            </h2>
+              <X className="size-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
+        )}
 
         <div className="max-h-[75vh] overflow-y-auto p-6">
           {!result ? (
@@ -290,84 +320,70 @@ function ApplicantProfile({ app }: { app: Application }) {
     { icon: Mail, label: "Email", value: app.email || "—" },
     { icon: Phone, label: "Phone", value: app.phone || "—" },
     { icon: Plane, label: "Destination", value: app.destinationCountry || "—" },
+    { icon: FileText, label: "Visa Type", value: app.visaType || "—" },
+    {
+      icon: Clock,
+      label: "Submitted",
+      value: new Date(app.submittedAt).toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
+    },
   ]
 
   return (
     <div>
-      <div className="flex items-center gap-4">
-        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-lg font-semibold text-primary">
-          {app.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
-          ) : (
-            <span>{initials(app.fullName) || <User className="size-7" />}</span>
-          )}
-        </div>
-        <div>
-          <p className="font-serif text-xl font-semibold text-foreground">{app.fullName}</p>
-          <p className="text-sm text-muted-foreground">Passport: {app.passportNumber}</p>
-          <StatusBadge
-            tone={stage === "rejected" ? "action" : stage === 3 ? "approved" : "progress"}
-            label={stage === "rejected" ? "Rejected" : STAGE_LABELS[stage as number]}
-          />
-        </div>
-      </div>
-
       {stage === "rejected" && app.statusNote && (
-        <p className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+        <p className="mb-6 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           {app.statusNote}
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-3 rounded-lg border border-border p-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {details.map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex items-start gap-2">
-            <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div
+            key={label}
+            className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-3"
+          >
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Icon className="size-4" aria-hidden="true" />
+            </div>
             <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
               <p className="text-sm font-medium text-foreground">{value}</p>
             </div>
           </div>
         ))}
-        <div className="flex items-start gap-2">
-          <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Visa Type</p>
-            <p className="text-sm font-medium text-foreground">{app.visaType || "—"}</p>
-          </div>
-        </div>
-        <div className="flex items-start gap-2">
-          <Clock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Submitted</p>
-            <p className="text-sm font-medium text-foreground">
-              {new Date(app.submittedAt).toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </p>
-          </div>
-        </div>
       </div>
 
-      <div className="mt-6">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Application Progress</h3>
-        <ol className="space-y-4">
+      <div className="mt-8">
+        <h3 className="mb-4 text-sm font-semibold text-foreground">Application Progress</h3>
+        <ol className="relative space-y-6 border-l-2 border-dashed border-border pl-6">
           {steps.map((step) => (
-            <li key={step.label} className="flex items-start gap-3">
-              {step.state === "done" ? (
-                <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
-              ) : step.state === "current" ? (
-                <Clock className="mt-0.5 size-5 shrink-0 text-accent-foreground" aria-hidden="true" />
-              ) : (
-                <Circle className="mt-0.5 size-5 shrink-0 text-muted-foreground/40" aria-hidden="true" />
-              )}
+            <li key={step.label} className="relative">
+              <span
+                className={`absolute -left-[31px] flex size-6 items-center justify-center rounded-full ${
+                  step.state === "done"
+                    ? "bg-primary text-primary-foreground"
+                    : step.state === "current"
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-muted text-muted-foreground/40"
+                }`}
+              >
+                {step.state === "done" ? (
+                  <CheckCircle2 className="size-4" aria-hidden="true" />
+                ) : step.state === "current" ? (
+                  <Clock className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <Circle className="size-3.5" aria-hidden="true" />
+                )}
+              </span>
               <span
                 className={
                   step.state === "upcoming"
                     ? "text-sm text-muted-foreground"
-                    : "text-sm font-medium text-foreground"
+                    : "text-sm font-semibold text-foreground"
                 }
               >
                 {step.label}
@@ -377,14 +393,14 @@ function ApplicantProfile({ app }: { app: Application }) {
         </ol>
       </div>
 
-      <div className="mt-6 border-t border-border pt-6">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Documents</h3>
+      <div className="mt-8 border-t border-border pt-6">
+        <h3 className="mb-4 text-sm font-semibold text-foreground">Documents</h3>
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="space-y-6">
             {app.documents.map((doc) => (
-              <DocumentPreviewCard key={doc.id} doc={doc} />
+              <DocumentFullView key={doc.id} doc={doc} />
             ))}
           </div>
         )}
@@ -398,90 +414,47 @@ function ApplicantProfile({ app }: { app: Application }) {
   )
 }
 
-function DocumentPreviewCard({ doc }: { doc: AppDocument }) {
-  const [expanded, setExpanded] = useState(false)
+function DocumentFullView({ doc }: { doc: AppDocument }) {
   const label = doc.category ? DOCUMENT_CATEGORY_LABELS[doc.category] : "Document"
 
   if (!doc.dataUrl) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-center">
-        <FileText className="size-6 text-muted-foreground" aria-hidden="true" />
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="text-[11px] text-muted-foreground">Pending upload</p>
+      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-10 text-center">
+        <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">Pending upload</p>
       </div>
     )
   }
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setExpanded(true)}
-        className="group flex flex-col overflow-hidden rounded-lg border border-border bg-secondary/40 text-left transition hover:border-primary/50 hover:shadow-md"
-      >
-        <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-muted">
-          {isImageDataUrl(doc.dataUrl) ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={doc.dataUrl}
-              alt={label}
-              className="size-full object-cover transition duration-300 group-hover:scale-105"
-            />
-          ) : isPdfDataUrl(doc.dataUrl) ? (
-            <embed src={doc.dataUrl} type="application/pdf" className="pointer-events-none size-full" />
-          ) : (
-            <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
-          )}
-        </div>
-        <div className="flex items-center justify-between gap-1 px-2.5 py-1.5">
-          <span className="truncate text-xs font-medium text-foreground">{label}</span>
-          <Eye className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        </div>
-      </button>
-
-      {expanded && (
-        <div
-          className="fixed inset-0 z-[110] flex animate-in fade-in-0 items-center justify-center bg-black/70 p-4 backdrop-blur-sm duration-200"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setExpanded(false)}
-        >
-          <div
-            className="relative max-h-[85vh] w-full max-w-2xl animate-in fade-in-0 zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setExpanded(false)}
-              aria-label="Close preview"
-              className="absolute -top-10 right-0 rounded-md p-1.5 text-white/80 transition hover:text-white"
-            >
-              <X className="size-6" />
-            </button>
-            <div className="overflow-hidden rounded-xl border border-white/10 bg-card shadow-2xl">
-              <div className="border-b border-border px-4 py-2 text-sm font-medium text-foreground">{label}</div>
-              {isImageDataUrl(doc.dataUrl) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={doc.dataUrl} alt={label} className="max-h-[75vh] w-full object-contain" />
-              ) : isPdfDataUrl(doc.dataUrl) ? (
-                <embed src={doc.dataUrl} type="application/pdf" className="h-[75vh] w-full" />
-              ) : null}
-            </div>
-          </div>
+    <div className="overflow-hidden rounded-xl border border-border bg-secondary/20 shadow-sm">
+      <div className="flex items-center gap-2 border-b border-border bg-secondary/40 px-4 py-2.5">
+        <FileText className="size-4 text-muted-foreground" aria-hidden="true" />
+        <span className="text-sm font-semibold text-foreground">{label}</span>
+      </div>
+      {isImageDataUrl(doc.dataUrl) ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={doc.dataUrl} alt={label} className="w-full object-contain" />
+      ) : isPdfDataUrl(doc.dataUrl) ? (
+        <embed src={doc.dataUrl} type="application/pdf" className="h-[80vh] w-full" />
+      ) : (
+        <div className="flex items-center justify-center p-10">
+          <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
         </div>
       )}
-    </>
+    </div>
   )
 }
 
 function StatusBadge({ tone, label }: { tone: "progress" | "approved" | "action"; label: string }) {
   const styles =
     tone === "approved"
-      ? "bg-primary text-primary-foreground"
+      ? "bg-emerald-400 text-emerald-950"
       : tone === "action"
         ? "bg-accent text-accent-foreground"
-        : "bg-secondary text-primary"
+        : "bg-primary-foreground/15 text-primary-foreground"
   return (
-    <span className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-semibold ${styles}`}>{label}</span>
+    <span className={`mt-1.5 inline-block rounded-full px-3 py-1 text-xs font-semibold ${styles}`}>{label}</span>
   )
 }
