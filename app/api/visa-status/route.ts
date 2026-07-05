@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
-import { redis } from "@/lib/admin/redis"
+import { getRedis } from "@/lib/admin/redis"
 import type { Application } from "@/lib/admin/types"
+
 export const dynamic = "force-dynamic"
 
 const KEY = "gmh:applications"
@@ -13,7 +14,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing passport number" }, { status: 400 })
   }
 
-  const apps = (await redis.get<Application[]>(KEY)) ?? []
+  const redis = await getRedis()
+  const raw = await redis.get(KEY)
+  const apps: Application[] = raw ? JSON.parse(raw) : []
   const match = apps.find((a) => a.passportNumber.trim().toUpperCase() === passport)
 
   if (!match) {
