@@ -37,7 +37,7 @@ export function Hero() {
             <Button
               type="button"
               size="lg"
-              onClick={open}
+              onClick={() => open()}
               className="h-12 gap-2 px-7 text-base bg-accent text-accent-foreground hover:bg-accent/90"
             >
               Check Visa Status
