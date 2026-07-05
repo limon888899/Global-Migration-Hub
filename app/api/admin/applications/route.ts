@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { redis } from "@/lib/admin/redis"
 import type { Application, NewApplicationInput } from "@/lib/admin/types"
+export const dynamic = "force-dynamic"
 
 const KEY = "gmh:applications"
 
