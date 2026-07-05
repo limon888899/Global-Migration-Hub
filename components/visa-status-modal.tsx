@@ -23,7 +23,7 @@ import {
   Globe,
   Plane,
   FileText,
-  Download,
+  Eye,
   User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -32,10 +32,11 @@ import {
   STAGE_LABELS,
   DOCUMENT_CATEGORY_LABELS,
   type Application,
+  type AppDocument,
 } from "@/lib/admin/types"
 
 type ModalContextValue = {
-  open: () => void
+  open: (expectedCountry?: string) => void
   close: () => void
 }
 
@@ -51,14 +52,18 @@ export function useVisaStatusModal() {
 
 export function VisaStatusModalProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [expectedCountry, setExpectedCountry] = useState<string | null>(null)
 
-  const open = useCallback(() => setIsOpen(true), [])
+  const open = useCallback((country?: string) => {
+    setExpectedCountry(country ?? null)
+    setIsOpen(true)
+  }, [])
   const close = useCallback(() => setIsOpen(false), [])
 
   return (
     <VisaStatusModalContext.Provider value={{ open, close }}>
       {children}
-      {isOpen && <VisaStatusModal onClose={close} />}
+      {isOpen && <VisaStatusModal onClose={close} expectedCountry={expectedCountry} />}
     </VisaStatusModalContext.Provider>
   )
 }
@@ -72,7 +77,21 @@ function initials(name: string) {
     .join("")
 }
 
-function VisaStatusModal({ onClose }: { onClose: () => void }) {
+function isImageDataUrl(url?: string) {
+  return Boolean(url && url.startsWith("data:image/"))
+}
+
+function isPdfDataUrl(url?: string) {
+  return Boolean(url && url.startsWith("data:application/pdf"))
+}
+
+function VisaStatusModal({
+  onClose,
+  expectedCountry,
+}: {
+  onClose: () => void
+  expectedCountry: string | null
+}) {
   const [passport, setPassport] = useState("")
   const [result, setResult] = useState<Application | null>(null)
   const [error, setError] = useState("")
@@ -102,14 +121,23 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
     setLoading(true)
     setError("")
     try {
-      const res = await fetch(`/api/visa-status?passport=${encodeURIComponent(key)}`)
+      const params = new URLSearchParams({ passport: key })
+      if (expectedCountry) params.set("country", expectedCountry)
+      const res = await fetch(`/api/visa-status?${params.toString()}`)
       if (res.ok) {
         const app = (await res.json()) as Application
         setResult(app)
         setError("")
       } else {
+        const body = await res.json().catch(() => null)
         setResult(null)
-        setError("No record found for that passport number. Please check and try again.")
+        if (body?.error === "country_mismatch" && expectedCountry) {
+          setError(
+            `No ${expectedCountry} application was found for that passport number. Please check the country you applied for and try again.`,
+          )
+        } else {
+          setError("No record found for that passport number. Please check and try again.")
+        }
       }
     } catch {
       setResult(null)
@@ -136,11 +164,11 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
         type="button"
         aria-label="Close dialog"
         onClick={onClose}
-        className="absolute inset-0 h-full w-full cursor-default bg-primary/40 backdrop-blur-sm"
+        className="absolute inset-0 h-full w-full cursor-default bg-primary/40 backdrop-blur-sm animate-in fade-in-0 duration-300"
       />
 
       <div
-        className={`relative z-10 w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all ${
+        className={`relative z-10 w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 ${
           result ? "max-w-xl" : "max-w-md"
         }`}
       >
@@ -179,10 +207,11 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
 
         <div className="max-h-[75vh] overflow-y-auto p-6">
           {!result ? (
-            <>
+            <div key="search-form" className="animate-in fade-in-0 slide-in-from-left-3 duration-300">
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Enter your passport number to securely view real-time updates on your
-                application. Your information stays private and encrypted.
+                {expectedCountry
+                  ? `Enter your passport number to check your ${expectedCountry} application status. Your information stays private and encrypted.`
+                  : "Enter your passport number to securely view real-time updates on your application. Your information stays private and encrypted."}
               </p>
 
               <form onSubmit={handleSubmit} className="mt-5" noValidate>
@@ -224,9 +253,11 @@ function VisaStatusModal({ onClose }: { onClose: () => void }) {
                 Bank-grade encryption on every lookup. Enter the passport number used on
                 your application.
               </p>
-            </>
+            </div>
           ) : (
-            <ApplicantProfile app={result} />
+            <div key={result.id} className="animate-in fade-in-0 slide-in-from-right-3 duration-300">
+              <ApplicantProfile app={result} />
+            </div>
           )}
         </div>
       </div>
@@ -351,35 +382,11 @@ function ApplicantProfile({ app }: { app: Application }) {
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
         ) : (
-          <ul className="space-y-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {app.documents.map((doc) => (
-              <li
-                key={doc.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {doc.category ? DOCUMENT_CATEGORY_LABELS[doc.category] : doc.name}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">{doc.name}</p>
-                  </div>
-                </div>
-                {doc.dataUrl ? (
-                  <a
-                    href={doc.dataUrl}
-                    download={doc.name}
-                    className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline"
-                  >
-                    <Download className="size-4" /> View
-                  </a>
-                ) : (
-                  <span className="shrink-0 text-xs text-muted-foreground">Pending upload</span>
-                )}
-              </li>
+              <DocumentPreviewCard key={doc.id} doc={doc} />
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
@@ -388,6 +395,82 @@ function ApplicantProfile({ app }: { app: Application }) {
         This profile is only accessible with your correct passport number.
       </p>
     </div>
+  )
+}
+
+function DocumentPreviewCard({ doc }: { doc: AppDocument }) {
+  const [expanded, setExpanded] = useState(false)
+  const label = doc.category ? DOCUMENT_CATEGORY_LABELS[doc.category] : "Document"
+
+  if (!doc.dataUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-center">
+        <FileText className="size-6 text-muted-foreground" aria-hidden="true" />
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-[11px] text-muted-foreground">Pending upload</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="group flex flex-col overflow-hidden rounded-lg border border-border bg-secondary/40 text-left transition hover:border-primary/50 hover:shadow-md"
+      >
+        <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-muted">
+          {isImageDataUrl(doc.dataUrl) ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={doc.dataUrl}
+              alt={label}
+              className="size-full object-cover transition duration-300 group-hover:scale-105"
+            />
+          ) : isPdfDataUrl(doc.dataUrl) ? (
+            <embed src={doc.dataUrl} type="application/pdf" className="pointer-events-none size-full" />
+          ) : (
+            <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-1 px-2.5 py-1.5">
+          <span className="truncate text-xs font-medium text-foreground">{label}</span>
+          <Eye className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </div>
+      </button>
+
+      {expanded && (
+        <div
+          className="fixed inset-0 z-[110] flex animate-in fade-in-0 items-center justify-center bg-black/70 p-4 backdrop-blur-sm duration-200"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setExpanded(false)}
+        >
+          <div
+            className="relative max-h-[85vh] w-full max-w-2xl animate-in fade-in-0 zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-label="Close preview"
+              className="absolute -top-10 right-0 rounded-md p-1.5 text-white/80 transition hover:text-white"
+            >
+              <X className="size-6" />
+            </button>
+            <div className="overflow-hidden rounded-xl border border-white/10 bg-card shadow-2xl">
+              <div className="border-b border-border px-4 py-2 text-sm font-medium text-foreground">{label}</div>
+              {isImageDataUrl(doc.dataUrl) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={doc.dataUrl} alt={label} className="max-h-[75vh] w-full object-contain" />
+              ) : isPdfDataUrl(doc.dataUrl) ? (
+                <embed src={doc.dataUrl} type="application/pdf" className="h-[75vh] w-full" />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
