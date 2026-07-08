@@ -4,7 +4,8 @@ import { useState } from "react"
 import Image from "next/image"
 import { ArrowRight, ChevronDown, ChevronUp, Globe2 } from "lucide-react"
 import { useVisaStatusModal } from "@/components/visa-status-modal"
-import { DESTINATION_COUNTRIES, ALL_COUNTRIES } from "@/lib/countries"
+import { useApplicationModal } from "@/components/application-modal"
+import { DESTINATION_COUNTRIES, ALL_COUNTRIES, COUNTRY_FLAGS } from "@/lib/countries"
 
 const countryDetails: Record<string, { visaTypes: string; image: string; alt: string }> = {
   "United Kingdom": {
@@ -50,6 +51,7 @@ const remainingCountries = ALL_COUNTRIES.filter(
 
 export function CountriesSection() {
   const { open } = useVisaStatusModal()
+  const { open: openApplication } = useApplicationModal()
   const [showAll, setShowAll] = useState(false)
 
   return (
@@ -127,19 +129,24 @@ export function CountriesSection() {
 
           {showAll && (
             <div className="mt-8 w-full rounded-2xl border border-border bg-secondary/20 p-6 animate-in fade-in-0 slide-in-from-top-2 duration-300">
-              <p className="mb-4 text-center text-sm text-muted-foreground">
-                We also help with applications for these destinations. Tap a country to check
-                your visa application status.
+              <p className="mb-6 text-center text-sm text-muted-foreground">
+                We also help with applications for these destinations. Tap a country to start
+                your application.
               </p>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {remainingCountries.map((name) => (
                   <button
                     key={name}
                     type="button"
-                    onClick={() => open(name)}
-                    className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-accent hover:text-accent-foreground"
+                    onClick={() => openApplication(name)}
+                    className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent/10 hover:shadow-md"
                   >
-                    {name}
+                    <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
+                      {COUNTRY_FLAGS[name]}
+                    </span>
+                    <span className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent-foreground">
+                      {name}
+                    </span>
                   </button>
                 ))}
               </div>
