@@ -11,7 +11,7 @@ import {
 } from "react"
 import { X, CheckCircle2, ShieldCheck, AlertCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ALL_COUNTRIES, COUNTRY_CODES } from "@/lib/countries"
+import { ALL_COUNTRIES, COUNTRY_CODES, COUNTRY_FLAGS } from "@/lib/countries"
 import type { NewApplicationInput } from "@/lib/admin/types"
 
 type ModalContextValue = {
@@ -155,7 +155,7 @@ function ApplicationFormModal({
             </h2>
             <p className="text-sm text-muted-foreground">
               Thank you, {form.fullName.split(" ")[0]}. We&apos;ve received your application for a{" "}
-              {form.visaType} visa to {form.destinationCountry}. Our team will review it and reach
+              {form.visaType} visa to {COUNTRY_FLAGS[form.destinationCountry]} {form.destinationCountry}. Our team will review it and reach
               out to you at {form.email} shortly.
             </p>
             <p className="text-xs text-muted-foreground">
@@ -251,11 +251,11 @@ function ApplicationFormModal({
                       aria-label="Country code"
                       value={phoneCode}
                       onChange={(e) => setPhoneCode(e.target.value)}
-                      className="w-[7.5rem] shrink-0 truncate rounded-lg border border-input bg-background px-2 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                      className="w-24 shrink-0 rounded-lg border border-input bg-background px-2 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
                     >
                       {COUNTRY_CODES.map((c) => (
                         <option key={c.name} value={c.dial}>
-                          {c.dial} {c.name}
+                          {c.dial}
                         </option>
                       ))}
                     </select>
@@ -285,7 +285,7 @@ function ApplicationFormModal({
                     <option value="">Select a country</option>
                     {ALL_COUNTRIES.map((c) => (
                       <option key={c} value={c}>
-                        {c}
+                        {COUNTRY_FLAGS[c]} {c}
                       </option>
                     ))}
                   </select>
