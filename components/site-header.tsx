@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useVisaStatusModal } from "@/components/visa-status-modal"
+import { useApplicationModal } from "@/components/application-modal"
 
 const navLinks = [
   { label: "Work Permits", href: "#services" },
@@ -13,7 +13,7 @@ const navLinks = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
-  const { open: openStatusModal } = useVisaStatusModal()
+  const { open: openApplicationModal } = useApplicationModal()
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
@@ -40,8 +40,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden md:block">
-          <Button type="button" onClick={() => openStatusModal()} className="h-10 px-5">
-            Check Status
+          <Button type="button" onClick={() => openApplicationModal()} className="h-10 px-5">
+            Apply Now
           </Button>
         </div>
 
