@@ -114,25 +114,37 @@ export default function AdminDashboardPage() {
 
   return (
     <main className="min-h-screen pb-16">
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-4 backdrop-blur sm:px-6">
-        <div className="font-serif text-lg font-semibold text-foreground">
-          Global Migration Hub <span className="font-sans text-sm font-normal text-muted-foreground">Admin</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button type="button" onClick={() => setShowNewModal(true)} className="h-9 gap-1.5 px-4 text-sm">
-            <FilePlus2 className="size-4" /> New Application
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              logout()
-              router.replace("/admin/login")
-            }}
-            className="h-9 gap-1.5 px-4 text-sm"
-          >
-            <LogOut className="size-4" /> Log Out
-          </Button>
+      <div className="sticky top-0 z-30 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 font-serif text-base font-semibold leading-tight text-foreground sm:text-lg">
+            Global Migration Hub
+            <span className="block font-sans text-xs font-normal text-muted-foreground sm:inline sm:text-sm">
+              {" "}Admin
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              onClick={() => setShowNewModal(true)}
+              className="h-9 gap-1.5 px-2.5 text-xs sm:px-4 sm:text-sm"
+            >
+              <FilePlus2 className="size-4" />
+              <span className="hidden xs:inline sm:inline">New Application</span>
+              <span className="xs:hidden sm:hidden">New</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                logout()
+                router.replace("/admin/login")
+              }}
+              className="h-9 gap-1.5 px-2.5 text-xs sm:px-4 sm:text-sm"
+            >
+              <LogOut className="size-4" />
+              <span className="hidden sm:inline">Log Out</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -171,46 +183,78 @@ export default function AdminDashboardPage() {
           {filtered.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">No applications found yet.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="px-4 py-3 font-medium">Applicant</th>
-                    <th className="px-4 py-3 font-medium">Passport No.</th>
-                    <th className="px-4 py-3 font-medium">Country</th>
-                    <th className="px-4 py-3 font-medium">Visa Type</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Submitted</th>
-                    <th className="px-4 py-3 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((app) => (
-                    <tr key={app.id} className="border-b border-border last:border-0 hover:bg-muted/40">
-                      <td className="px-4 py-3 font-medium text-foreground">{app.fullName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{app.passportNumber}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{app.destinationCountry}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{app.visaType}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
-                          {stageLabel(app)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(app.submittedAt)}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedId(app.id)}
-                          className="text-sm font-medium text-primary hover:underline"
-                        >
-                          Manage
-                        </button>
-                      </td>
+            <>
+              {/* Mobile card list */}
+              <div className="divide-y divide-border sm:hidden">
+                {filtered.map((app) => (
+                  <button
+                    key={app.id}
+                    type="button"
+                    onClick={() => setSelectedId(app.id)}
+                    className="flex w-full flex-col gap-2 px-4 py-3.5 text-left active:bg-muted/40"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium text-foreground">{app.fullName}</span>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
+                        {stageLabel(app)}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>{app.passportNumber}</span>
+                      <span>·</span>
+                      <span>{app.destinationCountry}</span>
+                      <span>·</span>
+                      <span>{app.visaType}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Submitted {formatDate(app.submittedAt)}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden overflow-x-auto sm:block">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
+                      <th className="px-4 py-3 font-medium">Applicant</th>
+                      <th className="px-4 py-3 font-medium">Passport No.</th>
+                      <th className="px-4 py-3 font-medium">Country</th>
+                      <th className="px-4 py-3 font-medium">Visa Type</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium">Submitted</th>
+                      <th className="px-4 py-3 font-medium">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filtered.map((app) => (
+                      <tr key={app.id} className="border-b border-border last:border-0 hover:bg-muted/40">
+                        <td className="px-4 py-3 font-medium text-foreground">{app.fullName}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{app.passportNumber}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{app.destinationCountry}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{app.visaType}</td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
+                            {stageLabel(app)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(app.submittedAt)}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedId(app.id)}
+                            className="text-sm font-medium text-primary hover:underline"
+                          >
+                            Manage
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
