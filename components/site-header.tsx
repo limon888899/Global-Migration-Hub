@@ -70,14 +70,13 @@ export function SiteHeader() {
               </a>
             ))}
             <Button
-              type="button"
               onClick={() => {
                 setOpen(false)
-                openStatusModal()
+                openApplicationModal()
               }}
               className="mt-2 h-10 px-5"
             >
-              Check Status
+              Apply Now
             </Button>
           </nav>
         </div>
