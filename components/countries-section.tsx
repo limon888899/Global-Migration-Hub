@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, ChevronDown, ChevronUp, Globe2 } from "lucide-react"
 import { useVisaStatusModal } from "@/components/visa-status-modal"
-import { DESTINATION_COUNTRIES } from "@/lib/countries"
+import { useApplicationModal } from "@/components/application-modal"
+import { DESTINATION_COUNTRIES, ALL_COUNTRIES } from "@/lib/countries"
 
 const countryDetails: Record<string, { visaTypes: string; image: string; alt: string }> = {
   "United Kingdom": {
@@ -43,8 +45,14 @@ const countries = DESTINATION_COUNTRIES.map((name) => ({
   ...countryDetails[name],
 }))
 
+const remainingCountries = ALL_COUNTRIES.filter(
+  (name) => !(DESTINATION_COUNTRIES as readonly string[]).includes(name),
+)
+
 export function CountriesSection() {
   const { open } = useVisaStatusModal()
+  const { open: openApplication } = useApplicationModal()
+  const [showAll, setShowAll] = useState(false)
 
   return (
     <section id="countries" className="scroll-mt-20 bg-background py-16 sm:py-24">
@@ -101,6 +109,44 @@ export function CountriesSection() {
               </div>
             </article>
           ))}
+        </div>
+
+        <div className="mt-10 flex flex-col items-center">
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            aria-expanded={showAll}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+          >
+            <Globe2 className="size-4" aria-hidden="true" />
+            {showAll ? "Hide Countries" : "See More Countries"}
+            {showAll ? (
+              <ChevronUp className="size-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="size-4" aria-hidden="true" />
+            )}
+          </button>
+
+          {showAll && (
+            <div className="mt-8 w-full rounded-2xl border border-border bg-secondary/20 p-6 animate-in fade-in-0 slide-in-from-top-2 duration-300">
+              <p className="mb-4 text-center text-sm text-muted-foreground">
+                We also help with applications for these destinations. Tap a country to start
+                your application.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {remainingCountries.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => openApplication(name)}
+                    className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
