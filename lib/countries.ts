@@ -154,3 +154,13 @@ export const COUNTRY_CODES: { name: string; dial: string }[] = [
   { name: "Mexico", dial: "+52" },
   { name: "Argentina", dial: "+54" },
 ]
+export const VISA_TYPES = [
+  "Work Permit / Skilled Worker",
+  "Student Visa",
+  "Tourist / Visitor Visa",
+  "Business Visa",
+  "Family / Spouse Visa",
+  "Permanent Residency",
+  "Investor Visa",
+  "Other",
+]
