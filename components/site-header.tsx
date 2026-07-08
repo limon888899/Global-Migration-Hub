@@ -70,6 +70,7 @@ export function SiteHeader() {
               </a>
             ))}
             <Button
+              type="button"
               onClick={() => {
                 setOpen(false)
                 openApplicationModal()
