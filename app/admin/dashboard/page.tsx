@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { FilePlus2, Search, LogOut } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Search } from "lucide-react"
 import { ApplicationModal } from "@/components/admin/application-modal"
 import { NewApplicationModal } from "@/components/admin/new-application-modal"
-import { isLoggedIn, logout } from "@/lib/admin/auth"
+import { AdminTopNav } from "@/components/admin/admin-top-nav"
+import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { isLoggedIn } from "@/lib/admin/auth"
 import {
   getApplications,
   addApplication,
@@ -23,9 +24,9 @@ function formatDate(iso: string) {
 function statusBadgeClass(app: Application) {
   const stage = effectiveStage(app)
   if (stage === "rejected") return "bg-destructive/10 text-destructive"
-  if (stage === 3) return "bg-emerald-500/10 text-emerald-700"
+  if (stage === 3) return "bg-tip-green text-tip-green-foreground"
   if (stage === 0) return "bg-muted text-muted-foreground"
-  return "bg-accent/20 text-accent-foreground"
+  return "bg-tip-yellow text-tip-yellow-foreground"
 }
 
 export default function AdminDashboardPage() {
@@ -89,7 +90,7 @@ export default function AdminDashboardPage() {
     await updateApplication(id, { internalNotes: notes })
     await refresh()
   }
-  
+
   async function handleUpdateSubmittedAt(id: string, submittedAt: string) {
     await updateApplication(id, { submittedAt })
     await refresh()
@@ -112,150 +113,127 @@ export default function AdminDashboardPage() {
     return <main className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Loading…</main>
   }
 
+  const statTiles = [
+    { label: "Total Applications", value: stats.total, tone: "bg-tip-blue text-tip-blue-foreground" },
+    { label: "Processing", value: stats.processing, tone: "bg-tip-yellow text-tip-yellow-foreground" },
+    { label: "Document Verified", value: stats.verified, tone: "bg-tip-purple text-tip-purple-foreground" },
+    { label: "Approved", value: stats.approved, tone: "bg-tip-green text-tip-green-foreground" },
+    { label: "Rejected", value: stats.rejected, tone: "bg-tip-peach text-tip-peach-foreground" },
+  ]
+
   return (
-    <main className="min-h-screen pb-16">
-      <div className="sticky top-0 z-30 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 font-serif text-base font-semibold leading-tight text-foreground sm:text-lg">
-            Global Migration Hub
-            <span className="block font-sans text-xs font-normal text-muted-foreground sm:inline sm:text-sm">
-              {" "}Admin
-            </span>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              onClick={() => setShowNewModal(true)}
-              className="h-9 gap-1.5 px-2.5 text-xs sm:px-4 sm:text-sm"
-            >
-              <FilePlus2 className="size-4" />
-              <span className="hidden xs:inline sm:inline">New Application</span>
-              <span className="xs:hidden sm:hidden">New</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                logout()
-                router.replace("/admin/login")
-              }}
-              className="h-9 gap-1.5 px-2.5 text-xs sm:px-4 sm:text-sm"
-            >
-              <LogOut className="size-4" />
-              <span className="hidden sm:inline">Log Out</span>
-            </Button>
-          </div>
-        </div>
-      </div>
+    <main className="min-h-screen bg-secondary/30 pb-16">
+      <AdminTopNav />
 
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        {refreshing && <p className="mb-3 text-xs text-muted-foreground">Syncing…</p>}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {[
-            { label: "Total Applications", value: stats.total },
-            { label: "Processing", value: stats.processing },
-            { label: "Document Verified", value: stats.verified },
-            { label: "Approved", value: stats.approved },
-            { label: "Rejected", value: stats.rejected },
-          ].map((s) => (
-            <div key={s.label} className="rounded-lg border border-border bg-card p-4">
-              <div className="text-xs text-muted-foreground">{s.label}</div>
-              <div className="mt-1 text-2xl font-semibold text-foreground">{s.value}</div>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <AdminSidebar active="overview" onNewApplication={() => setShowNewModal(true)} />
+
+          <div className="min-w-0 flex-1">
+            {refreshing && <p className="mb-3 text-xs text-muted-foreground">Syncing…</p>}
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {statTiles.map((s) => (
+                <div key={s.label} className={`rounded-2xl p-4 ${s.tone}`}>
+                  <div className="text-xs opacity-80">{s.label}</div>
+                  <div className="mt-1 text-2xl font-semibold">{s.value}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div className="mt-6 rounded-lg border border-border bg-card">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
-            <h3 className="font-serif text-base font-semibold text-foreground">All Applications</h3>
-            <div className="relative w-full max-w-xs">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name or passport number..."
-                className="w-full rounded-md border border-input bg-background py-2 pl-8 pr-3 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
-            </div>
-          </div>
-
-          {filtered.length === 0 ? (
-            <p className="px-4 py-10 text-center text-sm text-muted-foreground">No applications found yet.</p>
-          ) : (
-            <>
-              {/* Mobile card list */}
-              <div className="divide-y divide-border sm:hidden">
-                {filtered.map((app) => (
-                  <button
-                    key={app.id}
-                    type="button"
-                    onClick={() => setSelectedId(app.id)}
-                    className="flex w-full flex-col gap-2 px-4 py-3.5 text-left active:bg-muted/40"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-medium text-foreground">{app.fullName}</span>
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
-                        {stageLabel(app)}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span>{app.passportNumber}</span>
-                      <span>·</span>
-                      <span>{app.destinationCountry}</span>
-                      <span>·</span>
-                      <span>{app.visaType}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Submitted {formatDate(app.submittedAt)}
-                    </div>
-                  </button>
-                ))}
+            <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+                <h3 className="font-serif text-base font-semibold text-foreground">All Applications</h3>
+                <div className="relative w-full max-w-xs">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by name or passport number..."
+                    className="w-full rounded-xl border border-input bg-background py-2 pl-8 pr-3 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  />
+                </div>
               </div>
 
-              {/* Desktop table */}
-              <div className="hidden overflow-x-auto sm:block">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Applicant</th>
-                      <th className="px-4 py-3 font-medium">Passport No.</th>
-                      <th className="px-4 py-3 font-medium">Country</th>
-                      <th className="px-4 py-3 font-medium">Visa Type</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium">Submitted</th>
-                      <th className="px-4 py-3 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              {filtered.length === 0 ? (
+                <p className="px-4 py-10 text-center text-sm text-muted-foreground">No applications found yet.</p>
+              ) : (
+                <>
+                  {/* Mobile card list */}
+                  <div className="divide-y divide-border sm:hidden">
                     {filtered.map((app) => (
-                      <tr key={app.id} className="border-b border-border last:border-0 hover:bg-muted/40">
-                        <td className="px-4 py-3 font-medium text-foreground">{app.fullName}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{app.passportNumber}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{app.destinationCountry}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{app.visaType}</td>
-                        <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
+                      <button
+                        key={app.id}
+                        type="button"
+                        onClick={() => setSelectedId(app.id)}
+                        className="flex w-full flex-col gap-2 px-4 py-3.5 text-left active:bg-muted/40"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-medium text-foreground">{app.fullName}</span>
+                          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
                             {stageLabel(app)}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(app.submittedAt)}</td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedId(app.id)}
-                            className="text-sm font-medium text-primary hover:underline"
-                          >
-                            Manage
-                          </button>
-                        </td>
-                      </tr>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span>{app.passportNumber}</span>
+                          <span>·</span>
+                          <span>{app.destinationCountry}</span>
+                          <span>·</span>
+                          <span>{app.visaType}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Submitted {formatDate(app.submittedAt)}
+                        </div>
+                      </button>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+                  </div>
+
+                  {/* Desktop table */}
+                  <div className="hidden overflow-x-auto sm:block">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
+                          <th className="px-5 py-3 font-medium">Applicant</th>
+                          <th className="px-5 py-3 font-medium">Passport No.</th>
+                          <th className="px-5 py-3 font-medium">Country</th>
+                          <th className="px-5 py-3 font-medium">Visa Type</th>
+                          <th className="px-5 py-3 font-medium">Status</th>
+                          <th className="px-5 py-3 font-medium">Submitted</th>
+                          <th className="px-5 py-3 font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((app) => (
+                          <tr key={app.id} className="border-b border-border last:border-0 hover:bg-muted/40">
+                            <td className="px-5 py-3 font-medium text-foreground">{app.fullName}</td>
+                            <td className="px-5 py-3 text-muted-foreground">{app.passportNumber}</td>
+                            <td className="px-5 py-3 text-muted-foreground">{app.destinationCountry}</td>
+                            <td className="px-5 py-3 text-muted-foreground">{app.visaType}</td>
+                            <td className="px-5 py-3">
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
+                                {stageLabel(app)}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-muted-foreground">{formatDate(app.submittedAt)}</td>
+                            <td className="px-5 py-3">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedId(app.id)}
+                                className="text-sm font-medium text-primary hover:underline"
+                              >
+                                Manage
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
