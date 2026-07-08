@@ -11,7 +11,7 @@ import {
 } from "react"
 import { X, CheckCircle2, ShieldCheck, AlertCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ALL_COUNTRIES, COUNTRY_CODES, COUNTRY_FLAGS } from "@/lib/countries"
+import { ALL_COUNTRIES, COUNTRY_CODES, COUNTRY_FLAGS, VISA_TYPES } from "@/lib/countries"
 import type { NewApplicationInput } from "@/lib/admin/types"
 
 type ModalContextValue = {
@@ -294,13 +294,19 @@ function ApplicationFormModal({
                   <label htmlFor="visaType" className="block text-sm font-medium text-foreground">
                     Visa Type
                   </label>
-                  <input
+                  <select
                     id="visaType"
                     value={form.visaType}
                     onChange={(e) => update("visaType", e.target.value)}
-                    placeholder="e.g. Skilled Worker"
                     className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                  />
+                  >
+                    <option value="">Select a visa type</option>
+                    {VISA_TYPES.map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
