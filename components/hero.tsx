@@ -14,7 +14,7 @@ export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden text-primary-foreground">
       <Image
-        src="/images/hero-plane.png"
+        src="/images/hero-plane.webp"
         alt="A private jet flying above the clouds"
         fill
         priority
@@ -74,3 +74,4 @@ export function Hero() {
     </section>
   )
 }
+
