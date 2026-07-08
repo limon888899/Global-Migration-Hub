@@ -26,6 +26,7 @@ import {
   User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { COUNTRY_FLAGS } from "@/lib/countries"
 import {
   effectiveStage,
   STAGE_LABELS,
@@ -227,7 +228,7 @@ function VisaStatusModal({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
+aria-label="Close"
               className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <X className="size-5" />
@@ -319,7 +320,7 @@ function ApplicantProfile({ app }: { app: Application }) {
     { icon: Globe, label: "Nationality", value: app.nationality || "—" },
     { icon: Mail, label: "Email", value: app.email || "—" },
     { icon: Phone, label: "Phone", value: app.phone || "—" },
-    { icon: Plane, label: "Destination", value: app.destinationCountry || "—" },
+    { icon: Plane, label: "Destination", value: app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry]} ${app.destinationCountry}` : "—" },
     { icon: FileText, label: "Visa Type", value: app.visaType || "—" },
     {
       icon: Clock,
