@@ -4,7 +4,6 @@ import { useState } from "react"
 import Image from "next/image"
 import { ArrowRight, ChevronDown, ChevronUp, Globe2 } from "lucide-react"
 import { useVisaStatusModal } from "@/components/visa-status-modal"
-import { useApplicationModal } from "@/components/application-modal"
 import { DESTINATION_COUNTRIES, ALL_COUNTRIES } from "@/lib/countries"
 
 const countryDetails: Record<string, { visaTypes: string; image: string; alt: string }> = {
@@ -51,7 +50,6 @@ const remainingCountries = ALL_COUNTRIES.filter(
 
 export function CountriesSection() {
   const { open } = useVisaStatusModal()
-  const { open: openApplication } = useApplicationModal()
   const [showAll, setShowAll] = useState(false)
 
   return (
@@ -130,15 +128,15 @@ export function CountriesSection() {
           {showAll && (
             <div className="mt-8 w-full rounded-2xl border border-border bg-secondary/20 p-6 animate-in fade-in-0 slide-in-from-top-2 duration-300">
               <p className="mb-4 text-center text-sm text-muted-foreground">
-                We also help with applications for these destinations. Tap a country to start
-                your application.
+                We also help with applications for these destinations. Tap a country to check
+                your visa application status.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 {remainingCountries.map((name) => (
                   <button
                     key={name}
                     type="button"
-                    onClick={() => openApplication(name)}
+                    onClick={() => open(name)}
                     className="rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-accent hover:text-accent-foreground"
                   >
                     {name}
