@@ -11,7 +11,7 @@ import {
 } from "react"
 import { X, CheckCircle2, ShieldCheck, AlertCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ALL_COUNTRIES, COUNTRY_CODES } from "@/lib/countries"
+import { ALL_COUNTRIES, COUNTRY_CODES, COUNTRY_FLAGS } from "@/lib/countries"
 import type { NewApplicationInput } from "@/lib/admin/types"
 
 type ModalContextValue = {
@@ -155,7 +155,7 @@ function ApplicationFormModal({
             </h2>
             <p className="text-sm text-muted-foreground">
               Thank you, {form.fullName.split(" ")[0]}. We&apos;ve received your application for a{" "}
-              {form.visaType} visa to {form.destinationCountry}. Our team will review it and reach
+              {form.visaType} visa to {COUNTRY_FLAGS[form.destinationCountry]} {form.destinationCountry}. Our team will review it and reach
               out to you at {form.email} shortly.
             </p>
             <p className="text-xs text-muted-foreground">
@@ -285,7 +285,7 @@ function ApplicationFormModal({
                     <option value="">Select a country</option>
                     {ALL_COUNTRIES.map((c) => (
                       <option key={c} value={c}>
-                        {c}
+                        {COUNTRY_FLAGS[c]} {c}
                       </option>
                     ))}
                   </select>
