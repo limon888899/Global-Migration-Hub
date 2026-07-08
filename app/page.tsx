@@ -5,7 +5,7 @@ import { CountriesSection } from "@/components/countries-section"
 import { ImmigrationNews } from "@/components/immigration-news"
 import { ContactSection } from "@/components/contact-section"
 import { SiteFooter } from "@/components/site-footer"
-import { VisaStatusModalProvider } from "@/components/visa-status-modal"
+import { ApplicationModalProvider } from "@/components/application-modal"
 
 export default function Page() {
   const jsonLd = {
@@ -16,8 +16,8 @@ export default function Page() {
       "Expert work permit services, immigration news, and a secure client portal to track your visa status.",
     areaServed: "Worldwide",
     serviceType: "Immigration Consultancy",
-    telephone: "+1-555-018-2290",
-    email: "hello@globalmigrationhub.com",
+    telephone: "+61 555 018 220",
+    email: "info@globalmigrationhub.com",
   }
 
   return (
@@ -27,7 +27,8 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <VisaStatusModalProvider>
-        <SiteHeader />
+        <ApplicationModalProvider>
+          <SiteHeader />
         <main>
           <Hero />
           <WorkPermitServices />
@@ -36,6 +37,7 @@ export default function Page() {
           <ContactSection />
         </main>
         <SiteFooter />
+        </ApplicationModalProvider>
       </VisaStatusModalProvider>
     </>
   )
