@@ -5,9 +5,9 @@ import { Mail, Phone, MapPin, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const details = [
-  { icon: Mail, label: "Email", value: "hello@globalmigrationhub.com", href: "mailto:hello@globalmigrationhub.com" },
-  { icon: Phone, label: "Phone", value: "+1 (555) 018-2290", href: "tel:+15550182290" },
-  { icon: MapPin, label: "Office", value: "120 Harbor Avenue, Suite 500", href: null },
+  { icon: Mail, label: "Email", value: "info@globalmigrationhub.com", href: "mailto:info@globalmigrationhub.com" },
+  { icon: Phone, label: "Phone", value: "+61 468 784 227", href: "tel:+15550182290" },
+  { icon: MapPin, label: "Office", value: "Level 15, 100 Queen Street, Melbourne, VIC 3000, Australia", href: null },
 ]
 
 export function ContactSection() {
@@ -19,17 +19,17 @@ export function ContactSection() {
   }
 
   return (
-    <section id="contact" className="scroll-mt-20 bg-primary py-16 text-primary-foreground sm:py-24">
+    <section id="contact" className="scroll-mt-20 bg-muted py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
-            <span className="text-sm font-semibold uppercase tracking-wider text-accent">
+            <span className="text-sm font-semibold uppercase tracking-wider text-accent-foreground">
               Get in touch
             </span>
-            <h2 className="mt-3 text-balance font-serif text-3xl font-semibold sm:text-4xl">
+            <h2 className="mt-3 text-balance font-serif text-3xl font-semibold text-foreground sm:text-4xl">
               Contact our advisors
             </h2>
-            <p className="mt-4 max-w-lg text-pretty text-base leading-relaxed text-primary-foreground/80">
+            <p className="mt-4 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground">
               Have a question about your eligibility or application? Book a
               confidential consultation with a licensed immigration advisor today.
             </p>
@@ -37,17 +37,17 @@ export function ContactSection() {
             <ul className="mt-10 space-y-6">
               {details.map((detail) => (
                 <li key={detail.label} className="flex items-start gap-4">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-foreground/10 text-accent">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
                     <detail.icon className="size-5" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="text-sm text-primary-foreground/70">{detail.label}</p>
+                    <p className="text-sm text-muted-foreground">{detail.label}</p>
                     {detail.href ? (
-                      <a href={detail.href} className="text-base font-medium hover:underline">
+                      <a href={detail.href} className="text-base font-medium text-foreground hover:text-primary hover:underline">
                         {detail.value}
                       </a>
                     ) : (
-                      <p className="text-base font-medium">{detail.value}</p>
+                      <p className="text-base font-medium text-foreground">{detail.value}</p>
                     )}
                   </div>
                 </li>
@@ -55,7 +55,7 @@ export function ContactSection() {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-primary-foreground/15 bg-background p-6 text-foreground shadow-xl sm:p-8">
+          <div className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-xl sm:p-8">
             {submitted ? (
               <div className="flex h-full flex-col items-center justify-center py-12 text-center">
                 <CheckCircle2 className="size-12 text-primary" aria-hidden="true" />
