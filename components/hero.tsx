@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react"
+import { ArrowRight, ShieldCheck, CheckCircle2, Plane } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useVisaStatusModal } from "@/components/visa-status-modal"
@@ -19,7 +19,12 @@ export function Hero() {
 
   return (
     <section id="top" className="relative overflow-hidden text-primary-foreground" style={heroBackground}>
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-28">
+      <Plane
+        className="pointer-events-none absolute left-1/2 top-1/2 z-0 size-[38rem] -translate-x-1/2 -translate-y-1/2 rotate-45 text-primary-foreground/[0.07] sm:size-[46rem] lg:size-[54rem]"
+        aria-hidden="true"
+        strokeWidth={1}
+      />
+      <div className="relative z-10 mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-28">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-xs font-medium backdrop-blur">
           <ShieldCheck className="size-4" aria-hidden="true" />
           Licensed &amp; regulated immigration advisors
