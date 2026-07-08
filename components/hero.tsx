@@ -3,7 +3,7 @@
 import { ArrowRight, ShieldCheck, CheckCircle2, Plane } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useVisaStatusModal } from "@/components/visa-status-modal"
+import { useApplicationModal } from "@/components/application-modal"
 
 const trustItems = ["Fast Processing", "Secure Process", "24/7 Support"]
 
@@ -15,7 +15,7 @@ const heroBackground = {
 }
 
 export function Hero() {
-  const { open } = useVisaStatusModal()
+  const { open } = useApplicationModal()
 
   return (
     <section id="top" className="relative overflow-hidden text-primary-foreground" style={heroBackground}>
@@ -47,7 +47,7 @@ export function Hero() {
             onClick={open}
             className="h-12 w-full gap-2 rounded-full bg-accent px-7 text-base text-accent-foreground hover:bg-accent/90 sm:w-auto"
           >
-            Check Visa Status
+            Start Application
             <ArrowRight className="size-4" aria-hidden="true" />
           </Button>
           <a
