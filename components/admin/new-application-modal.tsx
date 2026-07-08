@@ -4,7 +4,7 @@ import { useState } from "react"
 import { X, Upload, Image as ImageIcon, FileText, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { AppDocument, DocumentCategory, NewApplicationInput } from "@/lib/admin/types"
-import { DESTINATION_COUNTRIES } from "@/lib/countries"
+import { DESTINATION_COUNTRIES, VISA_TYPES } from "@/lib/countries"
 
 const MAX_FILE_BYTES = 800 * 1024 // 800 KB per file — keep uploads small
 
@@ -155,7 +155,6 @@ export function NewApplicationModal({
     { key: "nationality", label: "Nationality" },
     { key: "email", label: "Email", type: "email" },
     { key: "phone", label: "Phone" },
-    { key: "visaType", label: "Visa Type" },
     { key: "travelDate", label: "Travel Date", type: "date" },
   ]
 
@@ -216,28 +215,47 @@ export function NewApplicationModal({
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
-          ))}<div className="col-span-1">
-  <label htmlFor="destinationCountry" className="mb-1.5 block text-sm font-medium text-foreground">
-    Destination Country
-    <span className="text-destructive"> *</span>
-  </label>
-  <select
-    id="destinationCountry"
-    required
-    value={form.destinationCountry}
-    onChange={(e) => update("destinationCountry", e.target.value)}
-    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-  >
-    <option value="" disabled>
-      Select a country
-    </option>
-    {DESTINATION_COUNTRIES.map((country) => (
-      <option key={country} value={country}>
-        {country}
-      </option>
-    ))}
-  </select>
-</div>
+          ))}
+          <div className="col-span-1">
+            <label htmlFor="destinationCountry" className="mb-1.5 block text-sm font-medium text-foreground">
+              Destination Country
+              <span className="text-destructive"> *</span>
+            </label>
+            <select
+              id="destinationCountry"
+              required
+              value={form.destinationCountry}
+              onChange={(e) => update("destinationCountry", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="" disabled>
+                Select a country
+              </option>
+              {DESTINATION_COUNTRIES.map((country) => (
+                <option key={country} value={country}>
+                  {country}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="col-span-1">
+            <label htmlFor="visaType" className="mb-1.5 block text-sm font-medium text-foreground">
+              Visa Type
+            </label>
+            <select
+              id="visaType"
+              value={form.visaType}
+              onChange={(e) => update("visaType", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="">Select a visa type</option>
+              {VISA_TYPES.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="border-t border-border px-6 py-5">
