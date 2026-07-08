@@ -11,7 +11,7 @@ import {
 } from "react"
 import { X, CheckCircle2, ShieldCheck, AlertCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ALL_COUNTRIES } from "@/lib/countries"
+import { ALL_COUNTRIES, COUNTRY_CODES } from "@/lib/countries"
 import type { NewApplicationInput } from "@/lib/admin/types"
 
 type ModalContextValue = {
@@ -69,6 +69,7 @@ function ApplicationFormModal({
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [phoneCode, setPhoneCode] = useState("+880")
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -95,6 +96,7 @@ function ApplicationFormModal({
       !form.nationality.trim() ||
       !form.email.trim() ||
       !form.phone.trim() ||
+      !phoneCode ||
       !form.destinationCountry.trim() ||
       !form.visaType.trim()
     ) {
@@ -107,6 +109,7 @@ function ApplicationFormModal({
     try {
       const payload: NewApplicationInput = {
         ...form,
+        phone: `${phoneCode} ${form.phone.trim()}`,
         photoUrl: "",
         documents: [],
       }
@@ -242,14 +245,29 @@ function ApplicationFormModal({
                   <label htmlFor="phone" className="block text-sm font-medium text-foreground">
                     Phone
                   </label>
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => update("phone", e.target.value)}
-                    placeholder="+880 1XXX-XXXXXX"
-                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                  />
+                  <div className="mt-1.5 flex gap-2">
+                    <select
+                      id="phoneCode"
+                      aria-label="Country code"
+                      value={phoneCode}
+                      onChange={(e) => setPhoneCode(e.target.value)}
+                      className="w-[7.5rem] shrink-0 truncate rounded-lg border border-input bg-background px-2 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                    >
+                      {COUNTRY_CODES.map((c) => (
+                        <option key={c.name} value={c.dial}>
+                          {c.dial} {c.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={form.phone}
+                      onChange={(e) => update("phone", e.target.value)}
+                      placeholder="1XXX-XXXXXX"
+                      className="w-full min-w-0 rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                    />
+                  </div>
                 </div>
               </div>
 
