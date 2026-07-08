@@ -1,28 +1,29 @@
 "use client"
 
-import { ArrowRight, ShieldCheck, CheckCircle2, Plane } from "lucide-react"
+import Image from "next/image"
+import { ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useApplicationModal } from "@/components/application-modal"
 
 const trustItems = ["Fast Processing", "Secure Process", "24/7 Support"]
 
-const heroBackground = {
-  backgroundImage:
-    "radial-gradient(120% 60% at 50% -10%, rgba(139,92,246,0.35), transparent 60%), " +
-    "repeating-linear-gradient(100deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 40px), " +
-    "linear-gradient(180deg, #0b0518 0%, #2e1065 45%, #4c1d95 100%)",
-}
-
 export function Hero() {
   const { open } = useApplicationModal()
 
   return (
-    <section id="top" className="relative overflow-hidden text-primary-foreground" style={heroBackground}>
-      <Plane
-        className="pointer-events-none absolute left-1/2 top-1/2 z-0 size-[38rem] -translate-x-1/2 -translate-y-1/2 rotate-45 text-primary-foreground/[0.07] sm:size-[46rem] lg:size-[54rem]"
+    <section id="top" className="relative overflow-hidden text-primary-foreground">
+      <Image
+        src="/images/hero-plane.webp"
+        alt="A private jet flying above the clouds"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
+      />
+      <div
         aria-hidden="true"
-        strokeWidth={1}
+        className="absolute inset-0 bg-gradient-to-b from-[#0b0518]/90 via-[#2e1065]/85 to-[#4c1d95]/90"
       />
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-28">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-xs font-medium backdrop-blur">
