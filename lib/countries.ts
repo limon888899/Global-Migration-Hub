@@ -80,3 +80,13 @@ export const ALL_COUNTRIES = [
   "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast", "Jamaica",
   "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo",
   "Kuwait", "Ky
+export const VISA_TYPES = [
+  "Work Permit / Skilled Worker",
+  "Student Visa",
+  "Tourist / Visitor Visa",
+  "Business Visa",
+  "Family / Spouse Visa",
+  "Permanent Residency",
+  "Investor Visa",
+  "Other",
+]
