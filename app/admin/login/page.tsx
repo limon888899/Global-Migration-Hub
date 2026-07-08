@@ -26,13 +26,13 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-secondary/30 px-4 py-12">
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm"
+        className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm"
       >
-        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-tip-blue text-tip-blue-foreground">
           <Lock className="size-5" aria-hidden="true" />
         </div>
         <h1 className="text-center font-serif text-xl font-semibold text-foreground">Admin Access</h1>
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
                 setUsername(e.target.value)
                 setError(false)
               }}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
           <div>
@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
                 setPassword(e.target.value)
                 setError(false)
               }}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
         </div>
@@ -83,7 +83,7 @@ export default function AdminLoginPage() {
           </p>
         )}
 
-        <Button type="submit" className="mt-6 h-10 w-full">
+        <Button type="submit" className="mt-6 h-10 w-full rounded-xl">
           Sign In
         </Button>
 
@@ -93,7 +93,7 @@ export default function AdminLoginPage() {
           </a>
         </p>
 
-        <p className="mt-6 rounded-md border border-dashed border-border bg-muted/50 p-3 text-xs text-muted-foreground">
+        <p className="mt-6 rounded-xl border border-dashed border-border bg-muted/50 p-3 text-xs text-muted-foreground">
           Demo credentials: <strong>admin</strong> / <strong>ChangeMe123!</strong> — replace this with real
           authentication before going live.
         </p>
