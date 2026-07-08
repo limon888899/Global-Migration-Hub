@@ -4,7 +4,6 @@ import { useState } from "react"
 import Image from "next/image"
 import { ArrowRight, ChevronDown, ChevronUp, Globe2 } from "lucide-react"
 import { useVisaStatusModal } from "@/components/visa-status-modal"
-import { useApplicationModal } from "@/components/application-modal"
 import { DESTINATION_COUNTRIES, ALL_COUNTRIES, COUNTRY_FLAGS } from "@/lib/countries"
 
 const countryDetails: Record<string, { visaTypes: string; image: string; alt: string }> = {
@@ -51,7 +50,6 @@ const remainingCountries = ALL_COUNTRIES.filter(
 
 export function CountriesSection() {
   const { open } = useVisaStatusModal()
-  const { open: openApplication } = useApplicationModal()
   const [showAll, setShowAll] = useState(false)
 
   return (
@@ -138,7 +136,7 @@ export function CountriesSection() {
                   <button
                     key={name}
                     type="button"
-                    onClick={() => openApplication(name)}
+                    onClick={() => open(name)}
                     className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent/10 hover:shadow-md"
                   >
                     <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
