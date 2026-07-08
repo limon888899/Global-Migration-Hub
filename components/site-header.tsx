@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Globe, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useVisaStatusModal } from "@/components/visa-status-modal"
 
@@ -19,8 +19,8 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <a href="#top" className="flex items-center gap-2.5" aria-label="Global Migration Hub home">
-          <span className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Globe className="size-5" aria-hidden="true" />
+          <span className="flex size-9 items-center justify-center overflow-hidden rounded-md bg-primary">
+            <img src="/icon.png" alt="Global Migration Hub" className="size-full object-cover" />
           </span>
           <span className="font-serif text-lg font-semibold leading-tight text-foreground">
             Global Migration Hub
