@@ -11,7 +11,7 @@ import {
 } from "react"
 import { X, CheckCircle2, ShieldCheck, AlertCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DESTINATION_COUNTRIES } from "@/lib/countries"
+import { ALL_COUNTRIES } from "@/lib/countries"
 import type { NewApplicationInput } from "@/lib/admin/types"
 
 type ModalContextValue = {
@@ -265,7 +265,7 @@ function ApplicationFormModal({
                     className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
                   >
                     <option value="">Select a country</option>
-                    {DESTINATION_COUNTRIES.map((c) => (
+                    {ALL_COUNTRIES.map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
