@@ -37,18 +37,17 @@ export async function addDocument(id: string, name: string): Promise<void> {
   const apps = await getApplications()
   const app = apps.find((a) => a.id === id)
   if (!app) return
-  
   const documents = [
     ...app.documents,
     {
       id: `doc_${Date.now()}`,
       name,
-      category: undefined,
-      dataUrl: undefined,
       addedBy: "admin" as const,
       addedAt: new Date().toISOString(),
     },
   ]
-  
   await updateApplication(id, { documents })
-}
+},
+    },
+  ]
+ 
