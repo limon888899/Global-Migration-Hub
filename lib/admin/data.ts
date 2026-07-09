@@ -47,7 +47,4 @@ export async function addDocument(id: string, name: string): Promise<void> {
     },
   ]
   await updateApplication(id, { documents })
-},
-    },
-  ]
- 
+}
