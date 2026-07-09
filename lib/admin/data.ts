@@ -1,4 +1,4 @@
-import type { Application, NewApplicationInput } from "./types"
+import type { Application, DocumentCategory, NewApplicationInput } from "./types"
 
 export async function getApplications(): Promise<Application[]> {
   const res = await fetch("/api/admin/applications", { cache: "no-store" })
@@ -33,7 +33,15 @@ export async function deleteApplication(id: string): Promise<void> {
   await fetch(`/api/admin/applications/${id}`, { method: "DELETE" })
 }
 
-export async function addDocument(id: string, name: string): Promise<void> {
+/**
+ * Adds a document to an application. Now stores the actual file content (dataUrl)
+ * and an optional category, so it displays correctly (not "Pending upload")
+ * on the applicant's visa-status lookup page.
+ */
+export async function addDocument(
+  id: string,
+  doc: { name: string; dataUrl?: string; category?: DocumentCategory },
+): Promise<void> {
   const apps = await getApplications()
   const app = apps.find((a) => a.id === id)
   if (!app) return
@@ -41,7 +49,9 @@ export async function addDocument(id: string, name: string): Promise<void> {
     ...app.documents,
     {
       id: `doc_${Date.now()}`,
-      name,
+      name: doc.name,
+      dataUrl: doc.dataUrl,
+      category: doc.category,
       addedBy: "admin" as const,
       addedAt: new Date().toISOString(),
     },
