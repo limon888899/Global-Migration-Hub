@@ -1,15 +1,8 @@
 "use client"
 
-import { ExternalLink, FilePlus2, LayoutGrid, ListChecks } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ExternalLink, LayoutGrid, ListChecks } from "lucide-react"
 
-export function AdminSidebar({
-  active,
-  onNewApplication,
-}: {
-  active: "overview" | "applications"
-  onNewApplication: () => void
-}) {
+export function AdminSidebar({ active }: { active: "overview" | "applications" }) {
   const navItems = [
     { key: "overview", label: "Overview", icon: LayoutGrid },
     { key: "applications", label: "All Applications", icon: ListChecks },
@@ -30,11 +23,6 @@ export function AdminSidebar({
           </div>
         ))}
       </div>
-
-      <Button type="button" onClick={onNewApplication} className="h-10 w-full gap-1.5 rounded-xl">
-        <FilePlus2 className="size-4" />
-        New Application
-      </Button>
 
       <div className="rounded-2xl border border-border bg-card p-4">
         <h3 className="mb-2 text-sm font-semibold text-foreground">USCIS Useful Links</h3>
