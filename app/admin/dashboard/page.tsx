@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Search } from "lucide-react"
+import { Search, FilePlus2 } from "lucide-react"
 import { ApplicationModal } from "@/components/admin/application-modal"
 import { NewApplicationModal } from "@/components/admin/new-application-modal"
 import { AdminTopNav } from "@/components/admin/admin-top-nav"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { Button } from "@/components/ui/button"
 import { isLoggedIn } from "@/lib/admin/auth"
 import {
   getApplications,
@@ -133,8 +134,26 @@ export default function AdminDashboardPage() {
       <AdminTopNav />
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        {/* Prominent front-and-center action */}
+        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-serif text-xl font-semibold text-foreground">Admin Dashboard</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Create a new visa application on behalf of a user, or manage existing ones below.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => setShowNewModal(true)}
+            className="h-12 w-full gap-2 rounded-xl px-6 text-base font-semibold sm:w-auto"
+          >
+            <FilePlus2 className="size-5" />
+            Create User Application
+          </Button>
+        </div>
+
         <div className="flex flex-col gap-6 lg:flex-row">
-          <AdminSidebar active="overview" onNewApplication={() => setShowNewModal(true)} />
+          <AdminSidebar active="overview" />
 
           <div className="min-w-0 flex-1">
             {refreshing && <p className="mb-3 text-xs text-muted-foreground">Syncing…</p>}
