@@ -37,14 +37,16 @@ export async function addDocument(id: string, name: string): Promise<void> {
   const apps = await getApplications()
   const app = apps.find((a) => a.id === id)
   if (!app) return
-  const documents = [
-    ...app.documents,
-    {
-      id: `doc_${Date.now()}`,
-      name,
-      addedBy: "admin" as const,
-      addedAt: new Date().toISOString(),
-    },
-  ]
+  
+  const newDoc = {
+    id: `doc_${Date.now()}`,
+    name,
+    addedBy: "admin" as const,
+    addedAt: new Date().toISOString(),
+    category: undefined,
+    dataUrl: `data:application/octet-stream;base64,${Buffer.from(name).toString("base64")}`,
+  }
+  
+  const documents = [...app.documents, newDoc]
   await updateApplication(id, { documents })
 }
