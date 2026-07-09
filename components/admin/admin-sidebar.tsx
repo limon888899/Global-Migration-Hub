@@ -16,7 +16,7 @@ export function AdminSidebar({
   ] as const
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col gap-5 lg:flex">
+    <aside className="flex w-full shrink-0 flex-col gap-5 lg:w-64">
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {navItems.map((item) => (
           <div
