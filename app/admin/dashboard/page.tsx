@@ -15,7 +15,14 @@ import {
   deleteApplication,
   addDocument,
 } from "@/lib/admin/data"
-import { effectiveStage, stageLabel, type Application, type ManualStatus, type NewApplicationInput } from "@/lib/admin/types"
+import {
+  effectiveStage,
+  stageLabel,
+  type Application,
+  type DocumentCategory,
+  type ManualStatus,
+  type NewApplicationInput,
+} from "@/lib/admin/types"
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
@@ -102,8 +109,8 @@ export default function AdminDashboardPage() {
     await refresh()
   }
 
-  async function handleAddDocument(id: string, name: string) {
-    await addDocument(id, name)
+  async function handleAddDocument(id: string, doc: { name: string; dataUrl?: string; category?: DocumentCategory }) {
+    await addDocument(id, doc)
     await refresh()
   }
 
@@ -160,7 +167,6 @@ export default function AdminDashboardPage() {
                 <p className="px-4 py-10 text-center text-sm text-muted-foreground">No applications found yet.</p>
               ) : (
                 <>
-                  {/* Mobile card list */}
                   <div className="divide-y divide-border sm:hidden">
                     {filtered.map((app) => (
                       <button
@@ -189,7 +195,6 @@ export default function AdminDashboardPage() {
                     ))}
                   </div>
 
-                  {/* Desktop table */}
                   <div className="hidden overflow-x-auto sm:block">
                     <table className="w-full text-left text-sm">
                       <thead>
