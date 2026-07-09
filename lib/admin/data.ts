@@ -44,7 +44,7 @@ export async function addDocument(id: string, name: string): Promise<void> {
     addedBy: "admin" as const,
     addedAt: new Date().toISOString(),
     category: undefined,
-    dataUrl: `data:application/octet-stream;base64,${Buffer.from(name).toString("base64")}`,
+    dataUrl: `data:application/pdf;base64,JVBERi0xLjcKJeLjz9ENDENCjEgMCBvYmo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+PmVuZG9iagoyIDAgb2JqPDwvVHlwZS9QYWdlcy9LaWRzWzMgMCBSXS9Db3VudCAxPj5lbmRvYmoKMyAwIG9iajw8L1R5cGUvUGFnZS9QYXJlbnQgMiAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDQgMCBSPj4+Pi9NZWRpYUJveFswIDAgNjEyIDc5Ml0vQ29udGVudHMgNSAwIFI+PmVuZG9iagooRG9jdW1lbnQgLSAke25hbWV9KQ==`,
   }
   
   const documents = [...app.documents, newDoc]
