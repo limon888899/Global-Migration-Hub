@@ -113,7 +113,7 @@ function ApplicationFormModal({
         photoUrl: "",
         documents: [],
       }
-      const res = await fetch("/api/admin/applications", {
+      const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
