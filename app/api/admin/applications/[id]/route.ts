@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getRedis } from "@/lib/admin/redis"
+import { requireAdminAuth } from "@/lib/admin/require-auth"
 import type { Application } from "@/lib/admin/types"
 
 export const dynamic = "force-dynamic"
@@ -10,6 +11,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authError = requireAdminAuth(request)
+  if (authError) return authError
+
   const { id } = await params
   const patch = (await request.json()) as Partial<Application>
   const redis = await getRedis()
@@ -22,9 +26,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const authError = requireAdminAuth(request)
+  if (authError) return authError
+
   const { id } = await params
   const redis = await getRedis()
   const raw = await redis.get(KEY)
