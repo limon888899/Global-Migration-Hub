@@ -97,6 +97,16 @@ const countryDetails: Record<string, { visaTypes: string; image: string; alt: st
     image: "/images/countries/Malaysia.png",
     alt: "A scenic view of a landmark in Malaysia",
   },
+  Qarar: {
+    visaTypes: "Employment Pass · Student · MM2H",
+    image: "/images/countries/Qatar.png",
+    alt: "A scenic view of a landmark in Qatar",
+  },
+  Spain: {
+    visaTypes: "Employment Pass · Student · MM2H",
+    image: "/images/countries/Spain.png",
+    alt: "A scenic view of a landmark in Spain",
+  },
 }
 
 const countries = DESTINATION_COUNTRIES.map((name) => ({
