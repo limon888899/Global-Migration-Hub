@@ -46,13 +46,15 @@ export default function AdminDashboardPage() {
   const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
-    if (!isLoggedIn()) {
-      router.replace("/admin/login")
-      return
-    }
-    getApplications().then((data) => {
-      setApps(data)
-      setReady(true)
+    isLoggedIn().then((ok) => {
+      if (!ok) {
+        router.replace("/admin/login")
+        return
+      }
+      getApplications().then((data) => {
+        setApps(data)
+        setReady(true)
+      })
     })
   }, [router])
 
