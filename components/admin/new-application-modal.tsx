@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import type { AppDocument, DocumentCategory, NewApplicationInput } from "@/lib/admin/types"
 import { DESTINATION_COUNTRIES, VISA_TYPES } from "@/lib/countries"
 
-const MAX_FILE_BYTES = 800 * 1024 // 800 KB per file — keep uploads small
+const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB per file
 
 const emptyForm: Omit<NewApplicationInput, "photoUrl" | "documents"> = {
   fullName: "",
@@ -67,7 +67,7 @@ export function NewApplicationModal({
       return
     }
     if (file.size > MAX_FILE_BYTES) {
-      setFileError("Photo is too large. Please use a file under 800 KB.")
+      setFileError("Photo is too large. Please use a file under 3 MB.")
       return
     }
     const dataUrl = await readFileAsDataUrl(file)
@@ -81,7 +81,7 @@ export function NewApplicationModal({
       return
     }
     if (file.size > MAX_FILE_BYTES) {
-      setFileError("One of the documents is too large. Please use files under 800 KB each.")
+      setFileError("One of the documents is too large. Please use files under 3 MB each.")
       return
     }
     const dataUrl = await readFileAsDataUrl(file)
@@ -96,7 +96,7 @@ export function NewApplicationModal({
     setFileError("")
     if (!file) return
     if (file.size > MAX_FILE_BYTES) {
-      setFileError("One of the documents is too large. Please use files under 800 KB each.")
+      setFileError("One of the documents is too large. Please use files under 3 MB each.")
       return
     }
     const dataUrl = await readFileAsDataUrl(file)
