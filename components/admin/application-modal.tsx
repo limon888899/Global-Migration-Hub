@@ -12,7 +12,7 @@ import {
   type ManualStatus,
 } from "@/lib/admin/types"
 
-const MAX_FILE_BYTES = 800 * 1024
+const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB per file
 
 function formatDate(iso: string) {
   if (!iso) return "—"
@@ -60,6 +60,7 @@ export function ApplicationModal({
   onDelete,
   onAddDocument,
   onUpdateSubmittedAt,
+  onUpdateProfile,
 }: {
   app: Application
   onClose: () => void
@@ -68,6 +69,7 @@ export function ApplicationModal({
   onDelete: (id: string) => void
   onAddDocument: (id: string, doc: { name: string; dataUrl?: string; category?: DocumentCategory }) => void
   onUpdateSubmittedAt: (id: string, submittedAt: string) => void
+  onUpdateProfile: (id: string, patch: Partial<Application>) => void
 }) {
   const [statusSelect, setStatusSelect] = useState<ManualStatus>(app.manualStatus)
   const [statusNote, setStatusNote] = useState(app.statusNote)
@@ -78,6 +80,56 @@ export function ApplicationModal({
   const [uploadCategory, setUploadCategory] = useState<DocumentCategory>("passport_copy")
   const [uploadError, setUploadError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // --- Edit Applicant Info (name/passport/nationality/email/phone/photo) ---
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [profileForm, setProfileForm] = useState({
+    fullName: app.fullName,
+    passportNumber: app.passportNumber,
+    nationality: app.nationality,
+    email: app.email,
+    phone: app.phone,
+    photoUrl: app.photoUrl,
+  })
+  const [profileSaved, setProfileSaved] = useState(false)
+  const [photoError, setPhotoError] = useState("")
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  async function handlePhotoSelected(files: FileList | null) {
+    const file = files?.[0]
+    if (!file) return
+    setPhotoError("")
+    if (file.size > MAX_FILE_BYTES) {
+      setPhotoError("Photo is too large. Please use an image under 3 MB.")
+      return
+    }
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      setProfileForm((f) => ({ ...f, photoUrl: dataUrl }))
+    } catch {
+      setPhotoError("Could not read that image. Please try again.")
+    }
+  }
+
+  function handleSaveProfile() {
+    onUpdateProfile(app.id, profileForm)
+    setProfileSaved(true)
+    setIsEditingProfile(false)
+    setTimeout(() => setProfileSaved(false), 1500)
+  }
+
+  function handleCancelProfileEdit() {
+    setProfileForm({
+      fullName: app.fullName,
+      passportNumber: app.passportNumber,
+      nationality: app.nationality,
+      email: app.email,
+      phone: app.phone,
+      photoUrl: app.photoUrl,
+    })
+    setPhotoError("")
+    setIsEditingProfile(false)
+  }
 
   function handleSaveSubmittedDate() {
     if (!submittedInput) return
@@ -98,7 +150,7 @@ export function ApplicationModal({
     setUploadError("")
     for (const file of Array.from(files)) {
       if (file.size > MAX_FILE_BYTES) {
-        setUploadError(`"${file.name}" is too large. Please use files under 800 KB.`)
+        setUploadError(`"${file.name}" is too large. Please use files under 3 MB.`)
         continue
       }
       try {
@@ -139,13 +191,15 @@ export function ApplicationModal({
                 </div>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
-                  onClick={() => document.getElementById("submittedAtInput")?.focus()}
-                >
-                  <Pencil className="size-3.5" /> Edit
-                </button>
+                {!isEditingProfile && (
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+                    onClick={() => setIsEditingProfile(true)}
+                  >
+                    <Pencil className="size-3.5" /> Edit
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -165,33 +219,116 @@ export function ApplicationModal({
               </span>
             </div>
 
-            <div className="mt-4 rounded-xl bg-card/70 p-4 text-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
-                  {app.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground">No photo</span>
-                  )}
+            {!isEditingProfile ? (
+              <div className="mt-4 rounded-xl bg-card/70 p-4 text-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                  <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+                    {app.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">No photo</span>
+                    )}
+                  </div>
+                  <dl className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    {[
+                      ["Full Name", app.fullName],
+                      ["Passport No.", app.passportNumber],
+                      ["Nationality", app.nationality],
+                      ["Email", app.email],
+                      ["Phone", app.phone],
+                      ["Travel Date", formatDate(app.travelDate)],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+                        <dd className="font-medium text-foreground">{value || "—"}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-                <dl className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                  {[
-                    ["Full Name", app.fullName],
-                    ["Passport No.", app.passportNumber],
-                    ["Nationality", app.nationality],
-                    ["Email", app.email],
-                    ["Phone", app.phone],
-                    ["Travel Date", formatDate(app.travelDate)],
-                  ].map(([label, value]) => (
-                    <div key={label}>
-                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
-                      <dd className="font-medium text-foreground">{value || "—"}</dd>
-                    </div>
-                  ))}
-                </dl>
               </div>
-            </div>
+            ) : (
+              /* --- Edit mode: profile fields + photo upload --- */
+              <div className="mt-4 rounded-xl bg-card/70 p-4 text-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+                      {profileForm.photoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={profileForm.photoUrl} alt="Preview" className="size-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">No photo</span>
+                      )}
+                    </div>
+                    <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground hover:bg-muted">
+                      <Upload className="size-3.5" />
+                      {profileForm.photoUrl ? "Change" : "Upload"}
+                      <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handlePhotoSelected(e.target.files)}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Full Name</label>
+                      <input
+                        value={profileForm.fullName}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, fullName: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Passport No.</label>
+                      <input
+                        value={profileForm.passportNumber}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, passportNumber: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Nationality</label>
+                      <input
+                        value={profileForm.nationality}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, nationality: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Email</label>
+                      <input
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, email: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Phone</label>
+                      <input
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {photoError && <p className="mt-2 text-xs text-destructive">{photoError}</p>}
+
+                <div className="mt-3 flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={handleCancelProfileEdit} className="h-8 rounded-lg px-3 text-xs">
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleSaveProfile} className="h-8 rounded-lg px-3 text-xs">
+                    {profileSaved ? "Saved ✓" : "Save Changes"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="rounded-2xl border border-dashed border-border p-4">
@@ -302,7 +439,7 @@ export function ApplicationModal({
               </label>
               {uploadError && <p className="mt-2 text-xs text-destructive">{uploadError}</p>}
               <p className="mt-1 text-xs text-muted-foreground">
-                Max 800 KB per file. The actual file is stored so it shows correctly on the applicant&apos;s status page.
+                Max 3 MB per file. The actual file is stored so it shows correctly on the applicant&apos;s status page.
               </p>
             </div>
           </section>
