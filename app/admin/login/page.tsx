@@ -13,12 +13,15 @@ export default function AdminLoginPage() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    if (isLoggedIn()) router.replace("/admin/dashboard")
+    isLoggedIn().then((ok) => {
+      if (ok) router.replace("/admin/dashboard")
+    })
   }, [router])
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (login(username, password)) {
+    const ok = await login(username, password)
+    if (ok) {
       router.push("/admin/dashboard")
     } else {
       setError(true)
@@ -91,11 +94,6 @@ export default function AdminLoginPage() {
           <a href="/" className="hover:text-primary">
             ← Back to site
           </a>
-        </p>
-
-        <p className="mt-6 rounded-xl border border-dashed border-border bg-muted/50 p-3 text-xs text-muted-foreground">
-          Demo credentials: <strong>admin</strong> / <strong>ChangeMe123!</strong> — replace this with real
-          authentication before going live.
         </p>
       </form>
     </main>
