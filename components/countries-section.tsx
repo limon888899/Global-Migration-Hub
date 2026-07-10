@@ -37,6 +37,66 @@ const countryDetails: Record<string, { visaTypes: string; image: string; alt: st
     image: "/images/countries/united-arab-emirates.png",
     alt: "Burj Khalifa and the Dubai skyline at dusk",
   },
+  France: {
+    visaTypes: "Talent Passport · Student · Work",
+    image: "/images/countries/France.png",
+    alt: "The Eiffel Tower in Paris",
+  },
+  Italy: {
+    visaTypes: "Work Visa · Student · Elective Residency",
+    image: "/images/countries/Italy.png",
+    alt: "A scenic view of an Italian city",
+  },
+  Netherlands: {
+    visaTypes: "Highly Skilled Migrant · Student · Orientation Year",
+    image: "/images/countries/Netherlands.png",
+    alt: "Canals and traditional houses in the Netherlands",
+  },
+  Sweden: {
+    visaTypes: "Work Permit · Student · Family",
+    image: "/images/countries/Sweden.png",
+    alt: "A scenic view of a city in Sweden",
+  },
+  Portugal: {
+    visaTypes: "D7 Visa · Golden Visa · Student",
+    image: "/images/countries/Portugal.png",
+    alt: "A scenic coastal view in Portugal",
+  },
+  Ireland: {
+    visaTypes: "Critical Skills · Student · Work Permit",
+    image: "/images/countries/Ireland.png",
+    alt: "A scenic view of the Irish countryside",
+  },
+  "New Zealand": {
+    visaTypes: "Skilled Migrant · Work · Student",
+    image: "/images/countries/New Zealand.png",
+    alt: "A scenic landscape view in New Zealand",
+  },
+  Japan: {
+    visaTypes: "Engineer/Specialist · Student · Work",
+    image: "/images/countries/Japan.png",
+    alt: "A scenic view of a landmark in Japan",
+  },
+  "South Korea": {
+    visaTypes: "E-7 Work Visa · Student · Skilled Worker",
+    image: "/images/countries/South Korea.png",
+    alt: "A scenic view of a landmark in South Korea",
+  },
+  Singapore: {
+    visaTypes: "Employment Pass · Student · S Pass",
+    image: "/images/countries/Singapore.png",
+    alt: "The Singapore skyline",
+  },
+  "Saudi Arabia": {
+    visaTypes: "Work Visa · Premium Residency · Business",
+    image: "/images/countries/Saudi Arabia.png",
+    alt: "A scenic view of a landmark in Saudi Arabia",
+  },
+  Malaysia: {
+    visaTypes: "Employment Pass · Student · MM2H",
+    image: "/images/countries/Malaysia.png",
+    alt: "A scenic view of a landmark in Malaysia",
+  },
 }
 
 const countries = DESTINATION_COUNTRIES.map((name) => ({
