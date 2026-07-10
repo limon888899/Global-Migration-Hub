@@ -68,8 +68,8 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
               <div className="absolute right-0 top-11 w-44 overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
                 <button
                   type="button"
-                  onClick={() => {
-                    logout()
+                  onClick={async () => {
+                    await logout()
                     router.replace("/admin/login")
                   }}
                   className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-destructive hover:bg-muted"
