@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server"
 import { getRedis } from "@/lib/admin/redis"
+import { requireAdminAuth } from "@/lib/admin/require-auth"
 import type { Application, NewApplicationInput } from "@/lib/admin/types"
 
 export const dynamic = "force-dynamic"
 
 const KEY = "gmh:applications"
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authError = requireAdminAuth(request)
+  if (authError) return authError
+
   const redis = await getRedis()
   const raw = await redis.get(KEY)
   const apps: Application[] = raw ? JSON.parse(raw) : []
@@ -14,6 +18,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const authError = requireAdminAuth(request)
+  if (authError) return authError
+
   const input = (await request.json()) as NewApplicationInput
   const redis = await getRedis()
   const raw = await redis.get(KEY)
