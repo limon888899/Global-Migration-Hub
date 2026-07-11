@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useMemo } from "react"
 import { X, Pencil, Trash2, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
-  DOCUMENT_CATEGORY_LABELS,
+  DEFAULT_DOCUMENT_GROUPS,
   effectiveStage,
   stageLabel,
+  type AppDocument,
   type Application,
-  type DocumentCategory,
   type ManualStatus,
 } from "@/lib/admin/types"
 
@@ -44,14 +44,6 @@ function stagePillClass(app: Application) {
   return "bg-tip-yellow text-tip-yellow-foreground"
 }
 
-const DOC_CATEGORIES: { key: DocumentCategory; label: string }[] = [
-  { key: "passport_copy", label: "Passport Copy" },
-  { key: "job_letter", label: "Job Letter" },
-  { key: "medical_certificate", label: "Medical Certificate" },
-  { key: "fingerprint", label: "Fingerprint Form" },
-  { key: "other", label: "Other Document" },
-]
-
 export function ApplicationModal({
   app,
   onClose,
@@ -67,7 +59,7 @@ export function ApplicationModal({
   onUpdateStatus: (id: string, status: ManualStatus, note: string) => void
   onSaveNotes: (id: string, notes: string) => void
   onDelete: (id: string) => void
-  onAddDocument: (id: string, doc: { name: string; dataUrl?: string; category?: DocumentCategory }) => void
+  onAddDocument: (id: string, doc: { name: string; dataUrl?: string; groupName: string }) => void
   onUpdateSubmittedAt: (id: string, submittedAt: string) => void
   onUpdateProfile: (id: string, patch: Partial<Application>) => void
 }) {
@@ -77,9 +69,21 @@ export function ApplicationModal({
   const [submittedInput, setSubmittedInput] = useState(toDateTimeLocalValue(app.submittedAt))
   const [dateSaved, setDateSaved] = useState(false)
   const [statusSaved, setStatusSaved] = useState(false)
-  const [uploadCategory, setUploadCategory] = useState<DocumentCategory>("passport_copy")
   const [uploadError, setUploadError] = useState("")
+  const [newGroupName, setNewGroupName] = useState("")
+  const [renamingGroup, setRenamingGroup] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const groupedDocuments = useMemo(() => {
+    const map = new Map<string, AppDocument[]>()
+    for (const doc of app.documents) {
+      const key = doc.groupName?.trim() || "Other"
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(doc)
+    }
+    return Array.from(map.entries())
+  }, [app.documents])
 
   // --- Edit Applicant Info (name/passport/nationality/email/phone/photo) ---
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -145,7 +149,7 @@ export function ApplicationModal({
     setTimeout(() => setStatusSaved(false), 1500)
   }
 
-  async function handleFilesSelected(files: FileList | null) {
+  async function handleAddFilesToGroup(groupName: string, files: FileList | null) {
     if (!files || files.length === 0) return
     setUploadError("")
     for (const file of Array.from(files)) {
@@ -155,12 +159,64 @@ export function ApplicationModal({
       }
       try {
         const dataUrl = await readFileAsDataUrl(file)
-        onAddDocument(app.id, { name: file.name, dataUrl, category: uploadCategory })
+        onAddDocument(app.id, { name: file.name, dataUrl, groupName })
       } catch {
         setUploadError(`Could not read "${file.name}". Please try again.`)
       }
     }
+  }
+
+  async function handleAddNewGroupFiles(files: FileList | null) {
+    const groupName = newGroupName.trim()
+    if (!groupName) return
+    await handleAddFilesToGroup(groupName, files)
+    setNewGroupName("")
     if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  async function handleReplaceDocument(doc: AppDocument, file: File | null, inputEl: HTMLInputElement | null) {
+    if (!file) return
+    setUploadError("")
+    if (file.size > MAX_FILE_BYTES) {
+      setUploadError(`"${file.name}" is too large. Please use files under 3 MB.`)
+      return
+    }
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      const documents = app.documents.map((d) =>
+        d.id === doc.id ? { ...d, name: file.name, dataUrl, addedAt: new Date().toISOString() } : d,
+      )
+      onUpdateProfile(app.id, { documents })
+    } catch {
+      setUploadError(`Could not read "${file.name}". Please try again.`)
+    } finally {
+      if (inputEl) inputEl.value = ""
+    }
+  }
+
+  function handleDeleteDocument(docId: string) {
+    if (!confirm("Delete this document? This cannot be undone.")) return
+    const documents = app.documents.filter((d) => d.id !== docId)
+    onUpdateProfile(app.id, { documents })
+  }
+
+  function handleDeleteGroup(groupName: string) {
+    if (!confirm(`Delete the "${groupName}" section and all its files? This cannot be undone.`)) return
+    const documents = app.documents.filter((d) => (d.groupName?.trim() || "Other") !== groupName)
+    onUpdateProfile(app.id, { documents })
+  }
+
+  function handleRenameGroup(oldName: string) {
+    const newName = renameValue.trim()
+    if (!newName || newName === oldName) {
+      setRenamingGroup(null)
+      return
+    }
+    const documents = app.documents.map((d) =>
+      (d.groupName?.trim() || "Other") === oldName ? { ...d, groupName: newName } : d,
+    )
+    onUpdateProfile(app.id, { documents })
+    setRenamingGroup(null)
   }
 
   return (
@@ -388,44 +444,143 @@ export function ApplicationModal({
 
           <section className="rounded-2xl border border-border p-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Uploaded Documents</h4>
-            {app.documents.length > 0 ? (
-              <ul className="space-y-1.5 text-sm">
-                {app.documents.map((doc) => (
-                  <li key={doc.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-2">
-                    <span className="text-foreground">
-                      {doc.category ? `${DOCUMENT_CATEGORY_LABELS[doc.category]} — ` : ""}
-                      {doc.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {doc.addedBy === "admin" ? "Added by staff" : "From applicant"} · {formatDate(doc.addedAt)}
-                    </span>
-                  </li>
+
+            {groupedDocuments.length > 0 ? (
+              <div className="space-y-3">
+                {groupedDocuments.map(([groupName, docs]) => (
+                  <div key={groupName} className="rounded-xl border border-border p-3">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      {renamingGroup === groupName ? (
+                        <div className="flex flex-1 items-center gap-2">
+                          <input
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            autoFocus
+                            className="min-w-0 flex-1 rounded-lg border border-input bg-background px-2 py-1 text-sm text-foreground"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRenameGroup(groupName)}
+                            className="text-xs font-semibold text-primary hover:underline"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRenamingGroup(null)}
+                            className="text-xs text-muted-foreground hover:underline"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-sm font-semibold text-foreground">
+                            {groupName}{" "}
+                            <span className="font-normal text-muted-foreground">({docs.length})</span>
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRenamingGroup(groupName)
+                                setRenameValue(groupName)
+                              }}
+                              className="text-xs font-medium text-primary hover:underline"
+                            >
+                              Rename
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteGroup(groupName)}
+                              className="text-xs font-medium text-destructive hover:underline"
+                            >
+                              Delete Section
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <ul className="space-y-1.5 text-sm">
+                      {docs.map((doc) => (
+                        <li
+                          key={doc.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
+                        >
+                          <span className="min-w-0 truncate text-foreground">{doc.name}</span>
+                          <div className="flex shrink-0 items-center gap-3">
+                            <span className="text-xs text-muted-foreground">
+                              {doc.addedBy === "admin" ? "Added by staff" : "From applicant"} ·{" "}
+                              {formatDate(doc.addedAt)}
+                            </span>
+                            <label className="cursor-pointer text-xs font-semibold text-primary hover:underline">
+                              Replace
+                              <input
+                                type="file"
+                                accept=".pdf,image/*"
+                                className="hidden"
+                                onChange={(e) => handleReplaceDocument(doc, e.target.files?.[0] ?? null, e.target)}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              className="text-xs font-semibold text-destructive hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <label className="mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground hover:bg-muted">
+                      <Upload className="size-3.5" />
+                      Add more files to this section
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          handleAddFilesToGroup(groupName, e.target.files)
+                          e.target.value = ""
+                        }}
+                      />
+                    </label>
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">No documents yet.</p>
             )}
 
             <div className="mt-3 rounded-xl border border-dashed border-border p-3">
-              <p className="mb-2 text-sm font-medium text-foreground">Add a document on behalf of the applicant</p>
+              <p className="mb-2 text-sm font-medium text-foreground">Add a new document section</p>
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <label htmlFor="uploadCategory" className="text-xs font-medium text-muted-foreground">
-                  Document type:
+                <label htmlFor="newGroupName" className="text-xs font-medium text-muted-foreground">
+                  Document name:
                 </label>
-                <select
-                  id="uploadCategory"
-                  value={uploadCategory}
-                  onChange={(e) => setUploadCategory(e.target.value as DocumentCategory)}
-                  className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs text-foreground"
-                >
-                  {DOC_CATEGORIES.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      {c.label}
-                    </option>
+                <input
+                  id="newGroupName"
+                  list="doc-group-suggestions"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  placeholder="e.g. Passport, Job Letter"
+                  className="rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs text-foreground"
+                />
+                <datalist id="doc-group-suggestions">
+                  {DEFAULT_DOCUMENT_GROUPS.map((g) => (
+                    <option key={g} value={g} />
                   ))}
-                </select>
+                </datalist>
               </div>
-              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground hover:bg-muted">
+              <label
+                className={`inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ${
+                  newGroupName.trim() ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed opacity-50"
+                }`}
+              >
                 <Upload className="size-4" />
                 Choose file(s)
                 <input
@@ -433,13 +588,15 @@ export function ApplicationModal({
                   type="file"
                   multiple
                   accept=".pdf,image/*"
+                  disabled={!newGroupName.trim()}
                   className="hidden"
-                  onChange={(e) => handleFilesSelected(e.target.files)}
+                  onChange={(e) => handleAddNewGroupFiles(e.target.files)}
                 />
               </label>
               {uploadError && <p className="mt-2 text-xs text-destructive">{uploadError}</p>}
               <p className="mt-1 text-xs text-muted-foreground">
-                Max 3 MB per file. The actual file is stored so it shows correctly on the applicant&apos;s status page.
+                Max 3 MB per file. You can add several photos to the same section (e.g. 3-4 passport pages), and
+                replace, delete, or rename any section at any time.
               </p>
             </div>
           </section>
