@@ -30,7 +30,6 @@ import { COUNTRY_FLAGS } from "@/lib/countries"
 import {
   effectiveStage,
   STAGE_LABELS,
-  DOCUMENT_CATEGORY_LABELS,
   type Application,
   type AppDocument,
 } from "@/lib/admin/types"
@@ -228,7 +227,7 @@ function VisaStatusModal({
             <button
               type="button"
               onClick={onClose}
-aria-label="Close"
+              aria-label="Close"
               className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <X className="size-5" />
@@ -399,9 +398,18 @@ function ApplicantProfile({ app }: { app: Application }) {
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
         ) : (
-          <div className="space-y-6">
-            {app.documents.map((doc) => (
-              <DocumentFullView key={doc.id} doc={doc} />
+          <div className="space-y-8">
+            {groupDocuments(app.documents).map(([groupName, docs]) => (
+              <div key={groupName}>
+                <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {groupName} ({docs.length})
+                </h4>
+                <div className="space-y-4">
+                  {docs.map((doc) => (
+                    <DocumentFullView key={doc.id} doc={doc} />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -415,8 +423,18 @@ function ApplicantProfile({ app }: { app: Application }) {
   )
 }
 
+function groupDocuments(documents: AppDocument[]): [string, AppDocument[]][] {
+  const map = new Map<string, AppDocument[]>()
+  for (const doc of documents) {
+    const key = doc.groupName?.trim() || "Other"
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(doc)
+  }
+  return Array.from(map.entries())
+}
+
 function DocumentFullView({ doc }: { doc: AppDocument }) {
-  const label = doc.category ? DOCUMENT_CATEGORY_LABELS[doc.category] : "Document"
+  const label = doc.name || "Document"
 
   if (!doc.dataUrl) {
     return (
