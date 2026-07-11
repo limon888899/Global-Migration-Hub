@@ -1,8 +1,14 @@
 "use client"
 
-import { ExternalLink, LayoutGrid, ListChecks } from "lucide-react"
+import { ExternalLink, LayoutGrid, ListChecks, Plus } from "lucide-react"
 
-export function AdminSidebar({ active }: { active: "overview" | "applications" }) {
+export function AdminSidebar({
+  active,
+  onNewApplication,
+}: {
+  active: "overview" | "applications"
+  onNewApplication?: () => void
+}) {
   const navItems = [
     { key: "overview", label: "Overview", icon: LayoutGrid },
     { key: "applications", label: "All Applications", icon: ListChecks },
@@ -10,6 +16,17 @@ export function AdminSidebar({ active }: { active: "overview" | "applications" }
 
   return (
     <aside className="flex w-full shrink-0 flex-col gap-5 lg:w-64">
+      {onNewApplication && (
+        <button
+          type="button"
+          onClick={onNewApplication}
+          className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <Plus className="size-4" />
+          New Application
+        </button>
+      )}
+
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {navItems.map((item) => (
           <div
