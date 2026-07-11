@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { X, Upload, Image as ImageIcon, FileText, Trash2 } from "lucide-react"
+import { useState, useRef } from "react"
+import { X, Upload, Image as ImageIcon, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { AppDocument, DocumentCategory, NewApplicationInput } from "@/lib/admin/types"
+import { DEFAULT_DOCUMENT_GROUPS, type AppDocument, type NewApplicationInput } from "@/lib/admin/types"
 import { DESTINATION_COUNTRIES, VISA_TYPES } from "@/lib/countries"
 
 const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB per file
@@ -19,13 +19,6 @@ const emptyForm: Omit<NewApplicationInput, "photoUrl" | "documents"> = {
   travelDate: "",
 }
 
-const DOC_CATEGORIES: { key: DocumentCategory; label: string }[] = [
-  { key: "passport_copy", label: "Passport Copy" },
-  { key: "job_letter", label: "Job Letter" },
-  { key: "medical_certificate", label: "Medical Certificate" },
-  { key: "fingerprint", label: "Fingerprint Form" },
-]
-
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -37,6 +30,15 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 type SlotFile = { name: string; dataUrl: string } | null
 
+type DraftDoc = { id: string; name: string; dataUrl: string }
+type DraftGroup = { groupName: string; docs: DraftDoc[] }
+
+let draftIdCounter = 0
+function nextDraftId() {
+  draftIdCounter += 1
+  return `draft_${Date.now()}_${draftIdCounter}`
+}
+
 export function NewApplicationModal({
   onClose,
   onCreate,
@@ -46,15 +48,12 @@ export function NewApplicationModal({
 }) {
   const [form, setForm] = useState(emptyForm)
   const [photo, setPhoto] = useState<SlotFile>(null)
-  const [categoryFiles, setCategoryFiles] = useState<Record<DocumentCategory, SlotFile>>({
-    passport_copy: null,
-    job_letter: null,
-    medical_certificate: null,
-    fingerprint: null,
-    other: null,
-  })
-  const [otherDocs, setOtherDocs] = useState<SlotFile[]>([])
+  const [groups, setGroups] = useState<DraftGroup[]>([])
+  const [newGroupName, setNewGroupName] = useState("")
+  const [renamingGroup, setRenamingGroup] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
   const [fileError, setFileError] = useState("")
+  const newGroupFileInputRef = useRef<HTMLInputElement>(null)
 
   function update<K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -74,37 +73,93 @@ export function NewApplicationModal({
     setPhoto({ name: file.name, dataUrl })
   }
 
-  async function handleCategoryFileChange(category: DocumentCategory, file: File | null) {
+  async function addFilesToGroup(groupName: string, files: FileList | null) {
+    const trimmedName = groupName.trim()
+    if (!trimmedName || !files || files.length === 0) return
     setFileError("")
-    if (!file) {
-      setCategoryFiles((c) => ({ ...c, [category]: null }))
-      return
+
+    const newDocs: DraftDoc[] = []
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_FILE_BYTES) {
+        setFileError(`"${file.name}" is too large. Please use files under 3 MB.`)
+        continue
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file)
+        newDocs.push({ id: nextDraftId(), name: file.name, dataUrl })
+      } catch {
+        setFileError(`Could not read "${file.name}". Please try again.`)
+      }
     }
-    if (file.size > MAX_FILE_BYTES) {
-      setFileError("One of the documents is too large. Please use files under 3 MB each.")
-      return
-    }
-    const dataUrl = await readFileAsDataUrl(file)
-    setCategoryFiles((c) => ({ ...c, [category]: { name: file.name, dataUrl } }))
+    if (newDocs.length === 0) return
+
+    setGroups((prev) => {
+      const existing = prev.find((g) => g.groupName.toLowerCase() === trimmedName.toLowerCase())
+      if (existing) {
+        return prev.map((g) => (g === existing ? { ...g, docs: [...g.docs, ...newDocs] } : g))
+      }
+      return [...prev, { groupName: trimmedName, docs: newDocs }]
+    })
   }
 
-  function addOtherDocSlot() {
-    setOtherDocs((docs) => [...docs, null])
+  async function handleNewGroupFiles(files: FileList | null) {
+    await addFilesToGroup(newGroupName, files)
+    setNewGroupName("")
+    if (newGroupFileInputRef.current) newGroupFileInputRef.current.value = ""
   }
 
-  async function handleOtherDocChange(index: number, file: File | null) {
-    setFileError("")
+  async function handleReplaceDraftDoc(groupName: string, docId: string, file: File | null, inputEl: HTMLInputElement | null) {
     if (!file) return
+    setFileError("")
     if (file.size > MAX_FILE_BYTES) {
-      setFileError("One of the documents is too large. Please use files under 3 MB each.")
+      setFileError(`"${file.name}" is too large. Please use files under 3 MB.`)
       return
     }
-    const dataUrl = await readFileAsDataUrl(file)
-    setOtherDocs((docs) => docs.map((d, i) => (i === index ? { name: file.name, dataUrl } : d)))
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.groupName !== groupName
+            ? g
+            : { ...g, docs: g.docs.map((d) => (d.id === docId ? { ...d, name: file.name, dataUrl } : d)) },
+        ),
+      )
+    } catch {
+      setFileError(`Could not read "${file.name}". Please try again.`)
+    } finally {
+      if (inputEl) inputEl.value = ""
+    }
   }
 
-  function removeOtherDocSlot(index: number) {
-    setOtherDocs((docs) => docs.filter((_, i) => i !== index))
+  function removeDraftDoc(groupName: string, docId: string) {
+    setGroups((prev) =>
+      prev
+        .map((g) => (g.groupName !== groupName ? g : { ...g, docs: g.docs.filter((d) => d.id !== docId) }))
+        .filter((g) => g.docs.length > 0),
+    )
+  }
+
+  function deleteGroup(groupName: string) {
+    setGroups((prev) => prev.filter((g) => g.groupName !== groupName))
+  }
+
+  function handleRenameGroup(oldName: string) {
+    const trimmed = renameValue.trim()
+    if (!trimmed) {
+      setRenamingGroup(null)
+      return
+    }
+    setGroups((prev) => {
+      const clashing = prev.find((g) => g.groupName !== oldName && g.groupName.toLowerCase() === trimmed.toLowerCase())
+      if (clashing) {
+        // Merge into the existing section with that name.
+        return prev
+          .map((g) => (g.groupName === clashing.groupName ? { ...g, docs: [...g.docs, ...(prev.find((p) => p.groupName === oldName)?.docs ?? [])] } : g))
+          .filter((g) => g.groupName !== oldName)
+      }
+      return prev.map((g) => (g.groupName === oldName ? { ...g, groupName: trimmed } : g))
+    })
+    setRenamingGroup(null)
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -113,33 +168,18 @@ export function NewApplicationModal({
 
     const now = new Date().toISOString()
     const documents: AppDocument[] = []
-
-    for (const { key } of DOC_CATEGORIES) {
-      const file = categoryFiles[key]
-      if (file) {
+    for (const group of groups) {
+      for (const doc of group.docs) {
         documents.push({
-          id: `doc_${Date.now()}_${key}`,
-          name: file.name,
-          category: key,
-          dataUrl: file.dataUrl,
+          id: doc.id,
+          name: doc.name,
+          groupName: group.groupName,
+          dataUrl: doc.dataUrl,
           addedBy: "admin",
           addedAt: now,
         })
       }
     }
-
-    otherDocs.forEach((file, i) => {
-      if (file) {
-        documents.push({
-          id: `doc_${Date.now()}_other_${i}`,
-          name: file.name,
-          category: "other",
-          dataUrl: file.dataUrl,
-          addedBy: "admin",
-          addedAt: now,
-        })
-      }
-    })
 
     onCreate({
       ...form,
@@ -261,72 +301,160 @@ export function NewApplicationModal({
         <div className="border-t border-border px-6 py-5">
           <h4 className="mb-1 text-sm font-semibold text-foreground">Visa Documents</h4>
           <p className="mb-3 text-xs text-muted-foreground">
-            Upload the applicant&apos;s documents. These will be visible on their profile once the
-            application is created.
+            Create a section for each document type (e.g. Passport, Offer Letter, Demand Letter). Each
+            section can hold as many files as you need — one photo or several.
           </p>
 
-          <div className="space-y-3">
-            {DOC_CATEGORIES.map(({ key, label }) => (
-              <div key={key} className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-                <div className="flex min-w-0 items-center gap-2 text-sm text-foreground">
-                  <FileText className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="shrink-0">{label}</span>
-                  {categoryFiles[key] && (
-                    <span className="truncate text-xs text-muted-foreground">— {categoryFiles[key]?.name}</span>
-                  )}
-                </div>
-                <label className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground hover:bg-muted">
-                  <Upload className="size-3.5" />
-                  {categoryFiles[key] ? "Replace" : "Upload"}
-                  <input
-                    type="file"
-                    accept=".pdf,image/*"
-                    className="hidden"
-                    onChange={(e) => handleCategoryFileChange(key, e.target.files?.[0] ?? null)}
-                  />
-                </label>
-              </div>
-            ))}
+          {groups.length > 0 && (
+            <div className="mb-3 space-y-3">
+              {groups.map((group) => (
+                <div key={group.groupName} className="rounded-xl border border-border p-3">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    {renamingGroup === group.groupName ? (
+                      <div className="flex flex-1 items-center gap-2">
+                        <input
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          autoFocus
+                          className="min-w-0 flex-1 rounded-lg border border-input bg-background px-2 py-1 text-sm text-foreground"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRenameGroup(group.groupName)}
+                          className="text-xs font-semibold text-primary hover:underline"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRenamingGroup(null)}
+                          className="text-xs text-muted-foreground hover:underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm font-semibold text-foreground">
+                          {group.groupName}{" "}
+                          <span className="font-normal text-muted-foreground">({group.docs.length})</span>
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRenamingGroup(group.groupName)
+                              setRenameValue(group.groupName)
+                            }}
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            Rename
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteGroup(group.groupName)}
+                            className="text-xs font-medium text-destructive hover:underline"
+                          >
+                            Delete Section
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
 
-            {otherDocs.map((file, index) => (
-              <div key={index} className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-                <div className="flex min-w-0 items-center gap-2 text-sm text-foreground">
-                  <FileText className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{file?.name ?? "Other Document"}</span>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground hover:bg-muted">
+                  <ul className="space-y-1.5 text-sm">
+                    {group.docs.map((doc) => (
+                      <li
+                        key={doc.id}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
+                      >
+                        <span className="min-w-0 truncate text-foreground">{doc.name}</span>
+                        <div className="flex shrink-0 items-center gap-3">
+                          <label className="cursor-pointer text-xs font-semibold text-primary hover:underline">
+                            Replace
+                            <input
+                              type="file"
+                              accept=".pdf,image/*"
+                              className="hidden"
+                              onChange={(e) =>
+                                handleReplaceDraftDoc(group.groupName, doc.id, e.target.files?.[0] ?? null, e.target)
+                              }
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => removeDraftDoc(group.groupName, doc.id)}
+                            className="text-xs font-semibold text-destructive hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <label className="mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground hover:bg-muted">
                     <Upload className="size-3.5" />
-                    {file ? "Replace" : "Upload"}
+                    Add more files to this section
                     <input
                       type="file"
+                      multiple
                       accept=".pdf,image/*"
                       className="hidden"
-                      onChange={(e) => handleOtherDocChange(index, e.target.files?.[0] ?? null)}
+                      onChange={(e) => {
+                        addFilesToGroup(group.groupName, e.target.files)
+                        e.target.value = ""
+                      }}
                     />
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => removeOtherDocSlot(index)}
-                    aria-label="Remove document"
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+
+          <div className="rounded-xl border border-dashed border-border p-3">
+            <p className="mb-2 text-sm font-medium text-foreground">Add a new document section</p>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <label htmlFor="newGroupName" className="text-xs font-medium text-muted-foreground">
+                Document name:
+              </label>
+              <input
+                id="newGroupName"
+                list="new-app-doc-group-suggestions"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="e.g. Passport, Offer Letter, Demand Letter"
+                className="rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs text-foreground"
+              />
+              <datalist id="new-app-doc-group-suggestions">
+                {DEFAULT_DOCUMENT_GROUPS.map((g) => (
+                  <option key={g} value={g} />
+                ))}
+              </datalist>
+            </div>
+            <label
+              className={`inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ${
+                newGroupName.trim() ? "cursor-pointer hover:bg-muted" : "cursor-not-allowed opacity-50"
+              }`}
+            >
+              <Upload className="size-4" />
+              Choose file(s)
+              <input
+                ref={newGroupFileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,image/*"
+                disabled={!newGroupName.trim()}
+                className="hidden"
+                onChange={(e) => handleNewGroupFiles(e.target.files)}
+              />
+            </label>
+            {fileError && <p className="mt-2 text-xs text-destructive">{fileError}</p>}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Max 3 MB per file. Section names are fully custom — rename or delete any section before
+              creating the application, or edit them later from the application&apos;s details page.
+            </p>
           </div>
-
-          <button
-            type="button"
-            onClick={addOtherDocSlot}
-            className="mt-3 text-sm font-medium text-primary hover:underline"
-          >
-            + Add another document
-          </button>
-
-          {fileError && <p className="mt-3 text-sm text-destructive">{fileError}</p>}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
