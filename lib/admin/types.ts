@@ -2,25 +2,28 @@ export type ManualStatus = "auto" | "0" | "1" | "2" | "3" | "rejected"
 
 export const STAGE_LABELS = ["Submitted", "Processing", "Document Verified", "Visa Approved"] as const
 
-export type DocumentCategory =
-  | "passport_copy"
-  | "job_letter"
-  | "medical_certificate"
-  | "fingerprint"
-  | "other"
-
-export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
-  passport_copy: "Passport Copy",
-  job_letter: "Job Letter",
-  medical_certificate: "Medical Certificate",
-  fingerprint: "Fingerprint Form",
-  other: "Other Document",
-}
+/**
+ * Suggested document section names shown to the admin when creating a new
+ * section. Admins are free to type any custom name instead — this is just
+ * a convenience list, not a restriction.
+ */
+export const DEFAULT_DOCUMENT_GROUPS = [
+  "Passport",
+  "Job Letter",
+  "Medical Certificate",
+  "Fingerprint Form",
+  "Other Document",
+]
 
 export interface AppDocument {
   id: string
   name: string
-  category?: DocumentCategory
+  /**
+   * Free-text section/group name chosen by the admin (e.g. "Passport",
+   * "Job Letter"). Multiple documents can share the same groupName so a
+   * single document type can hold several files (e.g. 3-4 passport photos).
+   */
+  groupName: string
   /** Base64 data URL of the uploaded file, so it can be previewed/downloaded. */
   dataUrl?: string
   addedBy: "applicant" | "admin"
