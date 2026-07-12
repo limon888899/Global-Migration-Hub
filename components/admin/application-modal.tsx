@@ -11,8 +11,9 @@ import {
   type Application,
   type ManualStatus,
 } from "@/lib/admin/types"
+import { uploadAdminFile } from "@/lib/admin/upload"
 
-const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB per file
+const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB per file
 
 function formatDate(iso: string) {
   if (!iso) return "—"
@@ -25,15 +26,6 @@ function toDateTimeLocalValue(iso: string) {
   if (Number.isNaN(d.getTime())) return ""
   const offsetMs = d.getTimezoneOffset() * 60000
   return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16)
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error("Could not read file"))
-    reader.readAsDataURL(file)
-  })
 }
 
 function stagePillClass(app: Application) {
@@ -59,7 +51,7 @@ export function ApplicationModal({
   onUpdateStatus: (id: string, status: ManualStatus, note: string) => void
   onSaveNotes: (id: string, notes: string) => void
   onDelete: (id: string) => void
-  onAddDocument: (id: string, doc: { name: string; dataUrl?: string; groupName: string }) => void
+  onAddDocument: (id: string, doc: { name: string; dataUrl?: string; groupName: string }) => void | Promise<void>
   onUpdateSubmittedAt: (id: string, submittedAt: string) => void
   onUpdateProfile: (id: string, patch: Partial<Application>) => void
 }) {
@@ -104,14 +96,14 @@ export function ApplicationModal({
     if (!file) return
     setPhotoError("")
     if (file.size > MAX_FILE_BYTES) {
-      setPhotoError("Photo is too large. Please use an image under 3 MB.")
+      setPhotoError("Photo is too large. Please use an image under 4 MB.")
       return
     }
     try {
-      const dataUrl = await readFileAsDataUrl(file)
-      setProfileForm((f) => ({ ...f, photoUrl: dataUrl }))
+      const url = await uploadAdminFile(file)
+      setProfileForm((f) => ({ ...f, photoUrl: url }))
     } catch {
-      setPhotoError("Could not read that image. Please try again.")
+      setPhotoError("Could not upload that image. Please try again.")
     }
   }
 
@@ -154,14 +146,14 @@ export function ApplicationModal({
     setUploadError("")
     for (const file of Array.from(files)) {
       if (file.size > MAX_FILE_BYTES) {
-        setUploadError(`"${file.name}" is too large. Please use files under 3 MB.`)
+        setUploadError(`"${file.name}" is too large. Please use files under 4 MB.`)
         continue
       }
       try {
-        const dataUrl = await readFileAsDataUrl(file)
-        onAddDocument(app.id, { name: file.name, dataUrl, groupName })
+        const url = await uploadAdminFile(file)
+        await onAddDocument(app.id, { name: file.name, dataUrl: url, groupName })
       } catch {
-        setUploadError(`Could not read "${file.name}". Please try again.`)
+        setUploadError(`Could not upload "${file.name}". Please try again.`)
       }
     }
   }
@@ -178,17 +170,17 @@ export function ApplicationModal({
     if (!file) return
     setUploadError("")
     if (file.size > MAX_FILE_BYTES) {
-      setUploadError(`"${file.name}" is too large. Please use files under 3 MB.`)
+      setUploadError(`"${file.name}" is too large. Please use files under 4 MB.`)
       return
     }
     try {
-      const dataUrl = await readFileAsDataUrl(file)
+      const url = await uploadAdminFile(file)
       const documents = app.documents.map((d) =>
-        d.id === doc.id ? { ...d, name: file.name, dataUrl, addedAt: new Date().toISOString() } : d,
+        d.id === doc.id ? { ...d, name: file.name, dataUrl: url, addedAt: new Date().toISOString() } : d,
       )
       onUpdateProfile(app.id, { documents })
     } catch {
-      setUploadError(`Could not read "${file.name}". Please try again.`)
+      setUploadError(`Could not upload "${file.name}". Please try again.`)
     } finally {
       if (inputEl) inputEl.value = ""
     }
@@ -595,7 +587,7 @@ export function ApplicationModal({
               </label>
               {uploadError && <p className="mt-2 text-xs text-destructive">{uploadError}</p>}
               <p className="mt-1 text-xs text-muted-foreground">
-                Max 3 MB per file. You can add several photos to the same section (e.g. 3-4 passport pages), and
+                Max 4 MB per file. You can add several photos to the same section (e.g. 3-4 passport pages), and
                 replace, delete, or rename any section at any time.
               </p>
             </div>
