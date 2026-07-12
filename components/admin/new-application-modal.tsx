@@ -5,8 +5,9 @@ import { X, Upload, Image as ImageIcon, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DEFAULT_DOCUMENT_GROUPS, type AppDocument, type NewApplicationInput } from "@/lib/admin/types"
 import { DESTINATION_COUNTRIES, VISA_TYPES } from "@/lib/countries"
+import { uploadAdminFile } from "@/lib/admin/upload"
 
-const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB per file
+const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB per file
 
 const emptyForm: Omit<NewApplicationInput, "photoUrl" | "documents"> = {
   fullName: "",
@@ -17,15 +18,6 @@ const emptyForm: Omit<NewApplicationInput, "photoUrl" | "documents"> = {
   destinationCountry: "",
   visaType: "",
   travelDate: "",
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error("Could not read file"))
-    reader.readAsDataURL(file)
-  })
 }
 
 type SlotFile = { name: string; dataUrl: string } | null
@@ -66,11 +58,15 @@ export function NewApplicationModal({
       return
     }
     if (file.size > MAX_FILE_BYTES) {
-      setFileError("Photo is too large. Please use a file under 3 MB.")
+      setFileError("Photo is too large. Please use a file under 4 MB.")
       return
     }
-    const dataUrl = await readFileAsDataUrl(file)
-    setPhoto({ name: file.name, dataUrl })
+    try {
+      const url = await uploadAdminFile(file)
+      setPhoto({ name: file.name, dataUrl: url })
+    } catch {
+      setFileError("Could not upload that photo. Please try again.")
+    }
   }
 
   async function addFilesToGroup(groupName: string, files: FileList | null) {
@@ -81,14 +77,14 @@ export function NewApplicationModal({
     const newDocs: DraftDoc[] = []
     for (const file of Array.from(files)) {
       if (file.size > MAX_FILE_BYTES) {
-        setFileError(`"${file.name}" is too large. Please use files under 3 MB.`)
+        setFileError(`"${file.name}" is too large. Please use files under 4 MB.`)
         continue
       }
       try {
-        const dataUrl = await readFileAsDataUrl(file)
-        newDocs.push({ id: nextDraftId(), name: file.name, dataUrl })
+        const url = await uploadAdminFile(file)
+        newDocs.push({ id: nextDraftId(), name: file.name, dataUrl: url })
       } catch {
-        setFileError(`Could not read "${file.name}". Please try again.`)
+        setFileError(`Could not upload "${file.name}". Please try again.`)
       }
     }
     if (newDocs.length === 0) return
@@ -112,20 +108,20 @@ export function NewApplicationModal({
     if (!file) return
     setFileError("")
     if (file.size > MAX_FILE_BYTES) {
-      setFileError(`"${file.name}" is too large. Please use files under 3 MB.`)
+      setFileError(`"${file.name}" is too large. Please use files under 4 MB.`)
       return
     }
     try {
-      const dataUrl = await readFileAsDataUrl(file)
+      const url = await uploadAdminFile(file)
       setGroups((prev) =>
         prev.map((g) =>
           g.groupName !== groupName
             ? g
-            : { ...g, docs: g.docs.map((d) => (d.id === docId ? { ...d, name: file.name, dataUrl } : d)) },
+            : { ...g, docs: g.docs.map((d) => (d.id === docId ? { ...d, name: file.name, dataUrl: url } : d)) },
         ),
       )
     } catch {
-      setFileError(`Could not read "${file.name}". Please try again.`)
+      setFileError(`Could not upload "${file.name}". Please try again.`)
     } finally {
       if (inputEl) inputEl.value = ""
     }
@@ -451,7 +447,7 @@ export function NewApplicationModal({
             </label>
             {fileError && <p className="mt-2 text-xs text-destructive">{fileError}</p>}
             <p className="mt-1 text-xs text-muted-foreground">
-              Max 3 MB per file. Section names are fully custom — rename or delete any section before
+              Max 4 MB per file. Section names are fully custom — rename or delete any section before
               creating the application, or edit them later from the application&apos;s details page.
             </p>
           </div>
