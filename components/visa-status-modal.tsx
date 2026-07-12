@@ -77,11 +77,15 @@ function initials(name: string) {
 }
 
 function isImageDataUrl(url?: string) {
-  return Boolean(url && url.startsWith("data:image/"))
+  if (!url) return false
+  if (url.startsWith("data:image/")) return true // backward-compat with old base64 docs
+  return /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i.test(url)
 }
 
 function isPdfDataUrl(url?: string) {
-  return Boolean(url && url.startsWith("data:application/pdf"))
+  if (!url) return false
+  if (url.startsWith("data:application/pdf")) return true // backward-compat with old base64 docs
+  return /\.pdf(\?.*)?$/i.test(url)
 }
 
 function VisaStatusModal({
