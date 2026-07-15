@@ -1,8 +1,8 @@
 "use client"
 
-import { Suspense, useEffect, useRef, useState, type FormEvent } from "react"
+import { Suspense, useRef, useState, type FormEvent } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import {
   CheckCircle2,
   ShieldCheck,
@@ -10,23 +10,20 @@ import {
   Loader2,
   Upload,
   ArrowLeft,
-  ImageIcon,
-  FileText,
+  Building2,
+  UserRound,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ALL_COUNTRIES, COUNTRY_CODES, COUNTRY_FLAGS, VISA_TYPES } from "@/lib/countries"
-import type { AppDocument, NewApplicationInput } from "@/lib/admin/types"
-
-const emptyForm = {
-  fullName: "",
-  passportNumber: "",
-  nationality: "",
-  email: "",
-  phone: "",
-  destinationCountry: "",
-  visaType: "",
-  travelDate: "",
-}
+import {
+  ALL_COUNTRIES,
+  COUNTRY_CODES,
+  COUNTRY_FLAGS,
+  PASSPORT_TYPES,
+  VISA_TYPES,
+  VISIT_PURPOSES,
+} from "@/lib/countries"
+import { AGENCY_NOT_LISTED_OPTION, getAgenciesForCountry } from "@/lib/agencies"
+import type { AppDocument, ApplyingMethod, NewApplicationInput } from "@/lib/admin/types"
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB
 
@@ -42,163 +39,308 @@ async function uploadApplicantFile(file: File): Promise<string> {
   return data.url
 }
 
-type Step = "form" | "documents" | "success"
+type Step = 1 | 2 | 3
+
+type UploadKey =
+  | "jobOfferLetter"
+  | "policeClearance"
+  | "offerLetter"
+  | "hotelBooking"
+  | "tradeLicense"
+  | "medicalInvitation"
+  | "relationshipProof"
+  | "supportingDocument"
+
+const UPLOAD_GROUP_NAMES: Record<UploadKey, string> = {
+  jobOfferLetter: "Job Offer Letter",
+  policeClearance: "Police Clearance Certificate",
+  offerLetter: "Offer Letter / Admission Letter",
+  hotelBooking: "Hotel Booking / Invitation Letter",
+  tradeLicense: "Trade License / Invitation Letter",
+  medicalInvitation: "Medical Invitation / Appointment",
+  relationshipProof: "Relationship Proof",
+  supportingDocument: "Supporting Document",
+}
+
+/** Sleek inline text input with a right-side upload icon button. */
+function DocumentUploadField({
+  id,
+  label,
+  required,
+  fileName,
+  uploading,
+  error,
+  onFileSelected,
+}: {
+  id: string
+  label: string
+  required?: boolean
+  fileName?: string
+  uploading?: boolean
+  error?: string
+  onFileSelected: (file: File | null) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-foreground">
+        {label} {required && <span className="text-destructive">*</span>}
+      </label>
+      <div className="relative mt-1.5">
+        <input
+          type="text"
+          readOnly
+          value={fileName ?? ""}
+          placeholder="No file selected"
+          onClick={() => inputRef.current?.click()}
+          className="w-full cursor-pointer rounded-lg border border-input bg-background px-4 py-2.5 pr-11 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          aria-label={`Upload ${label}`}
+          className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-lg transition hover:bg-primary/10 disabled:opacity-50"
+        >
+          {uploading ? (
+            <Loader2 className="size-4 animate-spin text-primary" />
+          ) : fileName ? (
+            <CheckCircle2 className="size-4 text-primary" />
+          ) : (
+            <span aria-hidden="true">📤</span>
+          )}
+        </button>
+        <input
+          ref={inputRef}
+          id={id}
+          type="file"
+          accept="image/*,.pdf"
+          className="hidden"
+          disabled={uploading}
+          onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
+        />
+      </div>
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+function fieldClass() {
+  return "mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+}
 
 function ApplyPageContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const prefillCountry = searchParams.get("country") ?? ""
 
-  const [step, setStep] = useState<Step>("form")
-  const [form, setForm] = useState({ ...emptyForm, destinationCountry: prefillCountry })
+  const [step, setStep] = useState<Step>(1)
+  const [submitted, setSubmitted] = useState<Application2 | null>(null)
   const [error, setError] = useState("")
+
+  // ---- Step 1: Personal & Contact Information ----
+  const [fullName, setFullName] = useState("")
+  const [passportNumber, setPassportNumber] = useState("")
+  const [passportType, setPassportType] = useState("")
+  const [dateOfBirth, setDateOfBirth] = useState("")
+  const [nationalId, setNationalId] = useState("")
+  const [nationality, setNationality] = useState("")
+  const [email, setEmail] = useState("")
   const [phoneCode, setPhoneCode] = useState("+880")
+  const [phone, setPhone] = useState("")
 
-  // ---- Step 2 (documents) state ----
-  const [profilePhoto, setProfilePhoto] = useState<{ name: string; url: string } | null>(null)
-  const [passportScan, setPassportScan] = useState<{ name: string; url: string } | null>(null)
-  const [agencyName, setAgencyName] = useState("")
+  // ---- Step 2: Destination & Visa Selection ----
+  const [destinationCountry, setDestinationCountry] = useState(prefillCountry)
+  const [visaType, setVisaType] = useState("")
+  const [applyingMethod, setApplyingMethod] = useState<ApplyingMethod | "">("")
+
+  // ---- Step 3: Case B — Agency ----
+  const [agencyCountry, setAgencyCountry] = useState("")
+  const [agencyNameSelect, setAgencyNameSelect] = useState("")
+  const [agencyNameManual, setAgencyNameManual] = useState("")
   const [agencyReferenceNo, setAgencyReferenceNo] = useState("")
-  const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false)
-  const [uploadingPassport, setUploadingPassport] = useState(false)
-  const [docError, setDocError] = useState("")
-  const [finalSubmitting, setFinalSubmitting] = useState(false)
 
-  const profilePhotoInputRef = useRef<HTMLInputElement>(null)
-  const passportInputRef = useRef<HTMLInputElement>(null)
+  // ---- Step 3: Case A — self-apply dynamic text fields ----
+  const [universityName, setUniversityName] = useState("")
+  const [purposeOfVisit, setPurposeOfVisit] = useState("")
+  const [companyName, setCompanyName] = useState("")
+  const [hospitalName, setHospitalName] = useState("")
+  const [sponsorRelationship, setSponsorRelationship] = useState("")
+  const [expectedSalary, setExpectedSalary] = useState("")
+  const [travelDate, setTravelDate] = useState("")
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }, [step])
+  // ---- Step 3: file uploads ----
+  const [uploads, setUploads] = useState<Partial<Record<UploadKey, { name: string; url: string }>>>({})
+  const [uploadingKeys, setUploadingKeys] = useState<Partial<Record<UploadKey, boolean>>>({})
+  const [uploadErrors, setUploadErrors] = useState<Partial<Record<UploadKey, string>>>({})
+  const [submitting, setSubmitting] = useState(false)
 
-  function update<K extends keyof typeof form>(key: K, value: string) {
-    setForm((f) => ({ ...f, [key]: value }))
+  async function handleFileSelected(key: UploadKey, file: File | null) {
+    if (!file) return
+    setUploadErrors((e) => ({ ...e, [key]: undefined }))
+    if (file.size > MAX_FILE_BYTES) {
+      setUploadErrors((e) => ({ ...e, [key]: "File is too large. Please use a file under 4 MB." }))
+      return
+    }
+    setUploadingKeys((u) => ({ ...u, [key]: true }))
+    try {
+      const url = await uploadApplicantFile(file)
+      setUploads((u) => ({ ...u, [key]: { name: file.name, url } }))
+    } catch {
+      setUploadErrors((e) => ({ ...e, [key]: "Upload failed. Please try again." }))
+    } finally {
+      setUploadingKeys((u) => ({ ...u, [key]: false }))
+    }
   }
 
-  function handleFirstStepSubmit(e: FormEvent) {
+  function handleStep1Submit(e: FormEvent) {
     e.preventDefault()
     if (
-      !form.fullName.trim() ||
-      !form.passportNumber.trim() ||
-      !form.nationality.trim() ||
-      !form.email.trim() ||
-      !form.phone.trim() ||
-      !phoneCode ||
-      !form.destinationCountry.trim() ||
-      !form.visaType.trim()
+      !fullName.trim() ||
+      !passportNumber.trim() ||
+      !passportType ||
+      !dateOfBirth ||
+      !nationality.trim() ||
+      !email.trim() ||
+      !phone.trim()
     ) {
       setError("Please fill in all required fields.")
       return
     }
     setError("")
-    setStep("documents")
+    setStep(2)
   }
 
-  async function handleProfilePhotoChange(file: File | null) {
-    setDocError("")
-    if (!file) return
-    if (!file.type.startsWith("image/")) {
-      setDocError("Passport size photo must be an image file.")
+  function handleStep2Submit(e: FormEvent) {
+    e.preventDefault()
+    if (!destinationCountry || !visaType || !applyingMethod) {
+      setError("Please select destination country, visa type, and how you are applying.")
       return
     }
-    if (file.size > MAX_FILE_BYTES) {
-      setDocError("Photo is too large. Please use a file under 4 MB.")
-      return
-    }
-    setUploadingProfilePhoto(true)
-    try {
-      const url = await uploadApplicantFile(file)
-      setProfilePhoto({ name: file.name, url })
-    } catch {
-      setDocError("Could not upload the passport size photo. Please try again.")
-    } finally {
-      setUploadingProfilePhoto(false)
-    }
+    setError("")
+    setStep(3)
   }
 
-  async function handlePassportScanChange(file: File | null) {
-    setDocError("")
-    if (!file) return
-    if (file.size > MAX_FILE_BYTES) {
-      setDocError("Passport photo is too large. Please use a file under 4 MB.")
-      return
-    }
-    setUploadingPassport(true)
-    try {
-      const url = await uploadApplicantFile(file)
-      setPassportScan({ name: file.name, url })
-    } catch {
-      setDocError("Could not upload the passport photo. Please try again.")
-    } finally {
-      setUploadingPassport(false)
-    }
-  }
-
-  const canFinalSubmit =
-    !!profilePhoto &&
-    !!passportScan &&
-    agencyName.trim().length > 0 &&
-    agencyReferenceNo.trim().length > 0 &&
-    !uploadingProfilePhoto &&
-    !uploadingPassport &&
-    !finalSubmitting
+  const agencyOptions = agencyCountry ? getAgenciesForCountry(agencyCountry) : []
+  const resolvedAgencyName = agencyNameSelect === AGENCY_NOT_LISTED_OPTION ? agencyNameManual.trim() : agencyNameSelect
 
   async function handleFinalSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!profilePhoto || !passportScan) {
-      setDocError("Please upload both the passport size photo and the passport photo.")
-      return
-    }
-    if (!agencyName.trim() || !agencyReferenceNo.trim()) {
-      setDocError("Please fill in the agency name and agency reference number.")
-      return
-    }
+    setError("")
 
-    setFinalSubmitting(true)
-    setDocError("")
-    try {
-      const now = new Date().toISOString()
-      const documents: AppDocument[] = [
-        {
-          id: `doc_${Date.now()}`,
-          name: passportScan.name,
-          groupName: "Passport",
-          dataUrl: passportScan.url,
-          addedBy: "applicant",
-          addedAt: now,
-        },
-      ]
+    let documents: AppDocument[] = []
+    const now = new Date().toISOString()
 
-      const payload: NewApplicationInput = {
-        ...form,
-        phone: `${phoneCode} ${form.phone.trim()}`,
-        photoUrl: profilePhoto.url,
-        agencyName: agencyName.trim(),
-        agencyReferenceNo: agencyReferenceNo.trim(),
-        documents,
+    if (applyingMethod === "agency") {
+      if (!agencyCountry || !resolvedAgencyName || !agencyReferenceNo.trim()) {
+        setError("Please fill in the agency country, agency name, and reference number.")
+        return
+      }
+    } else {
+      // self-apply — validate based on visa type
+      if (visaType === "Work Permit Visa") {
+        if (!uploads.jobOfferLetter || !uploads.policeClearance) {
+          setError("Please upload the Job Offer Letter and Police Clearance Certificate.")
+          return
+        }
+      } else if (visaType === "Student / Study Visa") {
+        if (!universityName.trim() || !uploads.offerLetter) {
+          setError("Please provide the university name and upload the Offer/Admission Letter.")
+          return
+        }
+      } else if (visaType === "Tourist / Visit Visa") {
+        if (!purposeOfVisit || !uploads.hotelBooking) {
+          setError("Please select a purpose of visit and upload the Hotel Booking / Invitation Letter.")
+          return
+        }
+      } else if (visaType === "Business Visa") {
+        if (!companyName.trim() || !uploads.tradeLicense) {
+          setError("Please provide the company name and upload the Trade License / Invitation Letter.")
+          return
+        }
+      } else if (visaType === "Medical Visa") {
+        if (!hospitalName.trim() || !uploads.medicalInvitation) {
+          setError("Please provide the hospital name and upload the Medical Invitation / Appointment.")
+          return
+        }
+      } else if (visaType === "Family / Spouse Visa") {
+        if (!sponsorRelationship.trim() || !uploads.relationshipProof) {
+          setError("Please provide the sponsor's name/relationship and upload the Relationship Proof.")
+          return
+        }
       }
 
+      documents = (Object.keys(uploads) as UploadKey[])
+        .filter((key) => uploads[key])
+        .map((key) => ({
+          id: `doc_${key}_${Date.now()}`,
+          name: uploads[key]!.name,
+          groupName: UPLOAD_GROUP_NAMES[key],
+          dataUrl: uploads[key]!.url,
+          addedBy: "applicant" as const,
+          addedAt: now,
+        }))
+    }
+
+    const visaDetails: Record<string, string> = {}
+    if (universityName.trim()) visaDetails.universityName = universityName.trim()
+    if (purposeOfVisit) visaDetails.purposeOfVisit = purposeOfVisit
+    if (companyName.trim()) visaDetails.companyName = companyName.trim()
+    if (hospitalName.trim()) visaDetails.hospitalName = hospitalName.trim()
+    if (sponsorRelationship.trim()) visaDetails.sponsorRelationship = sponsorRelationship.trim()
+    if (expectedSalary.trim()) visaDetails.expectedSalary = expectedSalary.trim()
+
+    const payload: NewApplicationInput = {
+      fullName: fullName.trim(),
+      passportNumber: passportNumber.trim(),
+      passportType,
+      dateOfBirth,
+      nationalId: nationalId.trim(),
+      nationality: nationality.trim(),
+      email: email.trim(),
+      phone: `${phoneCode} ${phone.trim()}`,
+      destinationCountry,
+      visaType,
+      applyingMethod: applyingMethod as ApplyingMethod,
+      agencyCountry: applyingMethod === "agency" ? agencyCountry : "",
+      agencyName: applyingMethod === "agency" ? resolvedAgencyName : "",
+      agencyReferenceNo: applyingMethod === "agency" ? agencyReferenceNo.trim() : "",
+      visaDetails,
+      travelDate,
+      photoUrl: "",
+      documents,
+    }
+
+    setSubmitting(true)
+    try {
       const res = await fetch("/api/applications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
-
       if (res.ok) {
-        setStep("success")
+        setSubmitted({
+          fullName: payload.fullName,
+          visaType: payload.visaType,
+          destinationCountry: payload.destinationCountry,
+          passportNumber: payload.passportNumber,
+          dateOfBirth: payload.dateOfBirth,
+          email: payload.email,
+          applyingMethod: payload.applyingMethod,
+          agencyReferenceNo: payload.agencyReferenceNo,
+        })
       } else {
-        setDocError("Something went wrong while submitting your application. Please try again.")
+        const body = await res.json().catch(() => null)
+        setError(body?.error || "Something went wrong while submitting your application. Please try again.")
       }
     } catch {
-      setDocError("Something went wrong while submitting your application. Please try again.")
+      setError("Something went wrong while submitting your application. Please try again.")
     } finally {
-      setFinalSubmitting(false)
+      setSubmitting(false)
     }
   }
 
   return (
     <main className="min-h-screen bg-secondary/30">
-      {/* Top bar */}
       <div className="border-b border-border bg-background">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2.5" aria-label="Global Migration Hub home">
@@ -209,288 +351,182 @@ function ApplyPageContent() {
               Global Migration Hub
             </span>
           </Link>
-          {step !== "success" && (
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" /> Cancel
-            </Link>
-          )}
+          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-4" /> Cancel
+          </Link>
         </div>
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
-        {/* Step indicator */}
-        {step !== "success" && (
-          <div className="mb-6 flex items-center justify-center gap-2">
-            <div className={`h-1.5 w-16 rounded-full ${step === "form" ? "bg-primary" : "bg-primary/40"}`} />
-            <div className={`h-1.5 w-16 rounded-full ${step === "documents" ? "bg-primary" : "bg-muted"}`} />
-          </div>
-        )}
+        <div className="mb-6 flex items-center justify-center gap-2">
+          {[1, 2, 3].map((s) => (
+            <div key={s} className={`h-1.5 w-16 rounded-full ${step === s ? "bg-primary" : step > s ? "bg-primary/40" : "bg-muted"}`} />
+          ))}
+        </div>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-          {step === "success" ? (
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <CheckCircle2 className="size-7" aria-hidden="true" />
-              </div>
-              <h1 className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
-                🎉 Application Submitted Successfully!
-              </h1>
-              <div className="w-full rounded-xl bg-secondary/60 p-4 text-left">
-                <p className="text-sm font-semibold text-foreground">Important Note:</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Your application has been successfully received and is now under review. To proceed with
-                  the next steps, please contact your designated agency immediately to collect your Official
-                  Offer Letter.
-                </p>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Thank you for choosing our services. We wish you the best of luck with your application!
-              </p>
-              <Button asChild size="lg" className="mt-2 h-11 w-full">
-                <Link href="/">Back to Home</Link>
-              </Button>
-            </div>
-          ) : step === "documents" ? (
+          {step === 1 && (
             <div>
-              <button
-                type="button"
-                onClick={() => setStep("form")}
-                className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="size-3.5" /> Back
-              </button>
-              <h1 className="font-serif text-2xl font-semibold text-foreground">Documents &amp; Agency Details</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Upload your documents and agency information to complete the application.
-              </p>
+              <h1 className="font-serif text-2xl font-semibold text-foreground">Personal &amp; Contact Information</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Step 1 of 3 — Tell us about yourself.</p>
 
-              <form onSubmit={handleFinalSubmit} className="mt-6 space-y-4" noValidate>
-                {/* Passport Size Photo */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground">Passport Size Photo</label>
-                  <p className="mb-1.5 text-xs text-muted-foreground">
-                    This will be used as your profile photo.
-                  </p>
-                  <label
-                    className={`flex items-center justify-between gap-2 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm transition ${
-                      uploadingProfilePhoto ? "opacity-60" : "cursor-pointer hover:bg-muted"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2 truncate text-foreground">
-                      <ImageIcon className="size-4 shrink-0 text-primary" />
-                      <span className="truncate">
-                        {profilePhoto ? profilePhoto.name : "Choose an image file"}
-                      </span>
-                    </span>
-                    {uploadingProfilePhoto ? (
-                      <Loader2 className="size-4 shrink-0 animate-spin text-primary" />
-                    ) : profilePhoto ? (
-                      <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                    ) : (
-                      <Upload className="size-4 shrink-0 text-muted-foreground" />
-                    )}
-                    <input
-                      ref={profilePhotoInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploadingProfilePhoto}
-                      onChange={(e) => handleProfilePhotoChange(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                </div>
-
-                {/* Passport Photo (scan) */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground">Passport Photo</label>
-                  <p className="mb-1.5 text-xs text-muted-foreground">
-                    Upload a clear scan or photo of your passport&apos;s main page.
-                  </p>
-                  <label
-                    className={`flex items-center justify-between gap-2 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm transition ${
-                      uploadingPassport ? "opacity-60" : "cursor-pointer hover:bg-muted"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2 truncate text-foreground">
-                      <FileText className="size-4 shrink-0 text-primary" />
-                      <span className="truncate">
-                        {passportScan ? passportScan.name : "Choose an image or PDF file"}
-                      </span>
-                    </span>
-                    {uploadingPassport ? (
-                      <Loader2 className="size-4 shrink-0 animate-spin text-primary" />
-                    ) : passportScan ? (
-                      <CheckCircle2 className="size-4 shrink-0 text-primary" />
-                    ) : (
-                      <Upload className="size-4 shrink-0 text-muted-foreground" />
-                    )}
-                    <input
-                      ref={passportInputRef}
-                      type="file"
-                      accept=".pdf,image/*"
-                      className="hidden"
-                      disabled={uploadingPassport}
-                      onChange={(e) => handlePassportScanChange(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                </div>
-
-                {/* Agency Name */}
-                <div>
-                  <label htmlFor="agencyName" className="block text-sm font-medium text-foreground">
-                    Agency Name
-                  </label>
-                  <input
-                    id="agencyName"
-                    value={agencyName}
-                    onChange={(e) => setAgencyName(e.target.value)}
-                    placeholder="e.g. ABC Overseas Consultants"
-                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                  />
-                </div>
-
-                {/* Agency Reference No */}
-                <div>
-                  <label htmlFor="agencyReferenceNo" className="block text-sm font-medium text-foreground">
-                    Agency Reference No
-                  </label>
-                  <input
-                    id="agencyReferenceNo"
-                    value={agencyReferenceNo}
-                    onChange={(e) => setAgencyReferenceNo(e.target.value)}
-                    placeholder="Enter the reference number given by your agency"
-                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                  />
-                </div>
-
-                {docError && (
-                  <p role="alert" className="flex items-center gap-1.5 text-sm text-destructive">
-                    <AlertCircle className="size-4" aria-hidden="true" />
-                    {docError}
-                  </p>
-                )}
-
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="h-12 w-full gap-2 text-base"
-                  disabled={!canFinalSubmit}
-                >
-                  {finalSubmitting ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-                  {finalSubmitting ? "Submitting…" : "Confirm & Final Submit"}
-                </Button>
-
-                <p className="flex items-start gap-2 text-xs text-muted-foreground">
-                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-                  Bank-grade encryption. Your details are only used to process your application.
-                </p>
-              </form>
-            </div>
-          ) : (
-            <div>
-              <h1 className="font-serif text-2xl font-semibold text-foreground">Start your visa application</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Tell us a few details and our advisors will guide you through the rest.
-              </p>
-
-              <form onSubmit={handleFirstStepSubmit} className="mt-6 space-y-4" noValidate>
+              <form onSubmit={handleStep1Submit} className="mt-6 space-y-4" noValidate>
                 <div>
                   <label htmlFor="fullName" className="block text-sm font-medium text-foreground">
-                    Full Name
+                    Full Name <span className="text-destructive">*</span>
                   </label>
                   <input
                     id="fullName"
-                    value={form.fullName}
-                    onChange={(e) => update("fullName", e.target.value)}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     placeholder="Your full legal name"
-                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                    className={fieldClass()}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="passportNumber" className="block text-sm font-medium text-foreground">
-                      Passport Number
+                      Passport Number <span className="text-destructive">*</span>
                     </label>
                     <input
                       id="passportNumber"
-                      value={form.passportNumber}
-                      onChange={(e) => update("passportNumber", e.target.value)}
+                      value={passportNumber}
+                      onChange={(e) => setPassportNumber(e.target.value)}
                       placeholder="e.g. A1234567"
-                      className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                      className={fieldClass()}
                     />
                   </div>
                   <div>
-                    <label htmlFor="nationality" className="block text-sm font-medium text-foreground">
-                      Nationality
+                    <label htmlFor="passportType" className="block text-sm font-medium text-foreground">
+                      Passport Type <span className="text-destructive">*</span>
+                    </label>
+                    <select id="passportType" value={passportType} onChange={(e) => setPassportType(e.target.value)} className={fieldClass()}>
+                      <option value="">Select passport type</option>
+                      {PASSPORT_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="dateOfBirth" className="block text-sm font-medium text-foreground">
+                      Date of Birth <span className="text-destructive">*</span>
                     </label>
                     <input
-                      id="nationality"
-                      value={form.nationality}
-                      onChange={(e) => update("nationality", e.target.value)}
-                      placeholder="e.g. Bangladeshi"
-                      className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                      id="dateOfBirth"
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className={fieldClass()}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="nationalId" className="block text-sm font-medium text-foreground">
+                      National ID Card <span className="text-muted-foreground">(optional)</span>
+                    </label>
+                    <input
+                      id="nationalId"
+                      value={nationalId}
+                      onChange={(e) => setNationalId(e.target.value)}
+                      placeholder="e.g. 199XXXXXXXXXX"
+                      className={fieldClass()}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
+                    <label htmlFor="nationality" className="block text-sm font-medium text-foreground">
+                      Nationality <span className="text-destructive">*</span>
+                    </label>
+                    <input
+                      id="nationality"
+                      value={nationality}
+                      onChange={(e) => setNationality(e.target.value)}
+                      placeholder="e.g. Bangladeshi"
+                      className={fieldClass()}
+                    />
+                  </div>
+                  <div>
                     <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                      Email
+                      Email Address <span className="text-destructive">*</span>
                     </label>
                     <input
                       id="email"
                       type="email"
-                      value={form.email}
-                      onChange={(e) => update("email", e.target.value)}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                      className={fieldClass()}
                     />
-                  </div>
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-foreground">
-                      Phone
-                    </label>
-                    <div className="mt-1.5 flex gap-2">
-                      <select
-                        id="phoneCode"
-                        aria-label="Country code"
-                        value={phoneCode}
-                        onChange={(e) => setPhoneCode(e.target.value)}
-                        className="w-24 shrink-0 rounded-lg border border-input bg-background px-2 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                      >
-                        {COUNTRY_CODES.map((c) => (
-                          <option key={c.name} value={c.dial}>
-                            {c.dial}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        id="phone"
-                        type="tel"
-                        value={form.phone}
-                        onChange={(e) => update("phone", e.target.value)}
-                        placeholder="1XXX-XXXXXX"
-                        className="w-full min-w-0 rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                      />
-                    </div>
                   </div>
                 </div>
 
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-foreground">
+                    Phone Number <span className="text-destructive">*</span>
+                  </label>
+                  <div className="mt-1.5 flex gap-2">
+                    <select
+                      aria-label="Country code"
+                      value={phoneCode}
+                      onChange={(e) => setPhoneCode(e.target.value)}
+                      className="w-24 shrink-0 rounded-lg border border-input bg-background px-2 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                    >
+                      {COUNTRY_CODES.map((c) => (
+                        <option key={c.name} value={c.dial}>
+                          {c.dial}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="1XXX-XXXXXX"
+                      className="w-full min-w-0 rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <p role="alert" className="flex items-center gap-1.5 text-sm text-destructive">
+                    <AlertCircle className="size-4" aria-hidden="true" /> {error}
+                  </p>
+                )}
+
+                <Button type="submit" size="lg" className="h-12 w-full text-base">
+                  Continue
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <button type="button" onClick={() => setStep(1)} className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="size-3.5" /> Back
+              </button>
+              <h1 className="font-serif text-2xl font-semibold text-foreground">Destination &amp; Visa Selection</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Step 2 of 3 — Where are you headed?</p>
+
+              <form onSubmit={handleStep2Submit} className="mt-6 space-y-4" noValidate>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label htmlFor="destinationCountry" className="block text-sm font-medium text-foreground">
-                      Destination Country
+                      Destination Country <span className="text-destructive">*</span>
                     </label>
                     <select
                       id="destinationCountry"
-                      value={form.destinationCountry}
-                      onChange={(e) => update("destinationCountry", e.target.value)}
-                      className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                      value={destinationCountry}
+                      onChange={(e) => setDestinationCountry(e.target.value)}
+                      className={fieldClass()}
                     >
                       <option value="">Select a country</option>
                       {ALL_COUNTRIES.map((c) => (
@@ -502,14 +538,9 @@ function ApplyPageContent() {
                   </div>
                   <div>
                     <label htmlFor="visaType" className="block text-sm font-medium text-foreground">
-                      Visa Type
+                      Visa Type <span className="text-destructive">*</span>
                     </label>
-                    <select
-                      id="visaType"
-                      value={form.visaType}
-                      onChange={(e) => update("visaType", e.target.value)}
-                      className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                    >
+                    <select id="visaType" value={visaType} onChange={(e) => setVisaType(e.target.value)} className={fieldClass()}>
                       <option value="">Select a visa type</option>
                       {VISA_TYPES.map((v) => (
                         <option key={v} value={v}>
@@ -521,27 +552,360 @@ function ApplyPageContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="travelDate" className="block text-sm font-medium text-foreground">
-                    Planned Travel Date <span className="text-muted-foreground">(optional)</span>
-                  </label>
-                  <input
-                    id="travelDate"
-                    type="date"
-                    value={form.travelDate}
-                    onChange={(e) => update("travelDate", e.target.value)}
-                    className="mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-                  />
+                  <span className="block text-sm font-medium text-foreground">
+                    How are you applying? <span className="text-destructive">*</span>
+                  </span>
+                  <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => setApplyingMethod("self")}
+                      className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition ${
+                        applyingMethod === "self" ? "border-primary bg-primary/5" : "border-input hover:bg-muted"
+                      }`}
+                    >
+                      <UserRound className="size-5 shrink-0 text-primary" />
+                      <span>
+                        <span className="block text-sm font-semibold text-foreground">I am applying myself</span>
+                        <span className="block text-xs text-muted-foreground">Upload your own documents</span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setApplyingMethod("agency")}
+                      className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition ${
+                        applyingMethod === "agency" ? "border-primary bg-primary/5" : "border-input hover:bg-muted"
+                      }`}
+                    >
+                      <Building2 className="size-5 shrink-0 text-primary" />
+                      <span>
+                        <span className="block text-sm font-semibold text-foreground">Through an Agency</span>
+                        <span className="block text-xs text-muted-foreground">Applying via a registered agency</span>
+                      </span>
+                    </button>
+                  </div>
                 </div>
 
                 {error && (
                   <p role="alert" className="flex items-center gap-1.5 text-sm text-destructive">
-                    <AlertCircle className="size-4" aria-hidden="true" />
-                    {error}
+                    <AlertCircle className="size-4" aria-hidden="true" /> {error}
                   </p>
                 )}
 
-                <Button type="submit" size="lg" className="h-12 w-full gap-2 text-base">
+                <Button type="submit" size="lg" className="h-12 w-full text-base">
                   Continue
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
+              <button type="button" onClick={() => setStep(2)} className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="size-3.5" /> Back
+              </button>
+              <h1 className="font-serif text-2xl font-semibold text-foreground">Application Details &amp; Verification</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Step 3 of 3 — Almost done.</p>
+
+              <form onSubmit={handleFinalSubmit} className="mt-6 space-y-4" noValidate>
+                {applyingMethod === "agency" ? (
+                  <>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="agencyCountry" className="block text-sm font-medium text-foreground">
+                          Agency Country <span className="text-destructive">*</span>
+                        </label>
+                        <select
+                          id="agencyCountry"
+                          value={agencyCountry}
+                          onChange={(e) => {
+                            setAgencyCountry(e.target.value)
+                            setAgencyNameSelect("")
+                          }}
+                          className={fieldClass()}
+                        >
+                          <option value="">Select a country</option>
+                          {ALL_COUNTRIES.map((c) => (
+                            <option key={c} value={c}>
+                              {COUNTRY_FLAGS[c]} {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="agencyName" className="block text-sm font-medium text-foreground">
+                          Agency Name <span className="text-destructive">*</span>
+                        </label>
+                        <select
+                          id="agencyName"
+                          value={agencyNameSelect}
+                          onChange={(e) => setAgencyNameSelect(e.target.value)}
+                          disabled={!agencyCountry}
+                          className={fieldClass()}
+                        >
+                          <option value="">{agencyCountry ? "Select an agency" : "Select a country first"}</option>
+                          {agencyOptions.map((a) => (
+                            <option key={a} value={a}>
+                              {a}
+                            </option>
+                          ))}
+                          {agencyCountry && <option value={AGENCY_NOT_LISTED_OPTION}>{AGENCY_NOT_LISTED_OPTION}</option>}
+                        </select>
+                      </div>
+                    </div>
+
+                    {agencyNameSelect === AGENCY_NOT_LISTED_OPTION && (
+                      <div>
+                        <label htmlFor="agencyNameManual" className="block text-sm font-medium text-foreground">
+                          Enter Agency Name <span className="text-destructive">*</span>
+                        </label>
+                        <input
+                          id="agencyNameManual"
+                          value={agencyNameManual}
+                          onChange={(e) => setAgencyNameManual(e.target.value)}
+                          placeholder="Type the agency's name"
+                          className={fieldClass()}
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label htmlFor="agencyReferenceNo" className="block text-sm font-medium text-foreground">
+                        Agency Reference Number <span className="text-destructive">*</span>
+                      </label>
+                      <input
+                        id="agencyReferenceNo"
+                        value={agencyReferenceNo}
+                        onChange={(e) => setAgencyReferenceNo(e.target.value)}
+                        placeholder="Enter the reference number given by your agency"
+                        className={fieldClass()}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {visaType === "Work Permit Visa" && (
+                      <>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <DocumentUploadField
+                            id="jobOfferLetter"
+                            label="Job Offer Letter"
+                            required
+                            fileName={uploads.jobOfferLetter?.name}
+                            uploading={uploadingKeys.jobOfferLetter}
+                            error={uploadErrors.jobOfferLetter}
+                            onFileSelected={(f) => handleFileSelected("jobOfferLetter", f)}
+                          />
+                          <DocumentUploadField
+                            id="policeClearance"
+                            label="Police Clearance Certificate"
+                            required
+                            fileName={uploads.policeClearance?.name}
+                            uploading={uploadingKeys.policeClearance}
+                            error={uploadErrors.policeClearance}
+                            onFileSelected={(f) => handleFileSelected("policeClearance", f)}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="expectedSalary" className="block text-sm font-medium text-foreground">
+                            Expected Monthly Salary <span className="text-muted-foreground">(optional)</span>
+                          </label>
+                          <input
+                            id="expectedSalary"
+                            value={expectedSalary}
+                            onChange={(e) => setExpectedSalary(e.target.value)}
+                            placeholder="e.g. 1200 USD"
+                            className={fieldClass()}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {visaType === "Student / Study Visa" && (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="universityName" className="block text-sm font-medium text-foreground">
+                            University / College Name <span className="text-destructive">*</span>
+                          </label>
+                          <input
+                            id="universityName"
+                            value={universityName}
+                            onChange={(e) => setUniversityName(e.target.value)}
+                            placeholder="Name of the institution"
+                            className={fieldClass()}
+                          />
+                        </div>
+                        <DocumentUploadField
+                          id="offerLetter"
+                          label="Offer Letter / Admission Letter"
+                          required
+                          fileName={uploads.offerLetter?.name}
+                          uploading={uploadingKeys.offerLetter}
+                          error={uploadErrors.offerLetter}
+                          onFileSelected={(f) => handleFileSelected("offerLetter", f)}
+                        />
+                      </div>
+                    )}
+
+                    {visaType === "Tourist / Visit Visa" && (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="purposeOfVisit" className="block text-sm font-medium text-foreground">
+                            Purpose of Visit <span className="text-destructive">*</span>
+                          </label>
+                          <select
+                            id="purposeOfVisit"
+                            value={purposeOfVisit}
+                            onChange={(e) => setPurposeOfVisit(e.target.value)}
+                            className={fieldClass()}
+                          >
+                            <option value="">Select a purpose</option>
+                            {VISIT_PURPOSES.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <DocumentUploadField
+                          id="hotelBooking"
+                          label="Hotel Booking / Invitation Letter"
+                          required
+                          fileName={uploads.hotelBooking?.name}
+                          uploading={uploadingKeys.hotelBooking}
+                          error={uploadErrors.hotelBooking}
+                          onFileSelected={(f) => handleFileSelected("hotelBooking", f)}
+                        />
+                      </div>
+                    )}
+
+                    {visaType === "Business Visa" && (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="companyName" className="block text-sm font-medium text-foreground">
+                            Company Name <span className="text-destructive">*</span>
+                          </label>
+                          <input
+                            id="companyName"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                            placeholder="Your company's name"
+                            className={fieldClass()}
+                          />
+                        </div>
+                        <DocumentUploadField
+                          id="tradeLicense"
+                          label="Trade License / Invitation Letter"
+                          required
+                          fileName={uploads.tradeLicense?.name}
+                          uploading={uploadingKeys.tradeLicense}
+                          error={uploadErrors.tradeLicense}
+                          onFileSelected={(f) => handleFileSelected("tradeLicense", f)}
+                        />
+                      </div>
+                    )}
+
+                    {visaType === "Medical Visa" && (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="hospitalName" className="block text-sm font-medium text-foreground">
+                            Hospital Name <span className="text-destructive">*</span>
+                          </label>
+                          <input
+                            id="hospitalName"
+                            value={hospitalName}
+                            onChange={(e) => setHospitalName(e.target.value)}
+                            placeholder="Name of the hospital"
+                            className={fieldClass()}
+                          />
+                        </div>
+                        <DocumentUploadField
+                          id="medicalInvitation"
+                          label="Medical Invitation / Appointment"
+                          required
+                          fileName={uploads.medicalInvitation?.name}
+                          uploading={uploadingKeys.medicalInvitation}
+                          error={uploadErrors.medicalInvitation}
+                          onFileSelected={(f) => handleFileSelected("medicalInvitation", f)}
+                        />
+                      </div>
+                    )}
+
+                    {visaType === "Family / Spouse Visa" && (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="sponsorRelationship" className="block text-sm font-medium text-foreground">
+                            Sponsor Name &amp; Relationship <span className="text-destructive">*</span>
+                          </label>
+                          <input
+                            id="sponsorRelationship"
+                            value={sponsorRelationship}
+                            onChange={(e) => setSponsorRelationship(e.target.value)}
+                            placeholder="e.g. Jane Doe — Spouse"
+                            className={fieldClass()}
+                          />
+                        </div>
+                        <DocumentUploadField
+                          id="relationshipProof"
+                          label="Relationship Proof (Marriage/Birth Cert)"
+                          required
+                          fileName={uploads.relationshipProof?.name}
+                          uploading={uploadingKeys.relationshipProof}
+                          error={uploadErrors.relationshipProof}
+                          onFileSelected={(f) => handleFileSelected("relationshipProof", f)}
+                        />
+                      </div>
+                    )}
+
+                    {(visaType === "Transit Visa" || visaType === "Permanent Residency" || visaType === "Diplomatic Visa") && (
+                      <DocumentUploadField
+                        id="supportingDocument"
+                        label="Supporting Document"
+                        fileName={uploads.supportingDocument?.name}
+                        uploading={uploadingKeys.supportingDocument}
+                        error={uploadErrors.supportingDocument}
+                        onFileSelected={(f) => handleFileSelected("supportingDocument", f)}
+                      />
+                    )}
+
+                    <div>
+                      <label htmlFor="travelDate" className="block text-sm font-medium text-foreground">
+                        Planned Travel Date <span className="text-muted-foreground">(optional)</span>
+                      </label>
+                      <input
+                        id="travelDate"
+                        type="date"
+                        value={travelDate}
+                        onChange={(e) => setTravelDate(e.target.value)}
+                        className={fieldClass()}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {applyingMethod === "agency" && (
+                  <div>
+                    <label htmlFor="travelDate2" className="block text-sm font-medium text-foreground">
+                      Planned Travel Date <span className="text-muted-foreground">(optional)</span>
+                    </label>
+                    <input
+                      id="travelDate2"
+                      type="date"
+                      value={travelDate}
+                      onChange={(e) => setTravelDate(e.target.value)}
+                      className={fieldClass()}
+                    />
+                  </div>
+                )}
+
+                {error && (
+                  <p role="alert" className="flex items-center gap-1.5 text-sm text-destructive">
+                    <AlertCircle className="size-4" aria-hidden="true" /> {error}
+                  </p>
+                )}
+
+                <Button type="submit" size="lg" className="h-12 w-full gap-2 text-base" disabled={submitting}>
+                  {submitting ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+                  {submitting ? "Submitting…" : "Submit Application"}
                 </Button>
 
                 <p className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -553,7 +917,73 @@ function ApplyPageContent() {
           )}
         </div>
       </div>
+
+      {submitted && <SuccessModal data={submitted} />}
     </main>
+  )
+}
+
+type Application2 = {
+  fullName: string
+  visaType: string
+  destinationCountry: string
+  passportNumber: string
+  dateOfBirth: string
+  email: string
+  applyingMethod: string
+  agencyReferenceNo: string
+}
+
+function SuccessModal({ data }: { data: Application2 }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm animate-in fade-in-0 duration-300" />
+      <div className="relative z-10 w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-8 text-center shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary animate-in zoom-in-50 duration-500">
+          <CheckCircle2 className="size-9" aria-hidden="true" />
+        </div>
+        <h2 className="mt-4 font-serif text-2xl font-semibold text-foreground">🎉 Application Submitted Successfully!</h2>
+
+        <p className="mt-4 text-sm text-muted-foreground">
+          Dear <span className="font-semibold text-foreground">{data.fullName}</span>, your application for{" "}
+          <span className="font-semibold text-foreground">{data.visaType}</span> to{" "}
+          <span className="font-semibold text-foreground">{data.destinationCountry}</span> has been successfully
+          received.
+        </p>
+
+        <div className="mt-4 rounded-xl bg-secondary/60 p-4 text-left text-sm">
+          <p className="font-semibold text-foreground">How to Track:</p>
+          <p className="mt-1 text-muted-foreground">You can track your visa status using your:</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+            <li>
+              Passport Number (<span className="font-medium text-foreground">{data.passportNumber}</span>)
+            </li>
+            <li>
+              Date of Birth (<span className="font-medium text-foreground">{data.dateOfBirth}</span>)
+            </li>
+            {data.applyingMethod === "agency" && (
+              <li>
+                Agency Reference Number (<span className="font-medium text-foreground">{data.agencyReferenceNo}</span>)
+              </li>
+            )}
+          </ol>
+        </div>
+
+        <p className="mt-4 text-sm text-muted-foreground">
+          Our verification specialists will review your submitted data within 24 to 48 hours. A confirmation email
+          has been sent to <span className="font-medium text-foreground">{data.email}</span>.
+        </p>
+
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          <Button asChild variant="outline" className="h-11 flex-1 rounded-full">
+            <Link href="/">Close</Link>
+          </Button>
+          <Button asChild className="h-11 flex-1 rounded-full">
+            <Link href="/">Go to Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }
 
