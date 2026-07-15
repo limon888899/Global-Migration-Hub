@@ -42,6 +42,10 @@ export interface Application {
   travelDate: string
   /** Base64 data URL of the applicant's photo, set by the admin. */
   photoUrl: string
+  /** Name of the agency the applicant applied through. */
+  agencyName: string
+  /** Manually typed agency reference number (not auto-generated). */
+  agencyReferenceNo: string
   submittedAt: string
   manualStatus: ManualStatus
   statusNote: string
