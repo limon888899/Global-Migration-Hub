@@ -5,8 +5,11 @@ import { Mail, Phone, MapPin, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const details = [
+  { icon: Mail, label: "Email", value: "ceo@globalmigrationhub.com", href: "mailto:ceo@globalmigrationhub.com" },
+  { icon: Mail, label: "Email", value: "support@globalmigrationhub.com", href: "mailto:support@globalmigrationhub.com" },
   { icon: Mail, label: "Email", value: "info@globalmigrationhub.com", href: "mailto:info@globalmigrationhub.com" },
   { icon: Phone, label: "Phone", value: "+61 468 784 227", href: "tel:+61468784227" },
+  { icon: Phone, label: "Phone", value: "+61 468 784 238", href: "tel:+61468784238" },
   { icon: MapPin, label: "Office", value: "Level 15, 100 Queen Street, Melbourne, VIC 3000, Australia", href: null },
 ]
 
