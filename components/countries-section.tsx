@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { ArrowRight, ChevronDown, ChevronUp, Globe2 } from "lucide-react"
-import { useVisaStatusModal } from "@/components/visa-status-modal"
 import { DESTINATION_COUNTRIES, ALL_COUNTRIES, COUNTRY_FLAGS } from "@/lib/countries"
 
 const countryDetails: Record<string, { visaTypes: string; image: string; alt: string }> = {
@@ -119,7 +119,6 @@ const remainingCountries = ALL_COUNTRIES.filter(
 )
 
 export function CountriesSection() {
-  const { open } = useVisaStatusModal()
   const [showAll, setShowAll] = useState(false)
 
   return (
@@ -165,15 +164,14 @@ export function CountriesSection() {
                     {country.visaTypes}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => open(country.name)}
+                <Link
+                  href={`/track?country=${encodeURIComponent(country.name)}`}
                   className="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
                   aria-label={`Enquire now about visas for ${country.name}`}
                 >
                   Enquire Now
                   <ArrowRight className="size-4" aria-hidden="true" />
-                </button>
+                </Link>
               </div>
             </article>
           ))}
@@ -203,10 +201,9 @@ export function CountriesSection() {
               </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {remainingCountries.map((name) => (
-                  <button
+                  <Link
                     key={name}
-                    type="button"
-                    onClick={() => open(name)}
+                    href={`/track?country=${encodeURIComponent(name)}`}
                     className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent/10 hover:shadow-md"
                   >
                     <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
@@ -215,7 +212,7 @@ export function CountriesSection() {
                     <span className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent-foreground">
                       {name}
                     </span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>
