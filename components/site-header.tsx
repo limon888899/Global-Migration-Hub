@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useApplicationModal } from "@/components/application-modal"
 
 const navLinks = [
   { label: "Work Permits", href: "#services" },
@@ -13,7 +13,6 @@ const navLinks = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false)
-  const { open: openApplicationModal } = useApplicationModal()
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
@@ -40,8 +39,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden md:block">
-          <Button type="button" onClick={() => openApplicationModal()} className="h-10 rounded-full px-5">
-            Apply Now
+          <Button asChild className="h-10 rounded-full px-5">
+            <Link href="/apply">Apply Now</Link>
           </Button>
         </div>
 
@@ -69,15 +68,8 @@ export function SiteHeader() {
                 {link.label}
               </a>
             ))}
-            <Button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                openApplicationModal()
-              }}
-              className="mt-2 h-10 rounded-full px-5"
-            >
-              Apply Now
+            <Button asChild className="mt-2 h-10 rounded-full px-5" onClick={() => setOpen(false)}>
+              <Link href="/apply">Apply Now</Link>
             </Button>
           </nav>
         </div>
