@@ -5,7 +5,6 @@ import { CountriesSection } from "@/components/countries-section"
 import { ImmigrationNews } from "@/components/immigration-news"
 import { ContactSection } from "@/components/contact-section"
 import { SiteFooter } from "@/components/site-footer"
-import { VisaStatusModalProvider } from "@/components/visa-status-modal"
 
 export default function Page() {
   const jsonLd = {
@@ -26,17 +25,15 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <VisaStatusModalProvider>
-        <SiteHeader />
-        <main>
-          <Hero />
-          <WorkPermitServices />
-          <CountriesSection />
-          <ImmigrationNews />
-          <ContactSection />
-        </main>
-        <SiteFooter />
-      </VisaStatusModalProvider>
+      <SiteHeader />
+      <main>
+        <Hero />
+        <WorkPermitServices />
+        <CountriesSection />
+        <ImmigrationNews />
+        <ContactSection />
+      </main>
+      <SiteFooter />
     </>
   )
 }
