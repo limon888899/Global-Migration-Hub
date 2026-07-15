@@ -1,16 +1,14 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { useApplicationModal } from "@/components/application-modal"
 
 const trustItems = ["Fast Processing", "Secure Process", "24/7 Support"]
 
 export function Hero() {
-  const { open } = useApplicationModal()
-
   return (
     <section id="top" className="relative overflow-hidden text-primary-foreground">
       <Image
@@ -43,13 +41,14 @@ export function Hero() {
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button
-            type="button"
+            asChild
             size="lg"
-            onClick={open}
             className="h-12 w-full gap-2 rounded-full bg-accent px-7 text-base text-accent-foreground hover:bg-accent/90 sm:w-auto"
           >
-            Start Application
-            <ArrowRight className="size-4" aria-hidden="true" />
+            <Link href="/apply">
+              Start Application
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </Button>
           <a
             href="#services"
