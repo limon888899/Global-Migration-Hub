@@ -124,6 +124,8 @@ export function ApplicationModal({
       email: app.email,
       phone: app.phone,
       photoUrl: app.photoUrl,
+      agencyName: app.agencyName ?? "",
+      agencyReferenceNo: app.agencyReferenceNo ?? "",
     })
     setPhotoError("")
     setIsEditingProfile(false)
