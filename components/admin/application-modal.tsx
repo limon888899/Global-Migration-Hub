@@ -368,9 +368,24 @@ export function ApplicationModal({
                         className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
                       />
                     </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Agency Name</label>
+                      <input
+                        value={profileForm.agencyName}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, agencyName: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Agency Reference No</label>
+                      <input
+                        value={profileForm.agencyReferenceNo}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, agencyReferenceNo: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
                   </div>
                 </div>
-
                 {photoError && <p className="mt-2 text-xs text-destructive">{photoError}</p>}
 
                 <div className="mt-3 flex justify-end gap-2">
