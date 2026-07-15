@@ -5,8 +5,15 @@ import Link from "next/link"
 import { ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ALL_COUNTRIES, VISA_TYPES } from "@/lib/countries"
 
 const trustItems = ["Fast Processing", "Secure Process", "24/7 Support"]
+
+const stats = [
+  { value: `${ALL_COUNTRIES.length}+`, label: "Countries Supported" },
+  { value: `${VISA_TYPES.length}`, label: "Visa Categories" },
+  { value: "24/7", label: "Advisor Support" },
+]
 
 export function Hero() {
   return (
@@ -21,12 +28,12 @@ export function Hero() {
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-b from-[#0b0518]/90 via-[#2e1065]/85 to-[#4c1d95]/90"
+        className="absolute inset-0 bg-gradient-to-b from-[oklch(0.15_0.03_264)]/95 via-[oklch(0.32_0.1_258)]/85 to-[oklch(0.585_0.18_254.5)]/85"
       />
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-28">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-xs font-medium backdrop-blur">
           <ShieldCheck className="size-4" aria-hidden="true" />
-          Licensed &amp; regulated immigration advisors
+          Trusted immigration consultancy
         </span>
 
         <h1 className="mt-6 text-balance font-serif text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
@@ -69,6 +76,16 @@ export function Hero() {
             </li>
           ))}
         </ul>
+
+        <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-primary-foreground/15 pt-8 sm:gap-8">
+          {stats.map((stat) => (
+            <div key={stat.label}>
+              <dt className="sr-only">{stat.label}</dt>
+              <dd className="font-serif text-2xl font-semibold sm:text-3xl">{stat.value}</dd>
+              <p className="mt-1 text-xs text-primary-foreground/70 sm:text-sm">{stat.label}</p>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   )
