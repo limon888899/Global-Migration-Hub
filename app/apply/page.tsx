@@ -984,23 +984,14 @@ function SuccessModal({ data }: { data: SubmittedInfo }) {
         </p>
 
         <div className="mt-4 rounded-xl bg-secondary/60 p-4 text-left text-sm">
-          <p className="font-semibold text-foreground">How to Track:</p>
-          <p className="mt-1 text-muted-foreground">You can track your visa status using your:</p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-            <li>
-              Passport Number (<span className="font-medium text-foreground">{data.passportNumber}</span>)
-            </li>
-            <li>
-              Date of Birth (<span className="font-medium text-foreground">{data.dateOfBirth}</span>)
-            </li>
-            {data.applyingMethod === "agency" && (
-              <li>
-                Agency Reference Number (<span className="font-medium text-foreground">{data.agencyReferenceNo}</span>)
-              </li>
-            )}
-          </ol>
-        </div>
-
+  <p className="font-semibold text-foreground">How to Track:</p>
+  <p className="mt-1 text-muted-foreground">You can track your visa status using your:</p>
+  <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+    <li>
+      Passport Number (<span className="font-medium text-foreground">{data.passportNumber}</span>)
+    </li>
+  </ol>
+</div>
         <p className="mt-4 text-sm text-muted-foreground">
           Our verification specialists will review your submitted data within 24 to 48 hours. A confirmation email
           has been sent to <span className="font-medium text-foreground">{data.email}</span>.
