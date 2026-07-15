@@ -86,6 +86,8 @@ export function ApplicationModal({
     email: app.email,
     phone: app.phone,
     photoUrl: app.photoUrl,
+    agencyName: app.agencyName ?? "",
+    agencyReferenceNo: app.agencyReferenceNo ?? "",
   })
   const [profileSaved, setProfileSaved] = useState(false)
   const [photoError, setPhotoError] = useState("")
