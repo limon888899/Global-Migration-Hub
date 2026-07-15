@@ -290,6 +290,8 @@ export function ApplicationModal({
                       ["Email", app.email],
                       ["Phone", app.phone],
                       ["Travel Date", formatDate(app.travelDate)],
+                      ["Agency Name", app.agencyName],
+                      ["Agency Reference No", app.agencyReferenceNo],
                     ].map(([label, value]) => (
                       <div key={label}>
                         <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
