@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 
 const details = [
   { icon: Mail, label: "Email", value: "info@globalmigrationhub.com", href: "mailto:info@globalmigrationhub.com" },
-  { icon: Phone, label: "Phone", value: "+61 468 784 227", href: "tel:+15550182290" },
+  { icon: Phone, label: "Phone", value: "+61 468 784 227", href: "tel:+61468784227" },
   { icon: MapPin, label: "Office", value: "Level 15, 100 Queen Street, Melbourne, VIC 3000, Australia", href: null },
 ]
 
@@ -31,7 +31,7 @@ export function ContactSection() {
             </h2>
             <p className="mt-4 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground">
               Have a question about your eligibility or application? Book a
-              confidential consultation with a licensed immigration advisor today.
+              confidential consultation with an experienced immigration advisor today.
             </p>
 
             <ul className="mt-10 space-y-6">
