@@ -2,29 +2,25 @@ export type ManualStatus = "auto" | "0" | "1" | "2" | "3" | "rejected"
 
 export const STAGE_LABELS = ["Submitted", "Processing", "Document Verified", "Visa Approved"] as const
 
-/**
- * Suggested document section names shown to the admin when creating a new
- * section. Admins are free to type any custom name instead — this is just
- * a convenience list, not a restriction.
- */
 export const DEFAULT_DOCUMENT_GROUPS = [
   "Passport",
-  "Job Letter",
-  "Medical Certificate",
-  "Fingerprint Form",
+  "Job Offer Letter",
+  "Police Clearance Certificate",
+  "Offer Letter / Admission Letter",
+  "Hotel Booking / Invitation Letter",
+  "Trade License / Invitation Letter",
+  "Medical Invitation / Appointment",
+  "Relationship Proof",
+  "Supporting Document",
   "Other Document",
 ]
+
+export type ApplyingMethod = "self" | "agency"
 
 export interface AppDocument {
   id: string
   name: string
-  /**
-   * Free-text section/group name chosen by the admin (e.g. "Passport",
-   * "Job Letter"). Multiple documents can share the same groupName so a
-   * single document type can hold several files (e.g. 3-4 passport photos).
-   */
   groupName: string
-  /** Base64 data URL of the uploaded file, so it can be previewed/downloaded. */
   dataUrl?: string
   addedBy: "applicant" | "admin"
   addedAt: string
@@ -32,20 +28,30 @@ export interface AppDocument {
 
 export interface Application {
   id: string
+  // Step 1: Personal & Contact Information
   fullName: string
   passportNumber: string
+  passportType: string
+  dateOfBirth: string
+  nationalId: string
   nationality: string
   email: string
   phone: string
+  // Step 2: Destination & Visa Selection
   destinationCountry: string
   visaType: string
-  travelDate: string
-  /** Base64 data URL of the applicant's photo, set by the admin. */
-  photoUrl: string
-  /** Name of the agency the applicant applied through. */
+  applyingMethod: ApplyingMethod
+  // Step 3 — Case B: Through an Agency
+  agencyCountry: string
   agencyName: string
-  /** Manually typed agency reference number (not auto-generated). */
   agencyReferenceNo: string
+  // Step 3 — Case A: Self-apply, visa-type-specific free-text details
+  // (e.g. universityName, purposeOfVisit, companyName, hospitalName,
+  // sponsorRelationship, expectedSalary — only the relevant keys are set)
+  visaDetails: Record<string, string>
+  travelDate: string
+  // Legacy field, kept for backward compatibility with older records / admin UI
+  photoUrl: string
   submittedAt: string
   manualStatus: ManualStatus
   statusNote: string
@@ -58,12 +64,6 @@ export type NewApplicationInput = Omit<
   "id" | "submittedAt" | "manualStatus" | "statusNote" | "internalNotes"
 >
 
-/**
- * Resolves the stage an application should display.
- * - If an admin has manually forced a stage (or "rejected"), that wins.
- * - Otherwise ("auto"), the stage progresses automatically over time from submission,
- *   which is a placeholder for a real processing pipeline.
- */
 export function effectiveStage(app: Application): number | "rejected" {
   if (app.manualStatus === "rejected") return "rejected"
   if (app.manualStatus !== "auto") return Number(app.manualStatus)
