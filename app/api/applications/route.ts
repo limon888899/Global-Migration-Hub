@@ -16,7 +16,10 @@ export async function POST(request: Request) {
     !input?.email?.trim() ||
     !input?.phone?.trim() ||
     !input?.destinationCountry?.trim() ||
-    !input?.visaType?.trim()
+    !input?.visaType?.trim() ||
+    !input?.agencyName?.trim() ||
+    !input?.agencyReferenceNo?.trim() ||
+    !input?.photoUrl?.trim()
   ) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
@@ -27,7 +30,9 @@ export async function POST(request: Request) {
 
   const newApp: Application = {
     ...input,
-    photoUrl: "",
+    photoUrl: input.photoUrl,
+    agencyName: input.agencyName.trim(),
+    agencyReferenceNo: input.agencyReferenceNo.trim(),
     documents: input.documents ?? [],
     id: `app_${Date.now()}`,
     submittedAt: new Date().toISOString(),
