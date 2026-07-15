@@ -19,6 +19,9 @@ export const DESTINATION_COUNTRIES = [
   "Qatar",
   "Saudi Arabia",
   "Malaysia",
+  "Romania",
+  "Bulgaria",
+  "Croatia",
 ]
 
 export type DestinationCountry = (typeof DESTINATION_COUNTRIES)[number]
@@ -44,6 +47,9 @@ export const COUNTRY_FLAGS: { [key: string]: string } = {
   Qatar: "🇶🇦",
   "Saudi Arabia": "🇸🇦",
   Malaysia: "🇲🇾",
+  Romania: "🇷🇴",
+  Bulgaria: "🇧🇬",
+  Croatia: "🇭🇷",
   Bangladesh: "🇧🇩",
   India: "🇮🇳",
   Pakistan: "🇵🇰",
@@ -111,6 +117,9 @@ export const COUNTRY_CODES: { name: string; dial: string }[] = [
   { name: "Qatar", dial: "+974" },
   { name: "Saudi Arabia", dial: "+966" },
   { name: "Malaysia", dial: "+60" },
+  { name: "Romania", dial: "+40" },
+  { name: "Bulgaria", dial: "+359" },
+  { name: "Croatia", dial: "+385" },
   { name: "Turkey", dial: "+90" },
   { name: "Nigeria", dial: "+234" },
   { name: "Kenya", dial: "+254" },
@@ -136,12 +145,17 @@ export const COUNTRY_CODES: { name: string; dial: string }[] = [
 ]
 
 export const VISA_TYPES = [
-  "Work Permit / Skilled Worker",
-  "Student Visa",
-  "Tourist / Visitor Visa",
+  "Work Permit Visa",
+  "Student / Study Visa",
+  "Tourist / Visit Visa",
   "Business Visa",
+  "Medical Visa",
   "Family / Spouse Visa",
+  "Transit Visa",
   "Permanent Residency",
-  "Investor Visa",
-  "Other",
+  "Diplomatic Visa",
 ]
+
+export const PASSPORT_TYPES = ["Ordinary", "Official", "Diplomatic"]
+
+export const VISIT_PURPOSES = ["Tourism", "Family Visit", "Transit"]
