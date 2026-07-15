@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   AlertCircle,
   Loader2,
-  Upload,
   ArrowLeft,
   Building2,
   UserRound,
@@ -22,7 +21,7 @@ import {
   VISA_TYPES,
   VISIT_PURPOSES,
 } from "@/lib/countries"
-import { AGENCY_NOT_LISTED_OPTION, getAgenciesForCountry } from "@/lib/agencies"
+import { AGENCY_COUNTRIES, getAgenciesForCountry } from "@/lib/agencies"
 import type { AppDocument, ApplyingMethod, NewApplicationInput } from "@/lib/admin/types"
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB
@@ -129,12 +128,23 @@ function fieldClass() {
   return "mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
 }
 
+type SubmittedInfo = {
+  fullName: string
+  visaType: string
+  destinationCountry: string
+  passportNumber: string
+  dateOfBirth: string
+  email: string
+  applyingMethod: string
+  agencyReferenceNo: string
+}
+
 function ApplyPageContent() {
   const searchParams = useSearchParams()
   const prefillCountry = searchParams.get("country") ?? ""
 
   const [step, setStep] = useState<Step>(1)
-  const [submitted, setSubmitted] = useState<Application2 | null>(null)
+  const [submitted, setSubmitted] = useState<SubmittedInfo | null>(null)
   const [error, setError] = useState("")
 
   // ---- Step 1: Personal & Contact Information ----
@@ -155,8 +165,7 @@ function ApplyPageContent() {
 
   // ---- Step 3: Case B — Agency ----
   const [agencyCountry, setAgencyCountry] = useState("")
-  const [agencyNameSelect, setAgencyNameSelect] = useState("")
-  const [agencyNameManual, setAgencyNameManual] = useState("")
+  const [agencyName, setAgencyName] = useState("")
   const [agencyReferenceNo, setAgencyReferenceNo] = useState("")
 
   // ---- Step 3: Case A — self-apply dynamic text fields ----
@@ -221,7 +230,7 @@ function ApplyPageContent() {
   }
 
   const agencyOptions = agencyCountry ? getAgenciesForCountry(agencyCountry) : []
-  const resolvedAgencyName = agencyNameSelect === AGENCY_NOT_LISTED_OPTION ? agencyNameManual.trim() : agencyNameSelect
+  const selectedAgency = agencyOptions.find((a) => a.name === agencyName)
 
   async function handleFinalSubmit(e: FormEvent) {
     e.preventDefault()
@@ -231,7 +240,7 @@ function ApplyPageContent() {
     const now = new Date().toISOString()
 
     if (applyingMethod === "agency") {
-      if (!agencyCountry || !resolvedAgencyName || !agencyReferenceNo.trim()) {
+      if (!agencyCountry || !agencyName || !agencyReferenceNo.trim()) {
         setError("Please fill in the agency country, agency name, and reference number.")
         return
       }
@@ -288,6 +297,10 @@ function ApplyPageContent() {
     if (hospitalName.trim()) visaDetails.hospitalName = hospitalName.trim()
     if (sponsorRelationship.trim()) visaDetails.sponsorRelationship = sponsorRelationship.trim()
     if (expectedSalary.trim()) visaDetails.expectedSalary = expectedSalary.trim()
+    if (applyingMethod === "agency" && selectedAgency) {
+      visaDetails.agencyPrimaryContact = selectedAgency.primaryPerson
+      visaDetails.agencySecondaryContact = selectedAgency.secondaryPerson
+    }
 
     const payload: NewApplicationInput = {
       fullName: fullName.trim(),
@@ -302,7 +315,7 @@ function ApplyPageContent() {
       visaType,
       applyingMethod: applyingMethod as ApplyingMethod,
       agencyCountry: applyingMethod === "agency" ? agencyCountry : "",
-      agencyName: applyingMethod === "agency" ? resolvedAgencyName : "",
+      agencyName: applyingMethod === "agency" ? agencyName : "",
       agencyReferenceNo: applyingMethod === "agency" ? agencyReferenceNo.trim() : "",
       visaDetails,
       travelDate,
@@ -351,7 +364,10 @@ function ApplyPageContent() {
               Global Migration Hub
             </span>
           </Link>
-          <Link href="/" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="size-4" /> Cancel
           </Link>
         </div>
@@ -360,7 +376,12 @@ function ApplyPageContent() {
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-6 flex items-center justify-center gap-2">
           {[1, 2, 3].map((s) => (
-            <div key={s} className={`h-1.5 w-16 rounded-full ${step === s ? "bg-primary" : step > s ? "bg-primary/40" : "bg-muted"}`} />
+            <div
+              key={s}
+              className={`h-1.5 w-16 rounded-full ${
+                step === s ? "bg-primary" : step > s ? "bg-primary/40" : "bg-muted"
+              }`}
+            />
           ))}
         </div>
 
@@ -401,7 +422,12 @@ function ApplyPageContent() {
                     <label htmlFor="passportType" className="block text-sm font-medium text-foreground">
                       Passport Type <span className="text-destructive">*</span>
                     </label>
-                    <select id="passportType" value={passportType} onChange={(e) => setPassportType(e.target.value)} className={fieldClass()}>
+                    <select
+                      id="passportType"
+                      value={passportType}
+                      onChange={(e) => setPassportType(e.target.value)}
+                      className={fieldClass()}
+                    >
                       <option value="">Select passport type</option>
                       {PASSPORT_TYPES.map((t) => (
                         <option key={t} value={t}>
@@ -510,7 +536,11 @@ function ApplyPageContent() {
 
           {step === 2 && (
             <div>
-              <button type="button" onClick={() => setStep(1)} className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
                 <ArrowLeft className="size-3.5" /> Back
               </button>
               <h1 className="font-serif text-2xl font-semibold text-foreground">Destination &amp; Visa Selection</h1>
@@ -540,7 +570,12 @@ function ApplyPageContent() {
                     <label htmlFor="visaType" className="block text-sm font-medium text-foreground">
                       Visa Type <span className="text-destructive">*</span>
                     </label>
-                    <select id="visaType" value={visaType} onChange={(e) => setVisaType(e.target.value)} className={fieldClass()}>
+                    <select
+                      id="visaType"
+                      value={visaType}
+                      onChange={(e) => setVisaType(e.target.value)}
+                      className={fieldClass()}
+                    >
                       <option value="">Select a visa type</option>
                       {VISA_TYPES.map((v) => (
                         <option key={v} value={v}>
@@ -600,7 +635,11 @@ function ApplyPageContent() {
 
           {step === 3 && (
             <div>
-              <button type="button" onClick={() => setStep(2)} className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
                 <ArrowLeft className="size-3.5" /> Back
               </button>
               <h1 className="font-serif text-2xl font-semibold text-foreground">Application Details &amp; Verification</h1>
@@ -619,17 +658,20 @@ function ApplyPageContent() {
                           value={agencyCountry}
                           onChange={(e) => {
                             setAgencyCountry(e.target.value)
-                            setAgencyNameSelect("")
+                            setAgencyName("")
                           }}
                           className={fieldClass()}
                         >
-                          <option value="">Select a country</option>
-                          {ALL_COUNTRIES.map((c) => (
+                          <option value="">Select a partner country</option>
+                          {AGENCY_COUNTRIES.map((c) => (
                             <option key={c} value={c}>
-                              {COUNTRY_FLAGS[c]} {c}
+                              {COUNTRY_FLAGS[c] ?? ""} {c}
                             </option>
                           ))}
                         </select>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Only our verified partner countries are listed here.
+                        </p>
                       </div>
                       <div>
                         <label htmlFor="agencyName" className="block text-sm font-medium text-foreground">
@@ -637,34 +679,32 @@ function ApplyPageContent() {
                         </label>
                         <select
                           id="agencyName"
-                          value={agencyNameSelect}
-                          onChange={(e) => setAgencyNameSelect(e.target.value)}
+                          value={agencyName}
+                          onChange={(e) => setAgencyName(e.target.value)}
                           disabled={!agencyCountry}
                           className={fieldClass()}
                         >
                           <option value="">{agencyCountry ? "Select an agency" : "Select a country first"}</option>
                           {agencyOptions.map((a) => (
-                            <option key={a} value={a}>
-                              {a}
+                            <option key={a.name} value={a.name}>
+                              {a.recommended ? "⭐ " : ""}
+                              {a.name}
                             </option>
                           ))}
-                          {agencyCountry && <option value={AGENCY_NOT_LISTED_OPTION}>{AGENCY_NOT_LISTED_OPTION}</option>}
                         </select>
                       </div>
                     </div>
 
-                    {agencyNameSelect === AGENCY_NOT_LISTED_OPTION && (
-                      <div>
-                        <label htmlFor="agencyNameManual" className="block text-sm font-medium text-foreground">
-                          Enter Agency Name <span className="text-destructive">*</span>
-                        </label>
-                        <input
-                          id="agencyNameManual"
-                          value={agencyNameManual}
-                          onChange={(e) => setAgencyNameManual(e.target.value)}
-                          placeholder="Type the agency's name"
-                          className={fieldClass()}
-                        />
+                    {selectedAgency && (
+                      <div className="rounded-xl bg-secondary/60 p-3 text-xs text-muted-foreground">
+                        <p className="font-semibold text-foreground">{selectedAgency.name} — Key Personnel</p>
+                        <p className="mt-1">
+                          <span className="font-medium text-foreground">Primary:</span> {selectedAgency.primaryPerson}
+                        </p>
+                        <p>
+                          <span className="font-medium text-foreground">Secondary:</span>{" "}
+                          {selectedAgency.secondaryPerson}
+                        </p>
                       </div>
                     )}
 
@@ -677,6 +717,22 @@ function ApplyPageContent() {
                         value={agencyReferenceNo}
                         onChange={(e) => setAgencyReferenceNo(e.target.value)}
                         placeholder="Enter the reference number given by your agency"
+                        className={fieldClass()}
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Collect this manually from your agency — it is not auto-generated.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label htmlFor="travelDate2" className="block text-sm font-medium text-foreground">
+                        Planned Travel Date <span className="text-muted-foreground">(optional)</span>
+                      </label>
+                      <input
+                        id="travelDate2"
+                        type="date"
+                        value={travelDate}
+                        onChange={(e) => setTravelDate(e.target.value)}
                         className={fieldClass()}
                       />
                     </div>
@@ -856,7 +912,9 @@ function ApplyPageContent() {
                       </div>
                     )}
 
-                    {(visaType === "Transit Visa" || visaType === "Permanent Residency" || visaType === "Diplomatic Visa") && (
+                    {(visaType === "Transit Visa" ||
+                      visaType === "Permanent Residency" ||
+                      visaType === "Diplomatic Visa") && (
                       <DocumentUploadField
                         id="supportingDocument"
                         label="Supporting Document"
@@ -880,21 +938,6 @@ function ApplyPageContent() {
                       />
                     </div>
                   </>
-                )}
-
-                {applyingMethod === "agency" && (
-                  <div>
-                    <label htmlFor="travelDate2" className="block text-sm font-medium text-foreground">
-                      Planned Travel Date <span className="text-muted-foreground">(optional)</span>
-                    </label>
-                    <input
-                      id="travelDate2"
-                      type="date"
-                      value={travelDate}
-                      onChange={(e) => setTravelDate(e.target.value)}
-                      className={fieldClass()}
-                    />
-                  </div>
                 )}
 
                 {error && (
@@ -923,18 +966,7 @@ function ApplyPageContent() {
   )
 }
 
-type Application2 = {
-  fullName: string
-  visaType: string
-  destinationCountry: string
-  passportNumber: string
-  dateOfBirth: string
-  email: string
-  applyingMethod: string
-  agencyReferenceNo: string
-}
-
-function SuccessModal({ data }: { data: Application2 }) {
+function SuccessModal({ data }: { data: SubmittedInfo }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm animate-in fade-in-0 duration-300" />
