@@ -281,6 +281,20 @@ function ApplicantProfile({ app }: { app: Application }) {
           />
         )}
         <div className="relative flex flex-col items-center gap-5 p-6 text-center sm:p-8">
+          {/* QR code — scan to return to the tracking page anytime */}
+          <div className="absolute right-4 top-4 hidden flex-col items-center gap-1 rounded-lg bg-primary-foreground/95 p-1.5 shadow-md sm:flex">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(
+                typeof window !== "undefined" ? `${window.location.origin}/track` : "https://globalmigrationhub.com/track",
+              )}`}
+              alt="QR code to return to this tracking page"
+              width={64}
+              height={64}
+              className="size-16"
+            />
+            <span className="text-[9px] font-medium uppercase tracking-wide text-primary/70">Scan to track</span>
+          </div>
+
           {/* Profile photo — circular, with a subtle trusted/verified ring */}
           <div className="relative">
             <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary-foreground/40 bg-primary-foreground/10 text-2xl font-semibold shadow-xl ring-4 ring-primary-foreground/10 sm:size-28">
@@ -451,7 +465,6 @@ function ApplicantProfile({ app }: { app: Application }) {
         ))}
       </div>
       </div>
-
       {/* Documents */}
       <div className="mt-6 animate-in rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both sm:p-8">
         <h3 className="mb-4 text-sm font-semibold text-foreground">Documents</h3>
@@ -461,7 +474,7 @@ function ApplicantProfile({ app }: { app: Application }) {
           <div className="space-y-7">
             {groupedDocuments.map(([groupName, docs]) => (
               <div key={groupName}>
-                <h4 className="mb-3 font-serif text-lg font-semibold text-foreground sm:text-xl">
+                <h4 className="mb-3 font-serif text-lg font-bold text-foreground sm:text-xl">
                   {groupName}
                 </h4>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
