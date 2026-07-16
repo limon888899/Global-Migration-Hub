@@ -15,6 +15,18 @@ import { uploadAdminFile } from "@/lib/admin/upload"
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB per file
 
+/** Friendly labels for the dynamic visaType-specific keys stored in app.visaDetails. */
+const VISA_DETAIL_LABELS: Record<string, string> = {
+  universityName: "University Name",
+  purposeOfVisit: "Purpose of Visit",
+  companyName: "Company Name",
+  hospitalName: "Hospital Name",
+  sponsorRelationship: "Sponsor Name & Relationship",
+  expectedSalary: "Expected Salary",
+  agencyPrimaryContact: "Agency Primary Contact",
+  agencySecondaryContact: "Agency Secondary Contact",
+}
+
 function formatDate(iso: string) {
   if (!iso) return "—"
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
@@ -286,10 +298,15 @@ export function ApplicationModal({
                     {[
                       ["Full Name", app.fullName],
                       ["Passport No.", app.passportNumber],
+                      ["Passport Type", app.passportType],
+                      ["Date of Birth", formatDate(app.dateOfBirth)],
+                      ["National ID", app.nationalId],
                       ["Nationality", app.nationality],
                       ["Email", app.email],
                       ["Phone", app.phone],
                       ["Travel Date", formatDate(app.travelDate)],
+                      ["Applying Method", app.applyingMethod === "agency" ? "Through an Agency" : "Self-apply"],
+                      ["Agency Country", app.agencyCountry],
                       ["Agency Name", app.agencyName],
                       ["Agency Reference No", app.agencyReferenceNo],
                     ].map(([label, value]) => (
@@ -399,6 +416,22 @@ export function ApplicationModal({
               </div>
             )}
           </section>
+
+          {Object.keys(app.visaDetails ?? {}).length > 0 && (
+            <section className="rounded-2xl border border-border p-4">
+              <h4 className="mb-3 text-sm font-semibold text-foreground">Visa Details</h4>
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+                {Object.entries(VISA_DETAIL_LABELS)
+                  .filter(([key]) => app.visaDetails?.[key])
+                  .map(([key, label]) => (
+                    <div key={key}>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+                      <dd className="font-medium text-foreground">{app.visaDetails[key]}</dd>
+                    </div>
+                  ))}
+              </dl>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-dashed border-border p-4">
             <label htmlFor="submittedAtInput" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
