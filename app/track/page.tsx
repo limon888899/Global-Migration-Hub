@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useMemo, useState, type FormEvent } from "react"
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -214,6 +214,18 @@ function ApplicantProfile({ app }: { app: Application }) {
     }
     return Array.from(map.entries())
   }, [app.documents])
+
+  // Lock the background page while the document viewer is open, so the
+  // large document image can't push/scroll the boarding-pass layout behind
+  // it on mobile (this is what caused the "zoomed in" look on phones).
+  useEffect(() => {
+    if (!viewDoc) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [viewDoc])
 
   const details: { icon: typeof Mail; label: string; value: string }[] = [
     { icon: Globe, label: "Nationality", value: app.nationality || "—" },
@@ -453,14 +465,14 @@ function ApplicantProfile({ app }: { app: Application }) {
 
       {viewDoc && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-none bg-black/80 p-4"
           onClick={() => setViewDoc(null)}
         >
           <div
             className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
               <span className="truncate text-sm font-semibold text-foreground">{viewDoc.label}</span>
               <button
                 type="button"
@@ -471,12 +483,16 @@ function ApplicantProfile({ app }: { app: Application }) {
                 <X className="size-4" />
               </button>
             </div>
-            <div className="overflow-auto bg-secondary/20">
+            <div className="flex flex-1 items-center justify-center overflow-auto overscroll-contain bg-secondary/20 p-2">
               {viewDoc.doc.dataUrl && isImageDataUrl(viewDoc.doc.dataUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={viewDoc.doc.dataUrl} alt={viewDoc.label} className="w-full object-contain" />
+                <img
+                  src={viewDoc.doc.dataUrl}
+                  alt={viewDoc.label}
+                  className="max-h-[75vh] w-auto max-w-full rounded-md object-contain"
+                />
               ) : viewDoc.doc.dataUrl && isPdfDataUrl(viewDoc.doc.dataUrl) ? (
-                <embed src={viewDoc.doc.dataUrl} type="application/pdf" className="h-[80vh] w-full" />
+                <embed src={viewDoc.doc.dataUrl} type="application/pdf" className="h-[75vh] w-full" />
               ) : (
                 <div className="flex items-center justify-center p-16">
                   <FileText className="size-10 text-muted-foreground" aria-hidden="true" />
