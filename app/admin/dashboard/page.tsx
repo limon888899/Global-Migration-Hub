@@ -19,7 +19,6 @@ import {
   effectiveStage,
   stageLabel,
   type Application,
-  type DocumentCategory,
   type ManualStatus,
   type NewApplicationInput,
 } from "@/lib/admin/types"
@@ -116,7 +115,7 @@ export default function AdminDashboardPage() {
     await refresh()
   }
 
-  async function handleAddDocument(id: string, doc: { name: string; dataUrl?: string; category?: DocumentCategory }) {
+  async function handleAddDocument(id: string, doc: { name: string; dataUrl?: string; groupName: string }) {
     await addDocument(id, doc)
     await refresh()
   }
