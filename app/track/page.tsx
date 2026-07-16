@@ -1,6 +1,7 @@
 "use client"
 
 import { Suspense, useState, type FormEvent } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import {
@@ -19,9 +20,15 @@ import {
   FileText,
   User,
   Search,
+  Calendar,
+  Building2,
+  Hash,
+  CreditCard,
+  CalendarClock,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { COUNTRY_FLAGS } from "@/lib/countries"
+import { COUNTRY_FLAGS, COUNTRY_IMAGES } from "@/lib/countries"
 import { effectiveStage, STAGE_LABELS, type Application, type AppDocument } from "@/lib/admin/types"
 
 function isImageDataUrl(url?: string) {
@@ -203,6 +210,7 @@ function ApplicantProfile({ app }: { app: Application }) {
   const isRejected = stage === "rejected"
   const stageIndex = typeof stage === "number" ? stage : STAGE_LABELS.length - 1
   const progressPercent = isRejected ? 100 : (stageIndex / (STAGE_LABELS.length - 1)) * 100
+  const [viewDoc, setViewDoc] = useState<AppDocument | null>(null)
 
   const details: { icon: typeof Mail; label: string; value: string }[] = [
     { icon: Globe, label: "Nationality", value: app.nationality || "—" },
@@ -214,6 +222,18 @@ function ApplicantProfile({ app }: { app: Application }) {
       value: app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ${app.destinationCountry}` : "—",
     },
     { icon: FileText, label: "Visa Type", value: app.visaType || "—" },
+    { icon: CreditCard, label: "Passport Type", value: app.passportType || "—" },
+    {
+      icon: Calendar,
+      label: "Date of Birth",
+      value: app.dateOfBirth
+        ? new Date(app.dateOfBirth).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
+        : "—",
+    },
     {
       icon: Clock,
       label: "Submitted",
@@ -223,13 +243,41 @@ function ApplicantProfile({ app }: { app: Application }) {
         day: "numeric",
       }),
     },
+    ...(app.travelDate
+      ? [
+          {
+            icon: CalendarClock,
+            label: "Travel Date",
+            value: new Date(app.travelDate).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            }),
+          },
+        ]
+      : []),
+    ...(app.applyingMethod === "agency" && app.agencyName
+      ? [{ icon: Building2, label: "Agency Name", value: app.agencyName }]
+      : []),
+    ...(app.applyingMethod === "agency" && app.agencyReferenceNo
+      ? [{ icon: Hash, label: "Agency Reference No.", value: app.agencyReferenceNo }]
+      : []),
   ]
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       {/* Boarding-pass style header */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-[oklch(0.32_0.09_275)] text-primary-foreground shadow-2xl">
-        <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        {app.destinationCountry && COUNTRY_IMAGES[app.destinationCountry] && (
+          <Image
+            src={COUNTRY_IMAGES[app.destinationCountry] || "/placeholder.svg"}
+            alt=""
+            fill
+            aria-hidden="true"
+            className="object-cover opacity-15 mix-blend-luminosity"
+          />
+        )}
+        <div className="relative flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
           <div className="flex items-center gap-4">
             <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-primary-foreground/30 bg-primary-foreground/10 text-lg font-semibold shadow-lg">
               {app.photoUrl ? (
@@ -257,15 +305,26 @@ function ApplicantProfile({ app }: { app: Application }) {
           <span className="absolute -right-3 top-1/2 size-6 -translate-y-1/2 rounded-full bg-secondary" />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-primary-foreground/70 sm:px-8">
+        <div className="relative flex flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-primary-foreground/70 sm:px-8">
           <span>Destination: {app.destinationCountry || "—"}</span>
           <span>Visa Type: {app.visaType || "—"}</span>
           <span>App. ID: {app.id.slice(0, 8).toUpperCase()}</span>
         </div>
       </div>
 
-      {/* Flight-path progress tracker */}
-      <div className="mt-10 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      {/* Journey + details section with plane watermark */}
+      <div className="relative">
+        <Image
+          src="/images/hero-plane.webp"
+          alt=""
+          width={900}
+          height={900}
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 -z-10 w-[140%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.06] sm:w-[900px]"
+        />
+
+        {/* Flight-path progress tracker */}
+        <div className="mt-10 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <h2 className="mb-8 text-sm font-semibold text-foreground">Application Journey</h2>
 
         {isRejected && app.statusNote && (
@@ -351,6 +410,7 @@ function ApplicantProfile({ app }: { app: Application }) {
           </div>
         ))}
       </div>
+      </div>
 
       {/* Documents */}
       <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
@@ -364,9 +424,9 @@ function ApplicantProfile({ app }: { app: Application }) {
                 <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {groupName} ({docs.length})
                 </h4>
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {docs.map((doc) => (
-                    <DocumentFullView key={doc.id} doc={doc} />
+                    <DocumentThumbnail key={doc.id} doc={doc} onOpen={() => setViewDoc(doc)} />
                   ))}
                 </div>
               </div>
@@ -379,6 +439,42 @@ function ApplicantProfile({ app }: { app: Application }) {
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
         This profile is only accessible with your correct passport number.
       </p>
+
+      {viewDoc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setViewDoc(null)}
+        >
+          <div
+            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-card shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <span className="truncate text-sm font-semibold text-foreground">{viewDoc.name || "Document"}</span>
+              <button
+                type="button"
+                onClick={() => setViewDoc(null)}
+                aria-label="Close"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="overflow-auto bg-secondary/20">
+              {viewDoc.dataUrl && isImageDataUrl(viewDoc.dataUrl) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={viewDoc.dataUrl} alt={viewDoc.name || "Document"} className="w-full object-contain" />
+              ) : viewDoc.dataUrl && isPdfDataUrl(viewDoc.dataUrl) ? (
+                <embed src={viewDoc.dataUrl} type="application/pdf" className="h-[80vh] w-full" />
+              ) : (
+                <div className="flex items-center justify-center p-16">
+                  <FileText className="size-10 text-muted-foreground" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -396,36 +492,44 @@ function StatusStamp({ isRejected, label }: { isRejected: boolean; label: string
   )
 }
 
-function DocumentFullView({ doc }: { doc: AppDocument }) {
+function DocumentThumbnail({ doc, onOpen }: { doc: AppDocument; onOpen: () => void }) {
   const label = doc.name || "Document"
 
   if (!doc.dataUrl) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-10 text-center">
-        <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground">Pending upload</p>
+      <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-3 text-center">
+        <FileText className="size-6 text-muted-foreground" aria-hidden="true" />
+        <p className="text-xs font-medium leading-tight text-muted-foreground">{label}</p>
+        <p className="text-[10px] text-muted-foreground">Pending upload</p>
       </div>
     )
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-secondary/20 shadow-sm">
-      <div className="flex items-center gap-2 border-b border-border bg-secondary/40 px-4 py-2.5">
-        <FileText className="size-4 text-muted-foreground" aria-hidden="true" />
-        <span className="text-sm font-semibold text-foreground">{label}</span>
+    <button
+      type="button"
+      onClick={onOpen}
+      className="group flex aspect-[3/4] flex-col overflow-hidden rounded-xl border border-border bg-secondary/20 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+    >
+      <div className="relative flex-1 overflow-hidden bg-muted/30">
+        {isImageDataUrl(doc.dataUrl) ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={doc.dataUrl}
+            alt={label}
+            className="absolute inset-0 size-full object-cover transition group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
+          </div>
+        )}
       </div>
-      {isImageDataUrl(doc.dataUrl) ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={doc.dataUrl} alt={label} className="w-full object-contain" />
-      ) : isPdfDataUrl(doc.dataUrl) ? (
-        <embed src={doc.dataUrl} type="application/pdf" className="h-[80vh] w-full" />
-      ) : (
-        <div className="flex items-center justify-center p-10">
-          <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
-        </div>
-      )}
-    </div>
+      <div className="flex items-center gap-1.5 border-t border-border bg-card px-2.5 py-2">
+        <FileText className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <span className="truncate text-xs font-medium text-foreground">{label}</span>
+      </div>
+    </button>
   )
 }
 
