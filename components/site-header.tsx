@@ -16,7 +16,8 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
-      <a href="#top" className="flex items-center gap-3" aria-label="Global Migration Hub home">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <a href="#top" className="flex items-center gap-3" aria-label="Global Migration Hub home">
           <span className="flex size-11 items-center justify-center overflow-hidden rounded-2xl bg-primary shadow-md shadow-primary/20 ring-1 ring-primary/10">
             <img src="/icon.png" alt="Global Migration Hub" className="size-full object-cover" />
           </span>
