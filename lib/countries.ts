@@ -83,6 +83,28 @@ export const COUNTRY_FLAGS: { [key: string]: string } = {
   Bahrain: "🇧🇭",
   Oman: "🇴🇲",
 }
+export const COUNTRY_IMAGES: { [key: string]: string } = {
+  "United Kingdom": "/images/countries/united-kingdom.png",
+  Canada: "/images/countries/canada.png",
+  Australia: "/images/countries/australia.png",
+  "United States": "/images/countries/united-states.png",
+  Germany: "/images/countries/germany.png",
+  "United Arab Emirates": "/images/countries/united-arab-emirates.png",
+  France: "/images/countries/France.png",
+  Italy: "/images/countries/Italy.png",
+  Netherlands: "/images/countries/Netherlands.png",
+  Sweden: "/images/countries/Sweden.png",
+  Portugal: "/images/countries/Portugal.png",
+  Ireland: "/images/countries/Ireland.png",
+  "New Zealand": "/images/countries/New Zealand.png",
+  Japan: "/images/countries/Japan.png",
+  "South Korea": "/images/countries/South Korea.png",
+  Singapore: "/images/countries/Singapore.png",
+  "Saudi Arabia": "/images/countries/Saudi Arabia.png",
+  Malaysia: "/images/countries/Malaysia.png",
+  Qatar: "/images/countries/Qatar.png",
+  Spain: "/images/countries/Spain.png",
+}
 
 export const ALL_COUNTRIES = Object.keys(COUNTRY_FLAGS)
 
