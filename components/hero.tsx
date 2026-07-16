@@ -33,11 +33,11 @@ export function Hero() {
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-28">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-1.5 text-xs font-medium backdrop-blur">
           <ShieldCheck className="size-4" aria-hidden="true" />
-          Trusted immigration consultancy
+          Licensed Immigration & Visa Consultancy
         </span>
 
         <h1 className="mt-6 text-balance font-serif text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
-          Your trusted partner for global immigration
+          Your Trusted Global Partner for Seamless Visa &amp; Immigration Excellence
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-pretty text-base leading-relaxed text-primary-foreground/80 sm:text-lg">
