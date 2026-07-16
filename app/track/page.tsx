@@ -20,7 +20,6 @@ import {
   FileText,
   User,
   Search,
-  Calendar,
   Building2,
   Hash,
   CreditCard,
@@ -227,28 +226,17 @@ function ApplicantProfile({ app }: { app: Application }) {
     }
   }, [viewDoc])
 
+  const dobFormatted = app.dateOfBirth
+    ? new Date(app.dateOfBirth).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : "—"
+
   const details: { icon: typeof Mail; label: string; value: string }[] = [
     { icon: Globe, label: "Nationality", value: app.nationality || "—" },
     { icon: Mail, label: "Email", value: app.email || "—" },
     { icon: Phone, label: "Phone", value: app.phone || "—" },
-    {
-      icon: Plane,
-      label: "Destination",
-      value: app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ${app.destinationCountry}` : "—",
-    },
-    { icon: FileText, label: "Visa Type", value: app.visaType || "—" },
     { icon: CreditCard, label: "Passport Type", value: app.passportType || "—" },
-    {
-      icon: Calendar,
-      label: "Date of Birth",
-      value: app.dateOfBirth
-        ? new Date(app.dateOfBirth).toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })
-        : "—",
-    },
+    { icon: Hash, label: "App. ID", value: app.id.slice(0, 8).toUpperCase() },
+
     {
       icon: Clock,
       label: "Submitted",
@@ -292,26 +280,49 @@ function ApplicantProfile({ app }: { app: Application }) {
             className="object-cover opacity-15 mix-blend-luminosity"
           />
         )}
-        <div className="relative flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-          <div className="flex items-center gap-4">
-            <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-primary-foreground/30 bg-primary-foreground/10 text-lg font-semibold shadow-lg">
+        <div className="relative flex flex-col items-center gap-5 p-6 text-center sm:p-8">
+          {/* Profile photo — circular, with a subtle trusted/verified ring */}
+          <div className="relative">
+            <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary-foreground/40 bg-primary-foreground/10 text-2xl font-semibold shadow-xl ring-4 ring-primary-foreground/10 sm:size-28">
               {app.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
               ) : (
-                <span>{initials(app.fullName) || <User className="size-8" />}</span>
+                <span>{initials(app.fullName) || <User className="size-10" />}</span>
               )}
             </div>
+            <span className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border-2 border-primary bg-tip-green text-tip-green-foreground shadow-md">
+              <ShieldCheck className="size-4" aria-hidden="true" />
+            </span>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-primary-foreground/60">Applicant</p>
+            <h1 className="mt-1 break-words font-serif text-2xl font-semibold leading-tight sm:text-3xl">
+              {app.fullName}
+            </h1>
+            <p className="mt-1.5 font-mono text-sm tracking-widest text-primary-foreground/75">
+              {app.passportNumber}
+            </p>
+          </div>
+
+          {/* Key facts: Date of Birth / Visa Type / Destination */}
+          <div className="grid w-full grid-cols-1 gap-4 border-t border-dashed border-primary-foreground/25 pt-5 text-left sm:grid-cols-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-primary-foreground/60">Applicant</p>
-              <h1 className="font-serif text-2xl font-semibold sm:text-3xl">{app.fullName}</h1>
-              <p className="mt-1 font-mono text-sm tracking-widest text-primary-foreground/75">
-                {app.passportNumber}
+              <p className="text-[10px] uppercase tracking-wide text-primary-foreground/60">Date of Birth</p>
+              <p className="mt-0.5 text-sm font-semibold">{dobFormatted}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-primary-foreground/60">Visa Type</p>
+              <p className="mt-0.5 text-sm font-semibold">{app.visaType || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-primary-foreground/60">Destination</p>
+              <p className="mt-0.5 text-sm font-semibold">
+                {app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ${app.destinationCountry}` : "—"}
               </p>
             </div>
           </div>
-
-          <StatusStamp isRejected={isRejected} label={isRejected ? "Rejected" : STAGE_LABELS[stageIndex]} />
         </div>
 
         {/* Perforated divider */}
@@ -320,10 +331,16 @@ function ApplicantProfile({ app }: { app: Application }) {
           <span className="absolute -right-3 top-1/2 size-6 -translate-y-1/2 rounded-full bg-secondary" />
         </div>
 
-        <div className="relative flex flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-primary-foreground/70 sm:px-8">
-          <span>Destination: {app.destinationCountry || "—"}</span>
-          <span>Visa Type: {app.visaType || "—"}</span>
-          <span>App. ID: {app.id.slice(0, 8).toUpperCase()}</span>
+        <div className="relative flex items-center justify-center gap-2 px-6 py-3 text-xs font-medium text-primary-foreground/70 sm:px-8">
+          {isRejected ? (
+            <>
+              <XCircle className="size-3.5" aria-hidden="true" /> Application Rejected
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="size-3.5" aria-hidden="true" /> Current Stage: {STAGE_LABELS[stageIndex]}
+            </>
+          )}
         </div>
       </div>
 
@@ -502,19 +519,6 @@ function ApplicantProfile({ app }: { app: Application }) {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function StatusStamp({ isRejected, label }: { isRejected: boolean; label: string }) {
-  return (
-    <div
-      className={`flex shrink-0 -rotate-6 items-center gap-2 self-start rounded-lg border-2 px-4 py-2 sm:self-center ${
-        isRejected ? "border-destructive/70 text-destructive-foreground" : "border-primary-foreground/50 text-primary-foreground"
-      }`}
-    >
-      {isRejected ? <XCircle className="size-5" /> : <CheckCircle2 className="size-5" />}
-      <span className="text-sm font-bold uppercase tracking-widest">{label}</span>
     </div>
   )
 }
