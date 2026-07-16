@@ -12,11 +12,11 @@ export default function Page() {
     "@type": "ProfessionalService",
     name: "Global Migration Hub",
     description:
-      "Expert work permit services, immigration news, and a secure client portal to track your visa status.",
+      "An official partner of the Department of Home Affairs, delivering global visa application processing and expert work permit services worldwide, backed by real-time immigration news and a secure client tracking portal.",
     areaServed: "Worldwide",
-    serviceType: "Immigration Consultancy",
-    telephone: "+1-555-018-2290",
-    email: "hello@globalmigrationhub.com",
+    serviceType: "Global Immigration & Visa Services",
+    telephone: "+61-468-784-227",
+    email: "info@globalmigrationhub.com",
   }
 
   return (
