@@ -52,16 +52,6 @@ function initials(name: string) {
     .join("")
 }
 
-function groupDocuments(documents: AppDocument[]): [string, AppDocument[]][] {
-  const map = new Map<string, AppDocument[]>()
-  for (const doc of documents) {
-    const key = doc.groupName?.trim() || "Other"
-    if (!map.has(key)) map.set(key, [])
-    map.get(key)!.push(doc)
-  }
-  return Array.from(map.entries())
-}
-
 function TrackPageContent() {
   const searchParams = useSearchParams()
   const expectedCountry = searchParams.get("country")
@@ -320,7 +310,7 @@ function ApplicantProfile({ app }: { app: Application }) {
           width={900}
           height={900}
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 -z-10 w-[140%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.06] sm:w-[900px]"
+          className="pointer-events-none absolute left-1/2 top-1/2 -z-10 w-[160%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.14] grayscale sm:w-[950px]"
         />
 
         {/* Flight-path progress tracker */}
@@ -418,18 +408,9 @@ function ApplicantProfile({ app }: { app: Application }) {
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
         ) : (
-          <div className="space-y-8">
-            {groupDocuments(app.documents).map(([groupName, docs]) => (
-              <div key={groupName}>
-                <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {groupName} ({docs.length})
-                </h4>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {docs.map((doc) => (
-                    <DocumentThumbnail key={doc.id} doc={doc} onOpen={() => setViewDoc(doc)} />
-                  ))}
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {app.documents.map((doc) => (
+              <DocumentThumbnail key={doc.id} doc={doc} onOpen={() => setViewDoc(doc)} />
             ))}
           </div>
         )}
@@ -493,7 +474,7 @@ function StatusStamp({ isRejected, label }: { isRejected: boolean; label: string
 }
 
 function DocumentThumbnail({ doc, onOpen }: { doc: AppDocument; onOpen: () => void }) {
-  const label = doc.name || "Document"
+  const label = doc.groupName?.trim() || doc.name || "Document"
 
   if (!doc.dataUrl) {
     return (
@@ -516,7 +497,7 @@ function DocumentThumbnail({ doc, onOpen }: { doc: AppDocument; onOpen: () => vo
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={doc.dataUrl}
-            alt={label}
+            alt={doc.name || label}
             className="absolute inset-0 size-full object-cover transition group-hover:scale-105"
           />
         ) : (
