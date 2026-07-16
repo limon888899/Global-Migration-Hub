@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, type FormEvent } from "react"
+import { Suspense, useMemo, useState, type FormEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -200,7 +200,20 @@ function ApplicantProfile({ app }: { app: Application }) {
   const isRejected = stage === "rejected"
   const stageIndex = typeof stage === "number" ? stage : STAGE_LABELS.length - 1
   const progressPercent = isRejected ? 100 : (stageIndex / (STAGE_LABELS.length - 1)) * 100
-  const [viewDoc, setViewDoc] = useState<AppDocument | null>(null)
+  const [viewDoc, setViewDoc] = useState<{ doc: AppDocument; label: string } | null>(null)
+
+  // Group documents by their admin-defined section (groupName), in the order
+  // sections were first added. The applicant never sees original filenames —
+  // only the section name plus a serial number (e.g. "Passport 1", "Passport 2").
+  const groupedDocuments = useMemo(() => {
+    const map = new Map<string, AppDocument[]>()
+    for (const doc of app.documents) {
+      const key = doc.groupName?.trim() || "Other"
+      if (!map.has(key)) map.set(key, [])
+      map.get(key)!.push(doc)
+    }
+    return Array.from(map.entries())
+  }, [app.documents])
 
   const details: { icon: typeof Mail; label: string; value: string }[] = [
     { icon: Globe, label: "Nationality", value: app.nationality || "—" },
@@ -408,9 +421,26 @@ function ApplicantProfile({ app }: { app: Application }) {
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {app.documents.map((doc) => (
-              <DocumentThumbnail key={doc.id} doc={doc} onOpen={() => setViewDoc(doc)} />
+          <div className="space-y-7">
+            {groupedDocuments.map(([groupName, docs]) => (
+              <div key={groupName}>
+                <h4 className="mb-3 font-serif text-lg font-semibold text-foreground sm:text-xl">
+                  {groupName}
+                </h4>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {docs.map((doc, index) => {
+                    const label = docs.length > 1 ? `${groupName} ${index + 1}` : groupName
+                    return (
+                      <DocumentThumbnail
+                        key={doc.id}
+                        doc={doc}
+                        label={label}
+                        onOpen={() => setViewDoc({ doc, label })}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -431,7 +461,7 @@ function ApplicantProfile({ app }: { app: Application }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <span className="truncate text-sm font-semibold text-foreground">{viewDoc.name || "Document"}</span>
+              <span className="truncate text-sm font-semibold text-foreground">{viewDoc.label}</span>
               <button
                 type="button"
                 onClick={() => setViewDoc(null)}
@@ -442,11 +472,11 @@ function ApplicantProfile({ app }: { app: Application }) {
               </button>
             </div>
             <div className="overflow-auto bg-secondary/20">
-              {viewDoc.dataUrl && isImageDataUrl(viewDoc.dataUrl) ? (
+              {viewDoc.doc.dataUrl && isImageDataUrl(viewDoc.doc.dataUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={viewDoc.dataUrl} alt={viewDoc.name || "Document"} className="w-full object-contain" />
-              ) : viewDoc.dataUrl && isPdfDataUrl(viewDoc.dataUrl) ? (
-                <embed src={viewDoc.dataUrl} type="application/pdf" className="h-[80vh] w-full" />
+                <img src={viewDoc.doc.dataUrl} alt={viewDoc.label} className="w-full object-contain" />
+              ) : viewDoc.doc.dataUrl && isPdfDataUrl(viewDoc.doc.dataUrl) ? (
+                <embed src={viewDoc.doc.dataUrl} type="application/pdf" className="h-[80vh] w-full" />
               ) : (
                 <div className="flex items-center justify-center p-16">
                   <FileText className="size-10 text-muted-foreground" aria-hidden="true" />
@@ -473,9 +503,7 @@ function StatusStamp({ isRejected, label }: { isRejected: boolean; label: string
   )
 }
 
-function DocumentThumbnail({ doc, onOpen }: { doc: AppDocument; onOpen: () => void }) {
-  const label = doc.groupName?.trim() || doc.name || "Document"
-
+function DocumentThumbnail({ doc, label, onOpen }: { doc: AppDocument; label: string; onOpen: () => void }) {
   if (!doc.dataUrl) {
     return (
       <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-3 text-center">
@@ -497,7 +525,7 @@ function DocumentThumbnail({ doc, onOpen }: { doc: AppDocument; onOpen: () => vo
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={doc.dataUrl}
-            alt={doc.name || label}
+            alt={label}
             className="absolute inset-0 size-full object-cover transition group-hover:scale-105"
           />
         ) : (
