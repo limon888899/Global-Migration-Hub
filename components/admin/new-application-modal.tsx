@@ -1,22 +1,30 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { X, Upload, Image as ImageIcon, Trash2 } from "lucide-react"
+import { X, Upload, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DEFAULT_DOCUMENT_GROUPS, type AppDocument, type NewApplicationInput } from "@/lib/admin/types"
-import { DESTINATION_COUNTRIES, VISA_TYPES } from "@/lib/countries"
+import { DEFAULT_DOCUMENT_GROUPS, type AppDocument, type ApplyingMethod, type NewApplicationInput } from "@/lib/admin/types"
+import { DESTINATION_COUNTRIES, PASSPORT_TYPES, VISA_TYPES } from "@/lib/countries"
+import { AGENCY_COUNTRIES, getAgenciesForCountry } from "@/lib/agencies"
 import { uploadAdminFile } from "@/lib/admin/upload"
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB per file
 
-const emptyForm: Omit<NewApplicationInput, "photoUrl" | "documents"> = {
+const emptyForm: Omit<NewApplicationInput, "photoUrl" | "documents" | "visaDetails"> = {
   fullName: "",
   passportNumber: "",
+  passportType: "",
+  dateOfBirth: "",
+  nationalId: "",
   nationality: "",
   email: "",
   phone: "",
   destinationCountry: "",
   visaType: "",
+  applyingMethod: "self",
+  agencyCountry: "",
+  agencyName: "",
+  agencyReferenceNo: "",
   travelDate: "",
 }
 
@@ -158,6 +166,9 @@ export function NewApplicationModal({
     setRenamingGroup(null)
   }
 
+  const agencyOptions = form.agencyCountry ? getAgenciesForCountry(form.agencyCountry) : []
+  const selectedAgency = agencyOptions.find((a) => a.name === form.agencyName)
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.fullName || !form.passportNumber || !form.destinationCountry) return
@@ -177,17 +188,31 @@ export function NewApplicationModal({
       }
     }
 
+    const visaDetails: Record<string, string> =
+      form.applyingMethod === "agency" && selectedAgency
+        ? {
+            agencyPrimaryContact: selectedAgency.primaryPerson,
+            agencySecondaryContact: selectedAgency.secondaryPerson,
+          }
+        : {}
+
     onCreate({
       ...form,
+      agencyCountry: form.applyingMethod === "agency" ? form.agencyCountry : "",
+      agencyName: form.applyingMethod === "agency" ? form.agencyName : "",
+      agencyReferenceNo: form.applyingMethod === "agency" ? form.agencyReferenceNo : "",
+      visaDetails,
       photoUrl: photo?.dataUrl ?? "",
       documents,
     })
     onClose()
   }
 
-  const fields: { key: keyof typeof emptyForm; label: string; type?: string }[] = [
+  const fields: { key: keyof Omit<typeof emptyForm, "applyingMethod" | "agencyCountry" | "agencyName" | "agencyReferenceNo" | "passportType">; label: string; type?: string }[] = [
     { key: "fullName", label: "Full Name" },
     { key: "passportNumber", label: "Passport No." },
+    { key: "dateOfBirth", label: "Date of Birth", type: "date" },
+    { key: "nationalId", label: "National ID" },
     { key: "nationality", label: "Nationality" },
     { key: "email", label: "Email", type: "email" },
     { key: "phone", label: "Phone" },
@@ -237,21 +262,66 @@ export function NewApplicationModal({
         </div>
 
         <div className="grid grid-cols-2 gap-4 px-6 py-5">
-          {fields.map(({ key, label, type }) => (
-            <div key={key} className="col-span-1">
-              <label htmlFor={key} className="mb-1.5 block text-sm font-medium text-foreground">
-                {label}
-                {(key === "fullName" || key === "passportNumber") && <span className="text-destructive"> *</span>}
-              </label>
-              <input
-                id={key}
-                type={type ?? "text"}
-                value={form[key]}
-                onChange={(e) => update(key, e.target.value)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              />
-            </div>
-          ))}
+          <div className="col-span-1">
+            <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-foreground">
+              Full Name<span className="text-destructive"> *</span>
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={form.fullName}
+              onChange={(e) => update("fullName", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
+          <div className="col-span-1">
+            <label htmlFor="passportNumber" className="mb-1.5 block text-sm font-medium text-foreground">
+              Passport No.<span className="text-destructive"> *</span>
+            </label>
+            <input
+              id="passportNumber"
+              type="text"
+              value={form.passportNumber}
+              onChange={(e) => update("passportNumber", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
+          <div className="col-span-1">
+            <label htmlFor="passportType" className="mb-1.5 block text-sm font-medium text-foreground">
+              Passport Type
+            </label>
+            <select
+              id="passportType"
+              value={form.passportType}
+              onChange={(e) => update("passportType", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="">Select a type</option>
+              {PASSPORT_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {fields
+            .filter((f) => f.key !== "fullName" && f.key !== "passportNumber")
+            .map(({ key, label, type }) => (
+              <div key={key} className="col-span-1">
+                <label htmlFor={key} className="mb-1.5 block text-sm font-medium text-foreground">
+                  {label}
+                </label>
+                <input
+                  id={key}
+                  type={type ?? "text"}
+                  value={form[key]}
+                  onChange={(e) => update(key, e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+              </div>
+            ))}
+
           <div className="col-span-1">
             <label htmlFor="destinationCountry" className="mb-1.5 block text-sm font-medium text-foreground">
               Destination Country
@@ -292,6 +362,77 @@ export function NewApplicationModal({
               ))}
             </select>
           </div>
+
+          <div className="col-span-2">
+            <label htmlFor="applyingMethod" className="mb-1.5 block text-sm font-medium text-foreground">
+              Applying Method
+            </label>
+            <select
+              id="applyingMethod"
+              value={form.applyingMethod}
+              onChange={(e) => update("applyingMethod", e.target.value as ApplyingMethod)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="self">Self-apply</option>
+              <option value="agency">Through an Agency</option>
+            </select>
+          </div>
+
+          {form.applyingMethod === "agency" && (
+            <>
+              <div className="col-span-1">
+                <label htmlFor="agencyCountry" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Agency Country
+                </label>
+                <select
+                  id="agencyCountry"
+                  value={form.agencyCountry}
+                  onChange={(e) => {
+                    update("agencyCountry", e.target.value)
+                    update("agencyName", "")
+                  }}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  <option value="">Select a country</option>
+                  {AGENCY_COUNTRIES.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="agencyName" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Agency Name
+                </label>
+                <input
+                  id="agencyName"
+                  list="admin-agency-suggestions"
+                  value={form.agencyName}
+                  onChange={(e) => update("agencyName", e.target.value)}
+                  placeholder="Type or select an agency"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+                <datalist id="admin-agency-suggestions">
+                  {agencyOptions.map((a) => (
+                    <option key={a.name} value={a.name} />
+                  ))}
+                </datalist>
+              </div>
+              <div className="col-span-2">
+                <label htmlFor="agencyReferenceNo" className="mb-1.5 block text-sm font-medium text-foreground">
+                  Agency Reference No.
+                </label>
+                <input
+                  id="agencyReferenceNo"
+                  type="text"
+                  value={form.agencyReferenceNo}
+                  onChange={(e) => update("agencyReferenceNo", e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="border-t border-border px-6 py-5">
