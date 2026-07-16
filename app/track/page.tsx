@@ -270,7 +270,7 @@ function ApplicantProfile({ app }: { app: Application }) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
       {/* Boarding-pass style header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-[oklch(0.32_0.09_275)] text-primary-foreground shadow-2xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-[oklch(0.32_0.09_275)] text-primary-foreground shadow-2xl animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
         {app.destinationCountry && COUNTRY_IMAGES[app.destinationCountry] && (
           <Image
             src={COUNTRY_IMAGES[app.destinationCountry] || "/placeholder.svg"}
@@ -291,7 +291,7 @@ function ApplicantProfile({ app }: { app: Application }) {
                 <span>{initials(app.fullName) || <User className="size-10" />}</span>
               )}
             </div>
-            <span className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border-2 border-primary bg-tip-green text-tip-green-foreground shadow-md">
+            <span className="absolute -bottom-1 -right-1 flex size-8 animate-in items-center justify-center rounded-full border-2 border-primary bg-tip-green text-tip-green-foreground shadow-md zoom-in-50 fade-in-0 delay-500 duration-500 fill-mode-both">
               <ShieldCheck className="size-4" aria-hidden="true" />
             </span>
           </div>
@@ -356,7 +356,7 @@ function ApplicantProfile({ app }: { app: Application }) {
         />
 
         {/* Flight-path progress tracker */}
-        <div className="mt-10 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+        <div className="mt-10 animate-in rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both sm:p-8">
         <h2 className="mb-8 text-sm font-semibold text-foreground">Application Journey</h2>
 
         {isRejected && app.statusNote && (
@@ -366,17 +366,20 @@ function ApplicantProfile({ app }: { app: Application }) {
         <div className="relative">
           <div className="absolute left-0 right-0 top-4 h-0.5 border-t-2 border-dashed border-border" />
           <div
-            className={`absolute left-0 top-4 h-0.5 border-t-2 transition-all duration-700 ${
+            className={`absolute left-0 top-4 h-0.5 border-t-2 transition-all delay-300 duration-1000 ease-out ${
               isRejected ? "border-destructive" : "border-primary"
             }`}
             style={{ width: `${progressPercent}%` }}
           />
           <div
-            className="absolute top-0 -translate-x-1/2 -translate-y-1/2 transition-all duration-700"
+            className="absolute top-0 -translate-x-1/2 -translate-y-1/2 transition-all delay-300 duration-1000 ease-out"
             style={{ left: `${progressPercent}%` }}
           >
+            {!isRejected && stageIndex < STAGE_LABELS.length - 1 && (
+              <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
+            )}
             <div
-              className={`flex size-8 items-center justify-center rounded-full shadow-md ${
+              className={`relative flex size-8 items-center justify-center rounded-full shadow-md animate-in zoom-in-50 fade-in-0 delay-700 duration-500 fill-mode-both ${
                 isRejected ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
               }`}
             >
@@ -398,7 +401,8 @@ function ApplicantProfile({ app }: { app: Application }) {
               return (
                 <div key={label} className="flex flex-col items-center text-center">
                   <span
-                    className={`flex size-6 items-center justify-center rounded-full ${
+                    style={{ animationDelay: `${300 + i * 150}ms` }}
+                    className={`flex size-6 animate-in items-center justify-center rounded-full zoom-in-50 fade-in-0 duration-500 fill-mode-both ${
                       state === "done"
                         ? "bg-primary/15 text-primary"
                         : state === "current"
@@ -430,8 +434,12 @@ function ApplicantProfile({ app }: { app: Application }) {
 
       {/* Details grid */}
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {details.map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+        {details.map(({ icon: Icon, label, value }, i) => (
+          <div
+            key={label}
+            style={{ animationDelay: `${i * 60}ms` }}
+            className="flex animate-in items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm fade-in-0 slide-in-from-bottom-2 duration-500 fill-mode-both"
+          >
             <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Icon className="size-4" aria-hidden="true" />
             </div>
@@ -445,7 +453,7 @@ function ApplicantProfile({ app }: { app: Application }) {
       </div>
 
       {/* Documents */}
-      <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div className="mt-6 animate-in rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both sm:p-8">
         <h3 className="mb-4 text-sm font-semibold text-foreground">Documents</h3>
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
@@ -460,12 +468,13 @@ function ApplicantProfile({ app }: { app: Application }) {
                   {docs.map((doc, index) => {
                     const label = docs.length > 1 ? `${groupName} ${index + 1}` : groupName
                     return (
-                      <DocumentThumbnail
+                      <div
                         key={doc.id}
-                        doc={doc}
-                        label={label}
-                        onOpen={() => setViewDoc({ doc, label })}
-                      />
+                        style={{ animationDelay: `${index * 80}ms` }}
+                        className="animate-in fade-in-0 zoom-in-95 duration-500 fill-mode-both"
+                      >
+                        <DocumentThumbnail doc={doc} label={label} onOpen={() => setViewDoc({ doc, label })} />
+                      </div>
                     )
                   })}
                 </div>
