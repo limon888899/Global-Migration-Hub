@@ -27,7 +27,7 @@ import {
   X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { COUNTRY_FLAGS, COUNTRY_IMAGES } from "@/lib/countries"
+import { COUNTRY_FLAGS } from "@/lib/countries"
 import { effectiveStage, STAGE_LABELS, type Application, type AppDocument } from "@/lib/admin/types"
 
 function isImageDataUrl(url?: string) {
@@ -104,14 +104,14 @@ function TrackPageContent() {
   }
 
   return (
-    <main className="min-h-screen bg-secondary">
+    <main className="min-h-screen overflow-x-hidden bg-secondary">
       <div className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5" aria-label="Global Migration Hub home">
-            <span className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-primary">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="Global Migration Hub home">
+            <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary">
               <img src="/icon.png" alt="Global Migration Hub" className="size-full object-cover" />
             </span>
-            <span className="font-serif text-lg font-semibold leading-tight text-foreground">
+            <span className="truncate font-serif text-lg font-semibold leading-tight text-foreground">
               Global Migration Hub
             </span>
           </Link>
@@ -119,14 +119,14 @@ function TrackPageContent() {
             <button
               type="button"
               onClick={handleNewSearch}
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <Search className="size-4" /> New search
             </button>
           ) : (
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="size-4" /> Back home
             </Link>
@@ -199,11 +199,9 @@ function ApplicantProfile({ app }: { app: Application }) {
   const isRejected = stage === "rejected"
   const stageIndex = typeof stage === "number" ? stage : STAGE_LABELS.length - 1
   const progressPercent = isRejected ? 100 : (stageIndex / (STAGE_LABELS.length - 1)) * 100
+
   const [viewDoc, setViewDoc] = useState<{ doc: AppDocument; label: string } | null>(null)
 
-  // Group documents by their admin-defined section (groupName), in the order
-  // sections were first added. The applicant never sees original filenames —
-  // only the section name plus a serial number (e.g. "Passport 1", "Passport 2").
   const groupedDocuments = useMemo(() => {
     const map = new Map<string, AppDocument[]>()
     for (const doc of app.documents) {
@@ -214,9 +212,6 @@ function ApplicantProfile({ app }: { app: Application }) {
     return Array.from(map.entries())
   }, [app.documents])
 
-  // Lock the background page while the document viewer is open, so the
-  // large document image can't push/scroll the boarding-pass layout behind
-  // it on mobile (this is what caused the "zoomed in" look on phones).
   useEffect(() => {
     if (!viewDoc) return
     const previousOverflow = document.body.style.overflow
@@ -236,7 +231,6 @@ function ApplicantProfile({ app }: { app: Application }) {
     { icon: Phone, label: "Phone", value: app.phone || "—" },
     { icon: CreditCard, label: "Passport Type", value: app.passportType || "—" },
     { icon: Hash, label: "App. ID", value: app.id.slice(0, 8).toUpperCase() },
-
     {
       icon: Clock,
       label: "Submitted",
@@ -269,20 +263,18 @@ function ApplicantProfile({ app }: { app: Application }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
-      {/* Boarding-pass style header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-[oklch(0.32_0.09_275)] text-primary-foreground shadow-2xl animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-        {app.destinationCountry && COUNTRY_IMAGES[app.destinationCountry] && (
-          <Image
-            src={COUNTRY_IMAGES[app.destinationCountry] || "/placeholder.svg"}
-            alt=""
-            fill
-            aria-hidden="true"
-            className="object-cover opacity-15 mix-blend-luminosity"
-          />
-        )}
+      {/* Boarding-pass style header — watermark instead of a solid blue overlay */}
+      <div className="relative overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-xl">
+        <Image
+          src="/images/gmh-watermark.png"
+          alt=""
+          fill
+          aria-hidden="true"
+          className="pointer-events-none object-cover opacity-[0.08]"
+        />
+
         <div className="relative flex flex-col items-center gap-5 p-6 text-center sm:p-8">
-          {/* QR code — scan to return to the tracking page anytime */}
-          <div className="absolute right-4 top-4 hidden flex-col items-center gap-1 rounded-lg bg-primary-foreground/95 p-1.5 shadow-md sm:flex">
+          <div className="absolute right-4 top-4 hidden flex-col items-center gap-1 rounded-lg bg-background/95 p-1.5 shadow-md ring-1 ring-border sm:flex">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=88x88&margin=0&data=${encodeURIComponent(
                 typeof window !== "undefined" ? `${window.location.origin}/track` : "https://globalmigrationhub.com/track",
@@ -292,12 +284,11 @@ function ApplicantProfile({ app }: { app: Application }) {
               height={64}
               className="size-16"
             />
-            <span className="text-[9px] font-medium uppercase tracking-wide text-primary/70">Scan to track</span>
+            <span className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">Scan to track</span>
           </div>
 
-          {/* Profile photo — circular, with a subtle trusted/verified ring */}
           <div className="relative">
-            <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary-foreground/40 bg-primary-foreground/10 text-2xl font-semibold shadow-xl ring-4 ring-primary-foreground/10 sm:size-28">
+            <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary/20 bg-primary/10 text-2xl font-semibold text-primary shadow-xl sm:size-28">
               {app.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
@@ -305,72 +296,59 @@ function ApplicantProfile({ app }: { app: Application }) {
                 <span>{initials(app.fullName) || <User className="size-10" />}</span>
               )}
             </div>
-            <span className="absolute -bottom-1 -right-1 flex size-8 animate-in items-center justify-center rounded-full border-2 border-primary bg-tip-green text-tip-green-foreground shadow-md zoom-in-50 fade-in-0 delay-500 duration-500 fill-mode-both">
+            <span className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border-2 border-card bg-tip-green text-tip-green-foreground shadow-md">
               <ShieldCheck className="size-4" aria-hidden="true" />
             </span>
           </div>
 
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-primary-foreground/60">Applicant</p>
-            <h1 className="mt-1 break-words font-serif text-2xl font-semibold leading-tight sm:text-3xl">
+          <div className="min-w-0 max-w-full">
+            <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Applicant</p>
+            <h1 className="mt-1 break-words font-serif text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
               {app.fullName}
             </h1>
-            <p className="mt-1.5 font-mono text-sm tracking-widest text-primary-foreground/75">
+            <p className="mt-1.5 break-all font-mono text-sm tracking-widest text-muted-foreground">
               {app.passportNumber}
             </p>
           </div>
 
-          {/* Key facts: Date of Birth / Visa Type / Destination */}
-          <div className="grid w-full grid-cols-1 gap-4 border-t border-dashed border-primary-foreground/25 pt-5 text-left sm:grid-cols-3">
+          <div className="grid w-full grid-cols-1 gap-4 border-t border-dashed border-border pt-5 text-left sm:grid-cols-3">
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-primary-foreground/60">Date of Birth</p>
-              <p className="mt-0.5 text-sm font-semibold">{dobFormatted}</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Date of Birth</p>
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{dobFormatted}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-primary-foreground/60">Visa Type</p>
-              <p className="mt-0.5 text-sm font-semibold">{app.visaType || "—"}</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Visa Type</p>
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{app.visaType || "—"}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-primary-foreground/60">Destination</p>
-              <p className="mt-0.5 text-sm font-semibold">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Destination</p>
+              <p className="mt-0.5 break-words text-sm font-semibold text-foreground">
                 {app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ${app.destinationCountry}` : "—"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Perforated divider */}
-        <div className="relative border-t border-dashed border-primary-foreground/25">
+        <div className="relative border-t border-dashed border-border">
           <span className="absolute -left-3 top-1/2 size-6 -translate-y-1/2 rounded-full bg-secondary" />
           <span className="absolute -right-3 top-1/2 size-6 -translate-y-1/2 rounded-full bg-secondary" />
         </div>
 
-        <div className="relative flex items-center justify-center gap-2 px-6 py-3 text-xs font-medium text-primary-foreground/70 sm:px-8">
+        <div className="relative flex items-center justify-center gap-2 bg-secondary/40 px-6 py-3 text-xs font-medium text-muted-foreground sm:px-8">
           {isRejected ? (
             <>
-              <XCircle className="size-3.5" aria-hidden="true" /> Application Rejected
+              <XCircle className="size-3.5 text-destructive" aria-hidden="true" /> Application Rejected
             </>
           ) : (
             <>
-              <CheckCircle2 className="size-3.5" aria-hidden="true" /> Current Stage: {STAGE_LABELS[stageIndex]}
+              <CheckCircle2 className="size-3.5 text-primary" aria-hidden="true" /> Current Stage: {STAGE_LABELS[stageIndex]}
             </>
           )}
         </div>
       </div>
 
-      {/* Journey + details section with plane watermark */}
-      <div className="relative">
-        <Image
-          src="/images/hero-plane.webp"
-          alt=""
-          width={900}
-          height={900}
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 -z-10 w-[160%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.14] grayscale sm:w-[950px]"
-        />
-
-        {/* Flight-path progress tracker */}
-        <div className="mt-10 animate-in rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both sm:p-8">
+      {/* Flight-path progress tracker */}
+      <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <h2 className="mb-8 text-sm font-semibold text-foreground">Application Journey</h2>
 
         {isRejected && app.statusNote && (
@@ -380,20 +358,17 @@ function ApplicantProfile({ app }: { app: Application }) {
         <div className="relative">
           <div className="absolute left-0 right-0 top-4 h-0.5 border-t-2 border-dashed border-border" />
           <div
-            className={`absolute left-0 top-4 h-0.5 border-t-2 transition-all delay-300 duration-1000 ease-out ${
+            className={`absolute left-0 top-4 h-0.5 border-t-2 transition-all duration-700 ${
               isRejected ? "border-destructive" : "border-primary"
             }`}
             style={{ width: `${progressPercent}%` }}
           />
           <div
-            className="absolute top-0 -translate-x-1/2 -translate-y-1/2 transition-all delay-300 duration-1000 ease-out"
+            className="absolute top-0 -translate-x-1/2 -translate-y-1/2 transition-all duration-700"
             style={{ left: `${progressPercent}%` }}
           >
-            {!isRejected && stageIndex < STAGE_LABELS.length - 1 && (
-              <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
-            )}
             <div
-              className={`relative flex size-8 items-center justify-center rounded-full shadow-md animate-in zoom-in-50 fade-in-0 delay-700 duration-500 fill-mode-both ${
+              className={`flex size-8 items-center justify-center rounded-full shadow-md ${
                 isRejected ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
               }`}
             >
@@ -401,7 +376,7 @@ function ApplicantProfile({ app }: { app: Application }) {
             </div>
           </div>
 
-          <div className="mt-10 grid grid-cols-4 gap-2">
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-2">
             {STAGE_LABELS.map((label, i) => {
               const state = isRejected
                 ? i <= 2
@@ -415,8 +390,7 @@ function ApplicantProfile({ app }: { app: Application }) {
               return (
                 <div key={label} className="flex flex-col items-center text-center">
                   <span
-                    style={{ animationDelay: `${300 + i * 150}ms` }}
-                    className={`flex size-6 animate-in items-center justify-center rounded-full zoom-in-50 fade-in-0 duration-500 fill-mode-both ${
+                    className={`flex size-6 items-center justify-center rounded-full ${
                       state === "done"
                         ? "bg-primary/15 text-primary"
                         : state === "current"
@@ -433,7 +407,7 @@ function ApplicantProfile({ app }: { app: Application }) {
                     )}
                   </span>
                   <span
-                    className={`mt-2 text-[11px] font-medium leading-tight sm:text-xs ${
+                    className={`mt-2 text-[10px] font-medium leading-tight sm:text-xs ${
                       state === "upcoming" ? "text-muted-foreground" : "text-foreground"
                     }`}
                   >
@@ -448,25 +422,21 @@ function ApplicantProfile({ app }: { app: Application }) {
 
       {/* Details grid */}
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {details.map(({ icon: Icon, label, value }, i) => (
-          <div
-            key={label}
-            style={{ animationDelay: `${i * 60}ms` }}
-            className="flex animate-in items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm fade-in-0 slide-in-from-bottom-2 duration-500 fill-mode-both"
-          >
+        {details.map(({ icon: Icon, label, value }) => (
+          <div key={label} className="flex min-w-0 items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Icon className="size-4" aria-hidden="true" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-              <p className="text-sm font-medium text-foreground">{value}</p>
+              <p className="break-words text-sm font-medium text-foreground">{value}</p>
             </div>
           </div>
         ))}
       </div>
-      </div>
+
       {/* Documents */}
-      <div className="mt-6 animate-in rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both sm:p-8">
+      <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <h3 className="mb-4 text-sm font-semibold text-foreground">Documents</h3>
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
@@ -474,20 +444,12 @@ function ApplicantProfile({ app }: { app: Application }) {
           <div className="space-y-7">
             {groupedDocuments.map(([groupName, docs]) => (
               <div key={groupName}>
-                <h4 className="mb-3 font-serif text-lg font-bold text-foreground sm:text-xl">
-                  {groupName}
-                </h4>
+                <h4 className="mb-3 font-serif text-lg font-bold text-foreground sm:text-xl">{groupName}</h4>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {docs.map((doc, index) => {
                     const label = docs.length > 1 ? `${groupName} ${index + 1}` : groupName
                     return (
-                      <div
-                        key={doc.id}
-                        style={{ animationDelay: `${index * 80}ms` }}
-                        className="animate-in fade-in-0 zoom-in-95 duration-500 fill-mode-both"
-                      >
-                        <DocumentThumbnail doc={doc} label={label} onOpen={() => setViewDoc({ doc, label })} />
-                      </div>
+                      <DocumentThumbnail key={doc.id} doc={doc} label={label} onOpen={() => setViewDoc({ doc, label })} />
                     )
                   })}
                 </div>
