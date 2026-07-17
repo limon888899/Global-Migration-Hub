@@ -104,7 +104,13 @@ function TrackPageContent() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-secondary">
+    <main className="relative min-h-screen overflow-x-hidden bg-secondary">
+      {/* Portal watermark — sits behind the entire /track page */}
+      <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <Image src="/images/track-watermark.webp" alt="" fill priority className="object-cover opacity-[0.22]" />
+        <div className="absolute inset-0 bg-secondary/80" />
+      </div>
+
       <div className="border-b border-border bg-background">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="Global Migration Hub home">
@@ -135,7 +141,7 @@ function TrackPageContent() {
       </div>
 
       {!result ? (
-        <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md flex-col justify-center px-4 py-14 sm:px-6">
+        <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col justify-center px-4 py-14 fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
           <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
             <ShieldCheck className="size-7" aria-hidden="true" />
           </div>
@@ -262,7 +268,7 @@ function ApplicantProfile({ app }: { app: Application }) {
   ]
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-4xl animate-in px-4 py-10 fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6 sm:py-14">
       {/* Boarding-pass style header — watermark instead of a solid blue overlay */}
       <div className="relative overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-xl">
         <Image
@@ -270,7 +276,7 @@ function ApplicantProfile({ app }: { app: Application }) {
           alt=""
           fill
           aria-hidden="true"
-          className="pointer-events-none object-cover opacity-[0.08]"
+          className="pointer-events-none object-contain opacity-[0.2]"
         />
 
         <div className="relative flex flex-col items-center gap-5 p-6 text-center sm:p-8">
@@ -348,7 +354,7 @@ function ApplicantProfile({ app }: { app: Application }) {
       </div>
 
       {/* Flight-path progress tracker */}
-      <div className="mt-10 overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div className="mt-10 animate-in overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:p-8" style={{ animationDelay: "150ms" }}>
         <h2 className="mb-8 text-sm font-semibold text-foreground">Application Journey</h2>
 
         {isRejected && app.statusNote && (
@@ -421,7 +427,7 @@ function ApplicantProfile({ app }: { app: Application }) {
       </div>
 
       {/* Details grid */}
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="mt-6 grid animate-in grid-cols-1 gap-3 fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:grid-cols-2" style={{ animationDelay: "250ms" }}>
         {details.map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex min-w-0 items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -436,7 +442,10 @@ function ApplicantProfile({ app }: { app: Application }) {
       </div>
 
       {/* Documents */}
-      <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div
+        className="mt-6 animate-in rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:p-8"
+        style={{ animationDelay: "350ms" }}
+      >
         <h3 className="mb-4 text-sm font-semibold text-foreground">Documents</h3>
         {app.documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">No documents have been added yet.</p>
