@@ -8,7 +8,7 @@ import type { Viewport } from "next"
 // shrunk to fit, instead of reflowing into a separate mobile layout.
 export const viewport: Viewport = {
   width: 1280,
-  userScalable: false,
+  userScalable: true,
   themeColor: "#211735",
 }
 
