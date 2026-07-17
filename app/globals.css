@@ -168,12 +168,3 @@
     scroll-behavior: auto !important;
   }
 }
-/* Hides the scrollbar on horizontally-swipeable rows (document carousel)
-   while keeping native touch/trackpad scrolling fully functional. */
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
