@@ -129,40 +129,110 @@ const countryDetails: Record<string, { visaTypes: string; image: string; alt: st
     image: "/images/countries/Spain.png",
     alt: "A scenic view of a landmark in Spain",
   },
-  Sweden: {
-    visaTypes: "Work Visa · Student · Residence",
-    image: "/images/countries/Sweden.png",
-    alt: "A scenic view of a landmark in Sweden",
+  Romania: {
+    visaTypes: "Work Permit · Student · EU Card",
   },
-  Portugal: {
-    visaTypes: "Work Visa · Digital Nomad · Student",
-    image: "/images/countries/Portugal.png",
-    alt: "A scenic view of a landmark in Portugal",
+  Bulgaria: {
+    visaTypes: "Work Permit · Student · EU Card",
   },
-  Ireland: {
-    visaTypes: "Work Visa · Student · Business",
-    image: "/images/countries/Ireland.png",
-    alt: "A scenic view of a landmark in Ireland",
+  Croatia: {
+    visaTypes: "Work Permit · Student · EU Card",
   },
-  "South Korea": {
-    visaTypes: "Work Visa · Student · Investor",
-    image: "/images/countries/South Korea.png",
-    alt: "A scenic view of a landmark in South Korea",
+  Bangladesh: {
+    visaTypes: "Work Visa · Study Visa · Tourist",
   },
-  Qatar: {
-    visaTypes: "Employment Pass · Student · Business",
-    image: "/images/countries/Qatar.png",
-    alt: "A scenic view of a landmark in Qatar",
+  India: {
+    visaTypes: "Work Visa · Student · Medical",
   },
-  "Saudi Arabia": {
-    visaTypes: "Work Visa · Professional · Business",
-    image: "/images/countries/Saudi Arabia.png",
-    alt: "A scenic view of a landmark in Saudi Arabia",
+  Pakistan: {
+    visaTypes: "Work Visa · Student · Family",
   },
-  Malaysia: {
-    visaTypes: "Work Visa · Student · MM2H",
-    image: "/images/countries/Malaysia.png",
-    alt: "A scenic view of a landmark in Malaysia",
+  Nepal: {
+    visaTypes: "Work Visa · Student · Tourist",
+  },
+  "Sri Lanka": {
+    visaTypes: "Work Visa · Student · Tourist",
+  },
+  Philippines: {
+    visaTypes: "Work Visa · Student · Professional",
+  },
+  Indonesia: {
+    visaTypes: "Work Visa · Business · Family",
+  },
+  Thailand: {
+    visaTypes: "Elite Visa · Student · Work",
+  },
+  Vietnam: {
+    visaTypes: "Work Visa · Business · Student",
+  },
+  China: {
+    visaTypes: "Work Visa · Student · Family",
+  },
+  Turkey: {
+    visaTypes: "Residence Permit · Work Visa · Student",
+  },
+  Nigeria: {
+    visaTypes: "Work Visa · Business · Family",
+  },
+  Kenya: {
+    visaTypes: "Work Visa · Business · Tourist",
+  },
+  Egypt: {
+    visaTypes: "Work Visa · Business · Student",
+  },
+  Jordan: {
+    visaTypes: "Work Visa · Residence · Business",
+  },
+  Lebanon: {
+    visaTypes: "Residence Permit · Work Visa · Student",
+  },
+  Brazil: {
+    visaTypes: "Work Visa · Investor · Digital Nomad",
+  },
+  Mexico: {
+    visaTypes: "Temporary Resident · Business · Student",
+  },
+  Argentina: {
+    visaTypes: "Temporary Resident · Student · Investor",
+  },
+  Switzerland: {
+    visaTypes: "Work Permit · Student · Family",
+  },
+  Belgium: {
+    visaTypes: "Highly Skilled Worker · Student · Family",
+  },
+  Norway: {
+    visaTypes: "Work Permit · Student · Family",
+  },
+  Denmark: {
+    visaTypes: "Work Permit · Student · Start-up",
+  },
+  Finland: {
+    visaTypes: "Residence Permit · Student · Work",
+  },
+  Austria: {
+    visaTypes: "Red-White-Red Card · Student · Family",
+  },
+  Poland: {
+    visaTypes: "Work Visa · Student · Family",
+  },
+  Greece: {
+    visaTypes: "Residence Permit · Work Visa · Student",
+  },
+  Russia: {
+    visaTypes: "Work Visa · Business · Family",
+  },
+  "South Africa": {
+    visaTypes: "Work Permit · Student · Residence",
+  },
+  Kuwait: {
+    visaTypes: "Work Visa · Business · Professional",
+  },
+  Bahrain: {
+    visaTypes: "Work Visa · Business · Residence",
+  },
+  Oman: {
+    visaTypes: "Work Visa · Residence · Business",
   },
 }
 
@@ -245,30 +315,49 @@ export function CountriesSection() {
             </p>
           </div>
 
-          <div className={`mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-700 ${otherVisible ? "opacity-100" : "opacity-0"}`}>
-            {OTHER_COUNTRIES.map((countryName) => (
-              <Link
-                key={countryName}
-                href={`/track?country=${encodeURIComponent(countryName)}`}
-                className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-center transition-all hover:border-accent hover:bg-accent/10 hover:shadow-md hover:-translate-y-1"
-              >
-                <span className="text-4xl" aria-hidden="true">
-                  {COUNTRY_FLAGS[countryName] || "🌍"}
-                </span>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">
-                    {countryName}
-                  </h4>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Click to enquire
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-
           {showOther && (
-            <div className="mt-10 flex justify-center">
+            <div className={`mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-700 ${otherVisible ? "opacity-100" : "opacity-0"}`}>
+              {OTHER_COUNTRIES.map((countryName) => (
+                <article
+                  key={countryName}
+                  className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl shadow-md transition-shadow hover:shadow-xl"
+                >
+                  <div
+                    className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-primary/40 flex items-center justify-center text-9xl"
+                    aria-hidden="true"
+                  >
+                    {COUNTRY_FLAGS[countryName] || "🌍"}
+                  </div>
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-primary/10"
+                  />
+
+                  <div className="relative flex flex-col gap-4 p-6">
+                    <div>
+                      <h3 className="text-balance font-serif text-2xl font-bold text-primary-foreground sm:text-3xl">
+                        {countryName}
+                      </h3>
+                      <p className="mt-1.5 text-sm font-medium text-primary-foreground/80">
+                        {countryDetails[countryName]?.visaTypes}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/track?country=${encodeURIComponent(countryName)}`}
+                      className="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+                      aria-label={`Enquire now about visas for ${countryName}`}
+                    >
+                      Enquire Now
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-10 flex justify-center">
+            {showOther ? (
               <button
                 type="button"
                 onClick={() => setShowOther(false)}
@@ -277,11 +366,7 @@ export function CountriesSection() {
                 <ChevronUp className="size-4" aria-hidden="true" />
                 Show Less Countries
               </button>
-            </div>
-          )}
-
-          {!showOther && (
-            <div className="mt-10 flex justify-center">
+            ) : (
               <button
                 type="button"
                 onClick={() => setShowOther(true)}
@@ -291,8 +376,8 @@ export function CountriesSection() {
                 Show More Countries
                 <ChevronDown className="size-4" aria-hidden="true" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </section>
