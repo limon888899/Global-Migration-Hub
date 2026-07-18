@@ -5,23 +5,23 @@ export const DESTINATION_COUNTRIES = [
   "Australia",
   "Germany",
   "France",
-  "Italy",
-  "Spain",
+  "Japan",
+  "United Arab Emirates",
+  "Singapore",
+  "New Zealand",
   "Netherlands",
+  "Italy",
+]
+
+export const OTHER_COUNTRIES = [
+  "Spain",
   "Sweden",
   "Portugal",
   "Ireland",
-  "New Zealand",
-  "Japan",
   "South Korea",
-  "Singapore",
-  "United Arab Emirates",
   "Qatar",
   "Saudi Arabia",
   "Malaysia",
-  "Romania",
-  "Bulgaria",
-  "Croatia",
   "Bangladesh",
   "India",
   "Pakistan",
@@ -54,6 +54,9 @@ export const DESTINATION_COUNTRIES = [
   "Kuwait",
   "Bahrain",
   "Oman",
+  "Romania",
+  "Bulgaria",
+  "Croatia",
 ]
 
 export type DestinationCountry = (typeof DESTINATION_COUNTRIES)[number]

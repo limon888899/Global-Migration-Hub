@@ -1,10 +1,32 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, ChevronDown, ChevronUp, Globe2 } from "lucide-react"
-import { DESTINATION_COUNTRIES, ALL_COUNTRIES, COUNTRY_FLAGS } from "@/lib/countries"
+import { DESTINATION_COUNTRIES, OTHER_COUNTRIES, ALL_COUNTRIES, COUNTRY_FLAGS } from "@/lib/countries"
+
+// Scroll animation hook
+function useScrollAnimation() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.1 }
+    )
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  return { ref, isVisible }
+}
 
 const countryDetails: Record<string, { visaTypes: string; image: string; alt: string }> = {
   "United Kingdom": {
@@ -289,31 +311,41 @@ const countries = DESTINATION_COUNTRIES.map((name) => ({
   ...countryDetails[name],
 }))
 
-const remainingCountries = ALL_COUNTRIES.filter(
-  (name) => !(DESTINATION_COUNTRIES as readonly string[]).includes(name),
-)
+const popularCountries = DESTINATION_COUNTRIES.map((name) => ({
+  name,
+  ...countryDetails[name],
+}))
+
+const otherCountriesData = OTHER_COUNTRIES.map((name) => ({
+  name,
+  ...countryDetails[name],
+}))
 
 export function CountriesSection() {
-  const [showAll, setShowAll] = useState(false)
+  const [showOther, setShowOther] = useState(false)
+  const { ref: sectionRef, isVisible } = useScrollAnimation()
+  const { ref: otherRef, isVisible: otherVisible } = useScrollAnimation()
 
   return (
     <section id="countries" className="scroll-mt-20 bg-background py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="text-sm font-semibold uppercase tracking-wider text-accent-foreground">
+        {/* Popular Destinations Header */}
+        <div ref={sectionRef} className="mx-auto max-w-2xl text-center">
+          <span className={`text-sm font-semibold uppercase tracking-wider text-accent-foreground transition-all duration-700 ${isVisible ? "opacity-100" : "opacity-0"}`}>
             Where we work
           </span>
-          <h2 className="mt-3 text-balance font-serif text-3xl font-semibold text-foreground sm:text-4xl">
+          <h2 className={`mt-3 text-balance font-serif text-3xl font-semibold text-foreground sm:text-4xl transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
             Popular Destinations
           </h2>
-          <p className="mt-4 text-pretty text-base leading-relaxed text-muted-foreground">
+          <p className={`mt-4 text-pretty text-base leading-relaxed text-muted-foreground transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
             Explore visa pathways across our most requested destinations. Our
             advisors guide you through every step of your relocation.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {countries.map((country) => (
+        {/* Popular Countries Grid */}
+        <div className={`mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-700 ${isVisible ? "opacity-100" : "opacity-0"}`}>
+          {popularCountries.map((country, idx) => (
             <article
               key={country.name}
               className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl shadow-md transition-shadow hover:shadow-xl"
@@ -352,46 +384,73 @@ export function CountriesSection() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col items-center">
-          <button
-            type="button"
-            onClick={() => setShowAll((v) => !v)}
-            aria-expanded={showAll}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
-          >
-            <Globe2 className="size-4" aria-hidden="true" />
-            {showAll ? "Hide Countries" : "See More Countries"}
-            {showAll ? (
-              <ChevronUp className="size-4" aria-hidden="true" />
-            ) : (
-              <ChevronDown className="size-4" aria-hidden="true" />
-            )}
-          </button>
+        {/* Other Countries Section */}
+        <div ref={otherRef} className="mt-16">
+          <div className={`mx-auto max-w-2xl text-center transition-all duration-700 ${otherVisible ? "opacity-100" : "opacity-0"}`}>
+            <h3 className="text-balance font-serif text-2xl font-semibold text-foreground sm:text-3xl">
+              Other Countries
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              We also help with visa applications for these destinations
+            </p>
+          </div>
 
-          {showAll && (
-            <div className="mt-8 w-full rounded-2xl border border-border bg-secondary/20 p-6 animate-in fade-in-0 slide-in-from-top-2 duration-300">
-              <p className="mb-6 text-center text-sm text-muted-foreground">
-                We also help with applications for these destinations. Tap a country to start
-                your application.
-              </p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                {remainingCountries.map((name) => (
+          <div className={`mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-700 ${otherVisible ? "opacity-100" : "opacity-0"}`}>
+            {otherCountriesData.map((country) => (
+              <article
+                key={country.name}
+                className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              >
+                <Image
+                  src={country.image || "/placeholder.svg"}
+                  alt={country.alt}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-primary/10"
+                />
+
+                <div className="relative flex flex-col gap-4 p-6">
+                  <div>
+                    <h4 className="text-balance font-serif text-xl font-bold text-primary-foreground sm:text-2xl">
+                      {country.name}
+                    </h4>
+                    <p className="mt-1.5 text-xs font-medium text-primary-foreground/80">
+                      {country.visaTypes}
+                    </p>
+                  </div>
                   <Link
-                    key={name}
-                    href={`/track?country=${encodeURIComponent(name)}`}
-                    className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent/10 hover:shadow-md"
+                    href={`/track?country=${encodeURIComponent(country.name)}`}
+                    className="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
+                    aria-label={`Enquire now about visas for ${country.name}`}
                   >
-                    <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
-                      {COUNTRY_FLAGS[name]}
-                    </span>
-                    <span className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent-foreground">
-                      {name}
-                    </span>
+                    Enquire Now
+                    <ArrowRight className="size-3" aria-hidden="true" />
                   </Link>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowOther((v) => !v)}
+              aria-expanded={showOther}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+            >
+              <Globe2 className="size-4" aria-hidden="true" />
+              {showOther ? "Show Less Countries" : "Show More Countries"}
+              {showOther ? (
+                <ChevronUp className="size-4" aria-hidden="true" />
+              ) : (
+                <ChevronDown className="size-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </section>

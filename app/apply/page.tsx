@@ -13,6 +13,7 @@ import {
   UserRound,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DocumentUpload } from "@/components/document-upload"
 import {
   ALL_COUNTRIES,
   COUNTRY_CODES,
@@ -61,68 +62,7 @@ const UPLOAD_GROUP_NAMES: Record<UploadKey, string> = {
   supportingDocument: "Supporting Document",
 }
 
-/** Sleek inline text input with a right-side upload icon button. */
-function DocumentUploadField({
-  id,
-  label,
-  required,
-  fileName,
-  uploading,
-  error,
-  onFileSelected,
-}: {
-  id: string
-  label: string
-  required?: boolean
-  fileName?: string
-  uploading?: boolean
-  error?: string
-  onFileSelected: (file: File | null) => void
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-foreground">
-        {label} {required && <span className="text-destructive">*</span>}
-      </label>
-      <div className="relative mt-1.5">
-        <input
-          type="text"
-          readOnly
-          value={fileName ?? ""}
-          placeholder="No file selected"
-          onClick={() => inputRef.current?.click()}
-          className="w-full cursor-pointer rounded-lg border border-input bg-background px-4 py-2.5 pr-11 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-        />
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          aria-label={`Upload ${label}`}
-          className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-lg transition hover:bg-primary/10 disabled:opacity-50"
-        >
-          {uploading ? (
-            <Loader2 className="size-4 animate-spin text-primary" />
-          ) : fileName ? (
-            <CheckCircle2 className="size-4 text-primary" />
-          ) : (
-            <span aria-hidden="true">📤</span>
-          )}
-        </button>
-        <input
-          ref={inputRef}
-          id={id}
-          type="file"
-          accept="image/*,.pdf"
-          className="hidden"
-          disabled={uploading}
-          onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
-        />
-      </div>
-      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-    </div>
-  )
-}
+
 
 function fieldClass() {
   return "mt-1.5 w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
@@ -741,23 +681,25 @@ function ApplyPageContent() {
                   <>
                     {visaType === "Work Permit Visa" && (
                       <>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <DocumentUploadField
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                          <DocumentUpload
                             id="jobOfferLetter"
                             label="Job Offer Letter"
                             required
                             fileName={uploads.jobOfferLetter?.name}
                             uploading={uploadingKeys.jobOfferLetter}
                             error={uploadErrors.jobOfferLetter}
+                            fileUrl={uploads.jobOfferLetter?.url}
                             onFileSelected={(f) => handleFileSelected("jobOfferLetter", f)}
                           />
-                          <DocumentUploadField
+                          <DocumentUpload
                             id="policeClearance"
                             label="Police Clearance Certificate"
                             required
                             fileName={uploads.policeClearance?.name}
                             uploading={uploadingKeys.policeClearance}
                             error={uploadErrors.policeClearance}
+                            fileUrl={uploads.policeClearance?.url}
                             onFileSelected={(f) => handleFileSelected("policeClearance", f)}
                           />
                         </div>
@@ -777,18 +719,16 @@ function ApplyPageContent() {
                     )}
 
                     {visaType === "Student / Study Visa" && (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <label htmlFor="universityName" className="block text-sm font-medium text-foreground">
-                            University / College Name <span className="text-destructive">*</span>
-                          </label>
-                          <input
-                            id="universityName"
-                            value={universityName}
-                            onChange={(e) => setUniversityName(e.target.value)}
-                            placeholder="Name of the institution"
-                            className={fieldClass()}
-                          />
+                      <DocumentUpload
+                        id="offerLetter"
+                        label="Offer / Admission Letter"
+                        required
+                        fileName={uploads.offerLetter?.name}
+                        uploading={uploadingKeys.offerLetter}
+                        error={uploadErrors.offerLetter}
+                        fileUrl={uploads.offerLetter?.url}
+                        onFileSelected={(f) => handleFileSelected("offerLetter", f)}
+                      />
                         </div>
                         <DocumentUploadField
                           id="offerLetter"
@@ -803,50 +743,30 @@ function ApplyPageContent() {
                     )}
 
                     {visaType === "Tourist / Visit Visa" && (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <label htmlFor="purposeOfVisit" className="block text-sm font-medium text-foreground">
-                            Purpose of Visit <span className="text-destructive">*</span>
-                          </label>
-                          <select
-                            id="purposeOfVisit"
-                            value={purposeOfVisit}
-                            onChange={(e) => setPurposeOfVisit(e.target.value)}
-                            className={fieldClass()}
-                          >
-                            <option value="">Select a purpose</option>
-                            {VISIT_PURPOSES.map((p) => (
-                              <option key={p} value={p}>
-                                {p}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <DocumentUploadField
-                          id="hotelBooking"
-                          label="Hotel Booking / Invitation Letter"
-                          required
-                          fileName={uploads.hotelBooking?.name}
-                          uploading={uploadingKeys.hotelBooking}
-                          error={uploadErrors.hotelBooking}
-                          onFileSelected={(f) => handleFileSelected("hotelBooking", f)}
-                        />
+                      <DocumentUpload
+                        id="hotelBooking"
+                        label="Hotel Booking / Invitation Letter"
+                        required
+                        fileName={uploads.hotelBooking?.name}
+                        uploading={uploadingKeys.hotelBooking}
+                        error={uploadErrors.hotelBooking}
+                        fileUrl={uploads.hotelBooking?.url}
+                        onFileSelected={(f) => handleFileSelected("hotelBooking", f)}
+                      />
                       </div>
                     )}
 
                     {visaType === "Business Visa" && (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <label htmlFor="companyName" className="block text-sm font-medium text-foreground">
-                            Company Name <span className="text-destructive">*</span>
-                          </label>
-                          <input
-                            id="companyName"
-                            value={companyName}
-                            onChange={(e) => setCompanyName(e.target.value)}
-                            placeholder="Your company's name"
-                            className={fieldClass()}
-                          />
+                      <DocumentUpload
+                        id="tradeLicense"
+                        label="Trade License / Invitation Letter"
+                        required
+                        fileName={uploads.tradeLicense?.name}
+                        uploading={uploadingKeys.tradeLicense}
+                        error={uploadErrors.tradeLicense}
+                        fileUrl={uploads.tradeLicense?.url}
+                        onFileSelected={(f) => handleFileSelected("tradeLicense", f)}
+                      />
                         </div>
                         <DocumentUploadField
                           id="tradeLicense"
@@ -861,18 +781,16 @@ function ApplyPageContent() {
                     )}
 
                     {visaType === "Medical Visa" && (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <label htmlFor="hospitalName" className="block text-sm font-medium text-foreground">
-                            Hospital Name <span className="text-destructive">*</span>
-                          </label>
-                          <input
-                            id="hospitalName"
-                            value={hospitalName}
-                            onChange={(e) => setHospitalName(e.target.value)}
-                            placeholder="Name of the hospital"
-                            className={fieldClass()}
-                          />
+                      <DocumentUpload
+                        id="medicalInvitation"
+                        label="Medical Invitation / Appointment"
+                        required
+                        fileName={uploads.medicalInvitation?.name}
+                        uploading={uploadingKeys.medicalInvitation}
+                        error={uploadErrors.medicalInvitation}
+                        fileUrl={uploads.medicalInvitation?.url}
+                        onFileSelected={(f) => handleFileSelected("medicalInvitation", f)}
+                      />
                         </div>
                         <DocumentUploadField
                           id="medicalInvitation"
@@ -887,18 +805,16 @@ function ApplyPageContent() {
                     )}
 
                     {visaType === "Family / Spouse Visa" && (
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div>
-                          <label htmlFor="sponsorRelationship" className="block text-sm font-medium text-foreground">
-                            Sponsor Name &amp; Relationship <span className="text-destructive">*</span>
-                          </label>
-                          <input
-                            id="sponsorRelationship"
-                            value={sponsorRelationship}
-                            onChange={(e) => setSponsorRelationship(e.target.value)}
-                            placeholder="e.g. Jane Doe — Spouse"
-                            className={fieldClass()}
-                          />
+                      <DocumentUpload
+                        id="relationshipProof"
+                        label="Relationship Proof"
+                        required
+                        fileName={uploads.relationshipProof?.name}
+                        uploading={uploadingKeys.relationshipProof}
+                        error={uploadErrors.relationshipProof}
+                        fileUrl={uploads.relationshipProof?.url}
+                        onFileSelected={(f) => handleFileSelected("relationshipProof", f)}
+                      />
                         </div>
                         <DocumentUploadField
                           id="relationshipProof"
@@ -915,14 +831,15 @@ function ApplyPageContent() {
                     {(visaType === "Transit Visa" ||
                       visaType === "Permanent Residency" ||
                       visaType === "Diplomatic Visa") && (
-                      <DocumentUploadField
-                        id="supportingDocument"
-                        label="Supporting Document"
-                        fileName={uploads.supportingDocument?.name}
-                        uploading={uploadingKeys.supportingDocument}
-                        error={uploadErrors.supportingDocument}
-                        onFileSelected={(f) => handleFileSelected("supportingDocument", f)}
-                      />
+                    <DocumentUpload
+                      id="supportingDocument"
+                      label="Supporting Document"
+                      fileName={uploads.supportingDocument?.name}
+                      uploading={uploadingKeys.supportingDocument}
+                      error={uploadErrors.supportingDocument}
+                      fileUrl={uploads.supportingDocument?.url}
+                      onFileSelected={(f) => handleFileSelected("supportingDocument", f)}
+                    />
                     )}
 
                     <div>
