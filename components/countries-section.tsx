@@ -125,23 +125,48 @@ const countryDetails: Record<string, { visaTypes: string; image: string; alt: st
     alt: "A scenic view of a landmark in Qatar",
   },
   Spain: {
-    visaTypes: "Employment Pass · Student · MM2H",
+    visaTypes: "Employment Pass · Student · Residence",
     image: "/images/countries/Spain.png",
     alt: "A scenic view of a landmark in Spain",
   },
+  Sweden: {
+    visaTypes: "Work Visa · Student · Residence",
+    image: "/images/countries/Sweden.png",
+    alt: "A scenic view of a landmark in Sweden",
+  },
+  Portugal: {
+    visaTypes: "Work Visa · Digital Nomad · Student",
+    image: "/images/countries/Portugal.png",
+    alt: "A scenic view of a landmark in Portugal",
+  },
+  Ireland: {
+    visaTypes: "Work Visa · Student · Business",
+    image: "/images/countries/Ireland.png",
+    alt: "A scenic view of a landmark in Ireland",
+  },
+  "South Korea": {
+    visaTypes: "Work Visa · Student · Investor",
+    image: "/images/countries/South Korea.png",
+    alt: "A scenic view of a landmark in South Korea",
+  },
+  Qatar: {
+    visaTypes: "Employment Pass · Student · Business",
+    image: "/images/countries/Qatar.png",
+    alt: "A scenic view of a landmark in Qatar",
+  },
+  "Saudi Arabia": {
+    visaTypes: "Work Visa · Professional · Business",
+    image: "/images/countries/Saudi Arabia.png",
+    alt: "A scenic view of a landmark in Saudi Arabia",
+  },
+  Malaysia: {
+    visaTypes: "Work Visa · Student · MM2H",
+    image: "/images/countries/Malaysia.png",
+    alt: "A scenic view of a landmark in Malaysia",
+  },
 }
 
-const countries = DESTINATION_COUNTRIES.map((name) => ({
-  name,
-  ...countryDetails[name],
-}))
-
 const popularCountries = DESTINATION_COUNTRIES.map((name) => ({
-  name,
-  ...countryDetails[name],
-}))
-
-const otherCountriesData = OTHER_COUNTRIES.map((name) => ({
   name,
   ...countryDetails[name],
 }))
@@ -220,62 +245,54 @@ export function CountriesSection() {
             </p>
           </div>
 
-          <div className={`mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-all duration-700 ${otherVisible ? "opacity-100" : "opacity-0"}`}>
-            {otherCountriesData.map((country) => (
-              <article
-                key={country.name}
-                className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+          <div className={`mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 transition-all duration-700 ${otherVisible ? "opacity-100" : "opacity-0"}`}>
+            {OTHER_COUNTRIES.map((countryName) => (
+              <Link
+                key={countryName}
+                href={`/track?country=${encodeURIComponent(countryName)}`}
+                className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-center transition-all hover:border-accent hover:bg-accent/10 hover:shadow-md hover:-translate-y-1"
               >
-                <Image
-                  src={country.image || "/placeholder.svg"}
-                  alt={country.alt}
-                  fill
-                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/50 to-primary/10"
-                />
-
-                <div className="relative flex flex-col gap-4 p-6">
-                  <div>
-                    <h4 className="text-balance font-serif text-xl font-bold text-primary-foreground sm:text-2xl">
-                      {country.name}
-                    </h4>
-                    <p className="mt-1.5 text-xs font-medium text-primary-foreground/80">
-                      {country.visaTypes}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/track?country=${encodeURIComponent(country.name)}`}
-                    className="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
-                    aria-label={`Enquire now about visas for ${country.name}`}
-                  >
-                    Enquire Now
-                    <ArrowRight className="size-3" aria-hidden="true" />
-                  </Link>
+                <span className="text-4xl" aria-hidden="true">
+                  {COUNTRY_FLAGS[countryName] || "🌍"}
+                </span>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-foreground group-hover:text-accent transition-colors">
+                    {countryName}
+                  </h4>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Click to enquire
+                  </p>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
 
-          <div className="mt-10 flex justify-center">
-            <button
-              type="button"
-              onClick={() => setShowOther((v) => !v)}
-              aria-expanded={showOther}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
-            >
-              <Globe2 className="size-4" aria-hidden="true" />
-              {showOther ? "Show Less Countries" : "Show More Countries"}
-              {showOther ? (
+          {showOther && (
+            <div className="mt-10 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowOther(false)}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+              >
                 <ChevronUp className="size-4" aria-hidden="true" />
-              ) : (
+                Show Less Countries
+              </button>
+            </div>
+          )}
+
+          {!showOther && (
+            <div className="mt-10 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowOther(true)}
+                className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/40 px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+              >
+                <Globe2 className="size-4" aria-hidden="true" />
+                Show More Countries
                 <ChevronDown className="size-4" aria-hidden="true" />
-              )}
-            </button>
-          </div>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>
