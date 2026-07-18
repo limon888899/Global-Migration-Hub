@@ -107,7 +107,14 @@ function TrackPageContent() {
     <main className="relative min-h-screen overflow-x-hidden bg-secondary">
       {/* Portal watermark — sits behind the entire /track page */}
       <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
-        <Image src="/images/track-watermark.webp" alt="" fill priority className="object-cover opacity-[0.22]" />
+        <Image
+          src="/images/track-watermark.webp"
+          alt=""
+          fill
+          sizes="1280px"
+          quality={60}
+          className="object-cover opacity-[0.22]"
+        />
         <div className="absolute inset-0 bg-secondary/80" />
       </div>
 
@@ -272,9 +279,11 @@ function ApplicantProfile({ app }: { app: Application }) {
       {/* Boarding-pass style header — watermark instead of a solid blue overlay */}
       <div className="relative overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-xl">
         <Image
-          src="/images/gmh-watermark.png"
+          src="/images/gmh-watermark.webp"
           alt=""
           fill
+          sizes="896px"
+          quality={70}
           aria-hidden="true"
           className="pointer-events-none object-contain opacity-[0.2]"
         />
