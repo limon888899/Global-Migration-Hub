@@ -510,21 +510,16 @@ function ApplyPageContent() {
                     <label htmlFor="visaType" className="block text-sm font-medium text-foreground">
                       Visa Type <span className="text-destructive">*</span>
                     </label>
-                    <select
-                      id="visaType"
-                      value={visaType}
-                      onChange={(e) => setVisaType(e.target.value)}
-                      className={fieldClass()}
-                    >
-                      <option value="">Select a visa type</option>
-                      {VISA_TYPES.map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="mt-1.5">
+                      <CustomSelect
+                        id="visaType"
+                        value={visaType}
+                        onChange={setVisaType}
+                        options={VISA_TYPE_OPTIONS}
+                        placeholder="Select a visa type"
+                      />
+                    </div>
                   </div>
-                </div>
 
                 <div>
                   <span className="block text-sm font-medium text-foreground">
