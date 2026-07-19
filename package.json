@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
+    "@simplewebauthn/browser": "^13.2.2",
+    "@simplewebauthn/server": "^13.2.2",
     "@vercel/blob": "^0.27.1",
     "redis": "^4.7.0",
     "@vercel/analytics": "1.6.1",
