@@ -24,5 +24,7 @@ export interface BiometricAppointment {
   webauthnCounter?: number
   verifiedAt?: string
   pendingChallenge?: string
+  fingerPhotoUrl?: string
+  fingerPhotoUploadedAt?: string
   createdAt: string
 }
