@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -26,7 +26,7 @@ import {
   CalendarClock,
   X,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { EnquireModal } from "@/components/enquire-modal"
 import { COUNTRY_FLAGS } from "@/lib/countries"
 import { effectiveStage, STAGE_LABELS, type Application, type AppDocument } from "@/lib/admin/types"
 
@@ -53,55 +53,59 @@ function initials(name: string) {
 
 function TrackPageContent() {
   const searchParams = useSearchParams()
-  const expectedCountry = searchParams.get("country")
+  const expectedCountry = searchParams.get("country") || ""
+  const passportParam = searchParams.get("passport") || ""
 
-  const [passport, setPassport] = useState("")
   const [result, setResult] = useState<Application | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    const key = passport.trim()
-    if (!key) {
-      setError("Please enter your passport number.")
-      setResult(null)
-      return
-    }
-    setLoading(true)
-    setError("")
-    try {
-      const params = new URLSearchParams({ passport: key })
-      if (expectedCountry) params.set("country", expectedCountry)
-      const res = await fetch(`/api/visa-status?${params.toString()}`)
-      if (res.ok) {
-        const app = (await res.json()) as Application
-        setResult(app)
-        setError("")
-      } else {
-        const body = await res.json().catch(() => null)
-        setResult(null)
-        if (body?.error === "country_mismatch" && expectedCountry) {
-          setError(
-            `No ${expectedCountry} application was found for that passport number. Please check the country you applied for and try again.`,
-          )
+  useEffect(() => {
+    if (!passportParam) return
+    let cancelled = false
+
+    async function run() {
+      setLoading(true)
+      setError("")
+      setHasSearched(false)
+      try {
+        const params = new URLSearchParams({ passport: passportParam })
+        if (expectedCountry) params.set("country", expectedCountry)
+        const res = await fetch(`/api/visa-status?${params.toString()}`)
+        if (cancelled) return
+        if (res.ok) {
+          setResult(await res.json())
         } else {
-          setError("No record found for that passport number. Please check and try again.")
+          const body = await res.json().catch(() => null)
+          setResult(null)
+          if (body?.error === "country_mismatch" && expectedCountry) {
+            setError(
+              `No ${expectedCountry} application was found for that passport number. Please check the country you applied for and try again.`,
+            )
+          } else {
+            setError("No record found for that passport number. Please check and try again.")
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setResult(null)
+          setError("Something went wrong. Please try again.")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+          setHasSearched(true)
         }
       }
-    } catch {
-      setResult(null)
-      setError("Something went wrong. Please try again.")
-    } finally {
-      setLoading(false)
     }
-  }
 
-  function handleNewSearch() {
-    setResult(null)
-    setPassport("")
-    setError("")
-  }
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [passportParam, expectedCountry])
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-secondary">
@@ -131,7 +135,7 @@ function TrackPageContent() {
           {result ? (
             <button
               type="button"
-              onClick={handleNewSearch}
+              onClick={() => setModalOpen(true)}
               className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <Search className="size-4" /> New search
@@ -147,62 +151,60 @@ function TrackPageContent() {
         </div>
       </div>
 
-      {!result ? (
-        <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col justify-center px-4 py-14 fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
-          <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+      {loading ? (
+        <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 duration-500">
+          <Loader2 className="size-8 animate-spin text-primary" aria-hidden="true" />
+          <p className="mt-4 text-sm text-muted-foreground">
+            Checking your {expectedCountry ? `${expectedCountry} ` : ""}application status…
+          </p>
+        </div>
+      ) : result ? (
+        <ApplicantProfile app={result} />
+      ) : passportParam && hasSearched ? (
+        <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
+          <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <AlertCircle className="size-7" aria-hidden="true" />
+          </div>
+          <h1 className="mt-5 font-serif text-2xl font-semibold text-foreground">No application found</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="mt-6 flex h-12 w-full items-center justify-center rounded-full bg-accent px-7 text-base font-semibold text-accent-foreground transition hover:bg-accent/90"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : (
+        <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
+          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
             <ShieldCheck className="size-7" aria-hidden="true" />
           </div>
-          <h1 className="mt-5 text-center font-serif text-3xl font-semibold text-foreground">
-            Track your application
-          </h1>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
+          <h1 className="mt-5 font-serif text-3xl font-semibold text-foreground">Track your application</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             {expectedCountry
-              ? `Enter your passport number to check your ${expectedCountry} application status.`
+              ? `Check your ${expectedCountry} application status using your passport number.`
               : "Enter the passport number used on your application to view real-time status updates."}
           </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8" noValidate>
-            <label htmlFor="passport-number" className="block text-sm font-medium text-foreground">
-              Passport Number
-            </label>
-            <input
-              id="passport-number"
-              name="passport-number"
-              type="text"
-              autoComplete="off"
-              autoFocus
-              placeholder="e.g. A12345678"
-              value={passport}
-              onChange={(e) => setPassport(e.target.value)}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? "passport-error" : undefined}
-              className="mt-2 w-full rounded-lg border border-input bg-background px-4 py-3 font-mono text-sm tracking-wider text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
-            />
-            {error && (
-              <p id="passport-error" role="alert" className="mt-2 flex items-center gap-1.5 text-sm text-destructive">
-                <AlertCircle className="size-4" aria-hidden="true" />
-                {error}
-              </p>
-            )}
-            <Button type="submit" size="lg" className="mt-5 h-12 w-full text-base" disabled={loading}>
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="size-4 animate-spin" /> Checking…
-                </span>
-              ) : (
-                "Track Status"
-              )}
-            </Button>
-          </form>
-
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            className="mt-8 flex h-12 w-full items-center justify-center rounded-full bg-accent px-7 text-base font-semibold text-accent-foreground transition hover:bg-accent/90"
+          >
+            Check My Status
+          </button>
           <p className="mt-5 flex items-start justify-center gap-2 text-center text-xs text-muted-foreground">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
             Bank-grade encryption on every lookup.
           </p>
         </div>
-      ) : (
-        <ApplicantProfile app={result} />
       )}
+
+      <EnquireModal
+        country={expectedCountry || undefined}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </main>
   )
 }
@@ -276,7 +278,6 @@ function ApplicantProfile({ app }: { app: Application }) {
 
   return (
     <div className="mx-auto max-w-4xl animate-in px-4 py-10 fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6 sm:py-14">
-      {/* Boarding-pass style header — watermark instead of a solid blue overlay */}
       <div className="relative overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-xl">
         <Image
           src="/images/gmh-watermark.webp"
@@ -362,7 +363,6 @@ function ApplicantProfile({ app }: { app: Application }) {
         </div>
       </div>
 
-      {/* Flight-path progress tracker */}
       <div className="mt-10 animate-in overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:p-8" style={{ animationDelay: "150ms" }}>
         <h2 className="mb-8 text-sm font-semibold text-foreground">Application Journey</h2>
 
@@ -435,7 +435,6 @@ function ApplicantProfile({ app }: { app: Application }) {
         </div>
       </div>
 
-      {/* Details grid */}
       <div className="mt-6 grid animate-in grid-cols-1 gap-3 fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:grid-cols-2" style={{ animationDelay: "250ms" }}>
         {details.map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex min-w-0 items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -450,7 +449,6 @@ function ApplicantProfile({ app }: { app: Application }) {
         ))}
       </div>
 
-      {/* Documents */}
       <div
         className="mt-6 animate-in rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:p-8"
         style={{ animationDelay: "350ms" }}
