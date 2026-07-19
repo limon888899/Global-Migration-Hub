@@ -75,13 +75,20 @@ export default function BiometricAppointmentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName, passportNumber, phone, email, centerId, date, time }),
       })
+      const text = await res.text()
       if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error(
-          body?.error === "slot_full" ? "এই স্লটটি পূর্ণ হয়ে গেছে, অন্য সময় বেছে নিন" : "বুকিং ব্যর্থ হয়েছে",
-        )
+        console.error("Booking failed:", res.status, text)
+        let msg = `বুকিং ব্যর্থ হয়েছে (${res.status})`
+        try {
+          const body = JSON.parse(text)
+          if (body?.error === "slot_full") msg = "এই স্লটটি পূর্ণ হয়ে গেছে, অন্য সময় বেছে নিন"
+          else if (body?.error) msg = `বুকিং ব্যর্থ হয়েছে: ${body.error}`
+        } catch {
+          msg = `বুকিং ব্যর্থ হয়েছে (${res.status}): ${text.slice(0, 200)}`
+        }
+        throw new Error(msg)
       }
-      const appointment = await res.json()
+      const appointment = JSON.parse(text)
       router.push(`/biometric/verify?id=${appointment.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "কিছু একটা সমস্যা হয়েছে")
