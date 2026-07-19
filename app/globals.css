@@ -207,3 +207,11 @@ body {
 .max-w-7xl {
   max-width: min(80rem, 96vw);
 }
+/* Floating popup animation */
+@keyframes gmh-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: gmh-float 4.5s ease-in-out infinite;
+}
