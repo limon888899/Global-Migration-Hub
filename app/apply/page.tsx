@@ -1,7 +1,5 @@
 "use client"
 
-import { CustomSelect } from "@/components/custom-select"
-import { VISA_TYPE_OPTIONS } from "@/lib/visa-type-meta"
 import { Suspense, useRef, useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -16,12 +14,13 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DocumentUpload } from "@/components/document-upload"
+import { CustomSelect } from "@/components/custom-select"
+import { VISA_TYPE_OPTIONS } from "@/lib/visa-type-meta"
 import {
   ALL_COUNTRIES,
   COUNTRY_CODES,
   COUNTRY_FLAGS,
   PASSPORT_TYPES,
-  VISA_TYPES,
   VISIT_PURPOSES,
 } from "@/lib/countries"
 import { AGENCY_COUNTRIES, getAgenciesForCountry } from "@/lib/agencies"
@@ -520,6 +519,7 @@ function ApplyPageContent() {
                       />
                     </div>
                   </div>
+                </div>
 
                 <div>
                   <span className="block text-sm font-medium text-foreground">
