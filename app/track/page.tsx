@@ -285,7 +285,7 @@ function ApplicantProfile({ app }: { app: Application }) {
           sizes="896px"
           quality={70}
           aria-hidden="true"
-          className="pointer-events-none object-contain opacity-[0.2]"
+          className="pointer-events-none object-cover opacity-[0.2]"
         />
 
         <div className="relative flex flex-col items-center gap-5 p-6 text-center sm:p-8">
@@ -391,7 +391,7 @@ function ApplicantProfile({ app }: { app: Application }) {
             </div>
           </div>
 
-          <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-2">
+          <div className="mt-10 grid grid-cols-4 gap-1.5 sm:gap-2">
             {STAGE_LABELS.map((label, i) => {
               const state = isRejected
                 ? i <= 2
