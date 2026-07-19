@@ -97,7 +97,7 @@ const countryDetails: Record<string, { visaTypes: string; image: string; alt: st
     image: "/images/countries/Malaysia.png",
     alt: "A scenic view of a landmark in Malaysia",
   },
-  Qarar: {
+  Qatar: {
     visaTypes: "Employment Pass · Student · Business",
     image: "/images/countries/Qatar.png",
     alt: "A scenic view of a landmark in Qatar",
