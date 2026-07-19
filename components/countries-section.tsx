@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { ArrowRight, ChevronDown, ChevronUp, Globe2 } from "lucide-react"
 import { DESTINATION_COUNTRIES, ALL_COUNTRIES, COUNTRY_FLAGS } from "@/lib/countries"
+import { EnquireModal } from "@/components/enquire-modal"
 
 const countryDetails: Record<string, { visaTypes: string; image: string; alt: string }> = {
   "United Kingdom": {
@@ -120,6 +120,7 @@ const remainingCountries = ALL_COUNTRIES.filter(
 
 export function CountriesSection() {
   const [showAll, setShowAll] = useState(false)
+  const [enquireCountry, setEnquireCountry] = useState<string | null>(null)
 
   return (
     <section id="countries" className="scroll-mt-20 bg-background py-16 sm:py-24">
@@ -164,14 +165,15 @@ export function CountriesSection() {
                     {country.visaTypes}
                   </p>
                 </div>
-                <Link
-                  href={`/track?country=${encodeURIComponent(country.name)}`}
+                <button
+                  type="button"
+                  onClick={() => setEnquireCountry(country.name)}
                   className="inline-flex w-fit items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
                   aria-label={`Enquire now about visas for ${country.name}`}
                 >
                   Enquire Now
                   <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
+                </button>
               </div>
             </article>
           ))}
@@ -201,9 +203,10 @@ export function CountriesSection() {
               </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {remainingCountries.map((name) => (
-                  <Link
+                  <button
                     key={name}
-                    href={`/track?country=${encodeURIComponent(name)}`}
+                    type="button"
+                    onClick={() => setEnquireCountry(name)}
                     className="group flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent/10 hover:shadow-md"
                   >
                     <span className="shrink-0 text-2xl leading-none" aria-hidden="true">
@@ -212,13 +215,19 @@ export function CountriesSection() {
                     <span className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent-foreground">
                       {name}
                     </span>
-                  </Link>
+                  </button>
                 ))}
               </div>
             </div>
           )}
         </div>
       </div>
+
+      <EnquireModal
+        country={enquireCountry ?? undefined}
+        open={enquireCountry !== null}
+        onClose={() => setEnquireCountry(null)}
+      />
     </section>
   )
 }
