@@ -188,11 +188,11 @@ const [workCompanyName, setWorkCompanyName] = useState("")
     } else {
       // self-apply — validate based on visa type
       if (visaType === "Work Permit Visa") {
-        if (!uploads.jobOfferLetter || !uploads.policeClearance) {
-          setError("Please upload the Job Offer Letter and Police Clearance Certificate.")
-          return
-        }
-      } else if (visaType === "Student / Study Visa") {
+  if (!workCompanyName.trim() || !uploads.jobOfferLetter || !uploads.policeClearance) {
+    setError("Please provide the company name and upload the Job Offer Letter and Police Clearance Certificate.")
+    return
+  }
+} else if (visaType === "Student / Study Visa") {
         if (!universityName.trim() || !uploads.offerLetter) {
           setError("Please provide the university name and upload the Offer/Admission Letter.")
           return
