@@ -16,7 +16,6 @@ export const DEFAULT_DOCUMENT_GROUPS = [
 ]
 
 export type ApplyingMethod = "self" | "agency"
-export type ApplyingMethod = "self" | "agency"
 
 export type AppDocument = {
   id: string
@@ -50,24 +49,9 @@ export type NewApplicationInput = {
   documents: AppDocument[]
 }
 
-export interface AppDocument {
-  id: string
-  name: string
-  groupName: string
-  dataUrl?: string
-  addedBy: "applicant" | "admin"
-  addedAt: string
-}
-
-
-export type NewApplicationInput = Omit<
-  Application,
-  "id" | "submittedAt" | "manualStatus" | "statusNote" | "internalNotes"
->
-
-export function effectiveStage(app: Application): number | "rejected" {
+export function effectiveStage(app: { manualStatus?: string; submittedAt: string }): number | "rejected" {
   if (app.manualStatus === "rejected") return "rejected"
-  if (app.manualStatus !== "auto") return Number(app.manualStatus)
+  if (app.manualStatus && app.manualStatus !== "auto") return Number(app.manualStatus)
 
   const submitted = new Date(app.submittedAt).getTime()
   const daysElapsed = Math.max(0, (Date.now() - submitted) / (1000 * 60 * 60 * 24))
@@ -75,7 +59,7 @@ export function effectiveStage(app: Application): number | "rejected" {
   return stage
 }
 
-export function stageLabel(app: Application): string {
+export function stageLabel(app: { manualStatus?: string; submittedAt: string }): string {
   const stage = effectiveStage(app)
   if (stage === "rejected") return "Rejected"
   return STAGE_LABELS[stage]
