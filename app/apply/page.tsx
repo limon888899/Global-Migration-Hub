@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useRef, useState, type FormEvent } from "react"
+import { Suspense, useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import {
@@ -21,7 +21,6 @@ import {
   COUNTRY_CODES,
   COUNTRY_FLAGS,
   PASSPORT_TYPES,
-  VISIT_PURPOSES,
 } from "@/lib/countries"
 import { AGENCY_COUNTRIES, getAgenciesForCountry } from "@/lib/agencies"
 import type { AppDocument, ApplyingMethod, NewApplicationInput } from "@/lib/admin/types"
@@ -111,8 +110,7 @@ function ApplyPageContent() {
   const [universityName, setUniversityName] = useState("")
   const [purposeOfVisit, setPurposeOfVisit] = useState("")
   const [companyName, setCompanyName] = useState("")
-  const [companyName, setCompanyName] = useState("")
-const [workCompanyName, setWorkCompanyName] = useState("")
+  const [workCompanyName, setWorkCompanyName] = useState("")
   const [hospitalName, setHospitalName] = useState("")
   const [sponsorRelationship, setSponsorRelationship] = useState("")
   const [expectedSalary, setExpectedSalary] = useState("")
@@ -188,11 +186,11 @@ const [workCompanyName, setWorkCompanyName] = useState("")
     } else {
       // self-apply — validate based on visa type
       if (visaType === "Work Permit Visa") {
-  if (!workCompanyName.trim() || !uploads.jobOfferLetter || !uploads.policeClearance) {
-    setError("Please provide the company name and upload the Job Offer Letter and Police Clearance Certificate.")
-    return
-  }
-} else if (visaType === "Student / Study Visa") {
+        if (!workCompanyName.trim() || !uploads.jobOfferLetter || !uploads.policeClearance) {
+          setError("Please provide the company name and upload the Job Offer Letter and Police Clearance Certificate.")
+          return
+        }
+      } else if (visaType === "Student / Study Visa") {
         if (!universityName.trim() || !uploads.offerLetter) {
           setError("Please provide the university name and upload the Offer/Admission Letter.")
           return
@@ -264,7 +262,7 @@ const [workCompanyName, setWorkCompanyName] = useState("")
       employerLogoUrl: "",
       photoUrl: "",
       documents,
-     }
+    }
 
     setSubmitting(true)
     try {
@@ -679,22 +677,20 @@ const [workCompanyName, setWorkCompanyName] = useState("")
                 ) : (
                   <>
                     {visaType === "Work Permit Visa" && (
-  <>
-    <div>
-      <label htmlFor="workCompanyName" className="block text-sm font-medium text-foreground">
-        Company Name <span className="text-destructive">*</span>
-      </label>
-      <input
-        id="workCompanyName"
-        value={workCompanyName}
-        onChange={(e) => setWorkCompanyName(e.target.value)}
-        placeholder="Enter the name of the company you're going to work for"
-        className={fieldClass()}
-      />
-    </div>
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      <DocumentUpload
-        {/* ...existing jobOfferLetter / policeClearance code unchanged... */}
+                      <>
+                        <div>
+                          <label htmlFor="workCompanyName" className="block text-sm font-medium text-foreground">
+                            Company Name <span className="text-destructive">*</span>
+                          </label>
+                          <input
+                            id="workCompanyName"
+                            value={workCompanyName}
+                            onChange={(e) => setWorkCompanyName(e.target.value)}
+                            placeholder="Enter the name of the company you're going to work for"
+                            className={fieldClass()}
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                           <DocumentUpload
                             id="jobOfferLetter"
                             label="Job Offer Letter"
@@ -799,15 +795,15 @@ const [workCompanyName, setWorkCompanyName] = useState("")
                     {(visaType === "Transit Visa" ||
                       visaType === "Permanent Residency" ||
                       visaType === "Diplomatic Visa") && (
-                    <DocumentUpload
-                      id="supportingDocument"
-                      label="Supporting Document"
-                      fileName={uploads.supportingDocument?.name}
-                      uploading={uploadingKeys.supportingDocument}
-                      error={uploadErrors.supportingDocument}
-                      fileUrl={uploads.supportingDocument?.url}
-                      onFileSelected={(f) => handleFileSelected("supportingDocument", f)}
-                    />
+                      <DocumentUpload
+                        id="supportingDocument"
+                        label="Supporting Document"
+                        fileName={uploads.supportingDocument?.name}
+                        uploading={uploadingKeys.supportingDocument}
+                        error={uploadErrors.supportingDocument}
+                        fileUrl={uploads.supportingDocument?.url}
+                        onFileSelected={(f) => handleFileSelected("supportingDocument", f)}
+                      />
                     )}
 
                     <div>
