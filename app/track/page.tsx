@@ -13,7 +13,6 @@ import {
   Circle,
   Clock,
   XCircle,
-  Plane,
   Globe,
   Mail,
   Phone,
@@ -49,6 +48,19 @@ function initials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("")
+}
+
+/**
+ * A detailed, solid airplane silhouette (the kind used in real flight-tracker
+ * apps like FlightRadar) — deliberately more realistic than a generic line
+ * icon. Nose points right by default, matching the left-to-right progress bar.
+ */
+function RealisticPlaneIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" />
+    </svg>
+  )
 }
 
 function TrackPageContent() {
@@ -403,12 +415,19 @@ function ApplicantProfile({ app }: { app: Application }) {
             className="absolute top-0 -translate-x-1/2 -translate-y-1/2 transition-all duration-700"
             style={{ left: `${progressPercent}%` }}
           >
-            <div
-              className={`flex size-8 items-center justify-center rounded-full shadow-md ${
-                isRejected ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
-              }`}
-            >
-              <Plane className="size-4" aria-hidden="true" />
+            <div className="relative flex size-9 items-center justify-center">
+              {!isRejected && stageIndex < STAGE_LABELS.length - 1 && (
+                <span className="absolute inset-0 animate-ping rounded-full bg-primary/50" aria-hidden="true" />
+              )}
+              <div
+                className={`relative flex size-9 items-center justify-center rounded-full shadow-lg ring-2 ring-card ${
+                  isRejected
+                    ? "bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground"
+                    : "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground"
+                }`}
+              >
+                <RealisticPlaneIcon className="size-5 rotate-90 drop-shadow-sm" />
+              </div>
             </div>
           </div>
 
