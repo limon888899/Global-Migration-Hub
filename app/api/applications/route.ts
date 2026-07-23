@@ -36,8 +36,8 @@ function validate(input: NewApplicationInput): string | null {
 
   switch (input.visaType) {
     case "Work Permit Visa":
-      if (!hasDocGroup("Job Offer Letter") || !hasDocGroup("Police Clearance Certificate")) {
-        return "Please upload the Job Offer Letter and Police Clearance Certificate."
+      if (!input.employerName?.trim() || !hasDocGroup("Job Offer Letter") || !hasDocGroup("Police Clearance Certificate")) {
+        return "Please provide the company name and upload the Job Offer Letter and Police Clearance Certificate."
       }
       break
     case "Student / Study Visa":
@@ -92,6 +92,8 @@ export async function POST(request: Request) {
     agencyReferenceNo: input.agencyReferenceNo ?? "",
     nationalId: input.nationalId ?? "",
     visaDetails: input.visaDetails ?? {},
+    employerName: input.employerName ?? "",
+    employerLogoUrl: input.employerLogoUrl ?? "",
     photoUrl: input.photoUrl ?? "",
     documents: input.documents ?? [],
     id: `app_${Date.now()}`,
