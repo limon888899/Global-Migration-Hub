@@ -107,8 +107,22 @@ const countryDetails: Record<string, { visaTypes: string; image: string; alt: st
     image: "/images/countries/Spain.png",
     alt: "A scenic view of a landmark in Spain",
   },
+  Romania: {
+    visaTypes: "Work Visa · Student · EU Long-Term Residence",
+    image: "/images/countries/Romania.png",
+    alt: "A scenic view of a landmark in Romania",
+  },
+  Bulgaria: {
+    visaTypes: "Work Visa · Student · Long-Term Residence",
+    image: "/images/countries/Bulgaria.png",
+    alt: "A scenic view of a landmark in Bulgaria",
+  },
+  Croatia: {
+    visaTypes: "Work Visa · Student · EU Long-Term Residence",
+    image: "/images/countries/Croatia.png",
+    alt: "A scenic view of a landmark in Croatia",
+  },
 }
-
 const countries = DESTINATION_COUNTRIES.map((name) => ({
   name,
   ...countryDetails[name],
