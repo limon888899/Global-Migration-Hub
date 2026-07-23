@@ -100,10 +100,14 @@ export function ApplicationModal({
     photoUrl: app.photoUrl,
     agencyName: app.agencyName ?? "",
     agencyReferenceNo: app.agencyReferenceNo ?? "",
+    employerName: app.employerName ?? "",
+    employerLogoUrl: app.employerLogoUrl ?? "",
   })
   const [profileSaved, setProfileSaved] = useState(false)
   const [photoError, setPhotoError] = useState("")
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const [employerLogoError, setEmployerLogoError] = useState("")
+  const employerLogoInputRef = useRef<HTMLInputElement>(null)
 
   async function handlePhotoSelected(files: FileList | null) {
     const file = files?.[0]
@@ -118,6 +122,22 @@ export function ApplicationModal({
       setProfileForm((f) => ({ ...f, photoUrl: url }))
     } catch {
       setPhotoError("Could not upload that image. Please try again.")
+    }
+  }
+
+  async function handleEmployerLogoSelected(files: FileList | null) {
+    const file = files?.[0]
+    if (!file) return
+    setEmployerLogoError("")
+    if (file.size > MAX_FILE_BYTES) {
+      setEmployerLogoError("Logo is too large. Please use an image under 4 MB.")
+      return
+    }
+    try {
+      const url = await uploadAdminFile(file)
+      setProfileForm((f) => ({ ...f, employerLogoUrl: url }))
+    } catch {
+      setEmployerLogoError("Could not upload that logo. Please try again.")
     }
   }
 
@@ -138,8 +158,11 @@ export function ApplicationModal({
       photoUrl: app.photoUrl,
       agencyName: app.agencyName ?? "",
       agencyReferenceNo: app.agencyReferenceNo ?? "",
+      employerName: app.employerName ?? "",
+      employerLogoUrl: app.employerLogoUrl ?? "",
     })
     setPhotoError("")
+    setEmployerLogoError("")
     setIsEditingProfile(false)
   }
 
@@ -309,6 +332,7 @@ export function ApplicationModal({
                       ["Agency Country", app.agencyCountry],
                       ["Agency Name", app.agencyName],
                       ["Agency Reference No", app.agencyReferenceNo],
+                      ["Company Name", app.employerName],
                     ].map(([label, value]) => (
                       <div key={label}>
                         <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
@@ -317,6 +341,22 @@ export function ApplicationModal({
                     ))}
                   </dl>
                 </div>
+                {(app.employerName || app.employerLogoUrl) && (
+                  <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
+                    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white p-1.5">
+                      {app.employerLogoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={app.employerLogoUrl} alt={app.employerName || "Company logo"} className="size-full object-contain" />
+                      ) : (
+                        <span className="text-[9px] text-muted-foreground">No logo</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Company</p>
+                      <p className="font-medium text-foreground">{app.employerName || "—"}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* --- Edit mode: profile fields + photo upload --- */
@@ -400,6 +440,43 @@ export function ApplicationModal({
                         onChange={(e) => setProfileForm((f) => ({ ...f, agencyReferenceNo: e.target.value }))}
                         className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
                       />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Company Name</label>
+                      <input
+                        value={profileForm.employerName}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, employerName: e.target.value }))}
+                        placeholder="e.g. Acme Construction LLC"
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Company Logo</label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-input bg-white p-1">
+                          {profileForm.employerLogoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={profileForm.employerLogoUrl} alt="Logo preview" className="size-full object-contain" />
+                          ) : (
+                            <span className="text-[8px] text-muted-foreground">None</span>
+                          )}
+                        </div>
+                        <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs text-foreground hover:bg-muted">
+                          <Upload className="size-3.5" />
+                          {profileForm.employerLogoUrl ? "Change" : "Upload"}
+                          <input
+                            ref={employerLogoInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleEmployerLogoSelected(e.target.files)}
+                          />
+                        </label>
+                      </div>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        Use a transparent-background PNG/WebP for the cleanest look on the applicant's profile.
+                      </p>
+                      {employerLogoError && <p className="mt-1 text-xs text-destructive">{employerLogoError}</p>}
                     </div>
                   </div>
                 </div>
