@@ -679,8 +679,22 @@ const [workCompanyName, setWorkCompanyName] = useState("")
                 ) : (
                   <>
                     {visaType === "Work Permit Visa" && (
-                      <>
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+  <>
+    <div>
+      <label htmlFor="workCompanyName" className="block text-sm font-medium text-foreground">
+        Company Name <span className="text-destructive">*</span>
+      </label>
+      <input
+        id="workCompanyName"
+        value={workCompanyName}
+        onChange={(e) => setWorkCompanyName(e.target.value)}
+        placeholder="Enter the name of the company you're going to work for"
+        className={fieldClass()}
+      />
+    </div>
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <DocumentUpload
+        {/* ...existing jobOfferLetter / policeClearance code unchanged... */}
                           <DocumentUpload
                             id="jobOfferLetter"
                             label="Job Offer Letter"
