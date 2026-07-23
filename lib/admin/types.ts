@@ -51,6 +51,44 @@ export interface Application {
   visaDetails: Record<string, string>
   travelDate: string
   // Legacy field, kept for backward compatibility with older records / admin UI
+  export interface Application {
+  id: string
+  // Step 1: Personal & Contact Information
+  fullName: string
+  passportNumber: string
+  passportType: string
+  dateOfBirth: string
+  nationalId: string
+  nationality: string
+  email: string
+  phone: string
+  // Step 2: Destination & Visa Selection
+  destinationCountry: string
+  visaType: string
+  applyingMethod: ApplyingMethod
+  // Step 3 — Case B: Through an Agency
+  agencyCountry: string
+  agencyName: string
+  agencyReferenceNo: string
+  // Step 3 — Case A: Self-apply, visa-type-specific free-text details
+  // (e.g. universityName, purposeOfVisit, companyName, hospitalName,
+  // sponsorRelationship, expectedSalary — only the relevant keys are set)
+  visaDetails: Record<string, string>
+  travelDate: string
+  // Employer / company the applicant is going to work for (Work Permit Visa).
+  // The applicant provides the name at submission; the logo is never uploaded
+  // by the applicant — admin manually attaches it (and may correct the name)
+  // after verifying the employer.
+  employerName?: string
+  employerLogoUrl?: string
+  // Legacy field, kept for backward compatibility with older records / admin UI
+  photoUrl: string
+  submittedAt: string
+  manualStatus: ManualStatus
+  statusNote: string
+  internalNotes: string
+  documents: AppDocument[]
+}
   photoUrl: string
   submittedAt: string
   manualStatus: ManualStatus
