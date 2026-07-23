@@ -16,6 +16,39 @@ export const DEFAULT_DOCUMENT_GROUPS = [
 ]
 
 export type ApplyingMethod = "self" | "agency"
+export type ApplyingMethod = "self" | "agency"
+
+export type AppDocument = {
+  id: string
+  name: string
+  groupName: string
+  dataUrl: string
+  addedBy: "applicant" | "admin"
+  addedAt: string
+}
+
+export type NewApplicationInput = {
+  fullName: string
+  passportNumber: string
+  passportType: string
+  dateOfBirth: string
+  nationalId?: string
+  nationality: string
+  email: string
+  phone: string
+  destinationCountry: string
+  visaType: string
+  applyingMethod: ApplyingMethod
+  agencyCountry?: string
+  agencyName?: string
+  agencyReferenceNo?: string
+  visaDetails?: Record<string, string>
+  travelDate?: string
+  employerName?: string
+  employerLogoUrl?: string
+  photoUrl?: string
+  documents: AppDocument[]
+}
 
 export interface AppDocument {
   id: string
@@ -26,35 +59,6 @@ export interface AppDocument {
   addedAt: string
 }
 
-export interface Application {
-  id: string
-  fullName: string
-  passportNumber: string
-  passportType: string
-  dateOfBirth: string
-  nationalId: string
-  nationality: string
-  email: string
-  phone: string
-  destinationCountry: string
-  visaType: string
-  applyingMethod: ApplyingMethod
-  agencyCountry: string
-  agencyName: string
-  agencyReferenceNo: string
-  visaDetails: Record<string, string>
-  travelDate: string
-  companyName?: string
-  companyLogo?: string
-  employerName?: string
-  employerLogoUrl?: string
-  photoUrl: string
-  submittedAt: string
-  manualStatus: ManualStatus
-  statusNote: string
-  internalNotes: string
-  documents: AppDocument[]
-}
 
 export type NewApplicationInput = Omit<
   Application,
