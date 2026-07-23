@@ -260,9 +260,11 @@ const [workCompanyName, setWorkCompanyName] = useState("")
       agencyReferenceNo: applyingMethod === "agency" ? agencyReferenceNo.trim() : "",
       visaDetails,
       travelDate,
+      employerName: visaType === "Work Permit Visa" ? workCompanyName.trim() : "",
+      employerLogoUrl: "",
       photoUrl: "",
       documents,
-    }
+     }
 
     setSubmitting(true)
     try {
