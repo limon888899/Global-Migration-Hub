@@ -343,6 +343,27 @@ function ApplicantProfile({ app }: { app: Application }) {
               </p>
             </div>
           </div>
+
+          {(app.employerName || app.employerLogoUrl) && (
+            <div className="flex w-full items-center justify-center gap-3 border-t border-dashed border-border pt-5">
+              <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 shadow-sm">
+                {app.employerLogoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={app.employerLogoUrl}
+                    alt={app.employerName || "Company logo"}
+                    className="size-full object-contain"
+                  />
+                ) : (
+                  <Building2 className="size-5 text-muted-foreground" aria-hidden="true" />
+                )}
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Working At</p>
+                <p className="text-sm font-semibold text-foreground">{app.employerName || "—"}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="relative border-t border-dashed border-border">
