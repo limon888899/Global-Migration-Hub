@@ -111,6 +111,8 @@ function ApplyPageContent() {
   const [universityName, setUniversityName] = useState("")
   const [purposeOfVisit, setPurposeOfVisit] = useState("")
   const [companyName, setCompanyName] = useState("")
+  const [companyName, setCompanyName] = useState("")
+const [workCompanyName, setWorkCompanyName] = useState("")
   const [hospitalName, setHospitalName] = useState("")
   const [sponsorRelationship, setSponsorRelationship] = useState("")
   const [expectedSalary, setExpectedSalary] = useState("")
