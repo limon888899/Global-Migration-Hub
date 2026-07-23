@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, type FormEvent } from "react"
+import { Suspense, useRef, useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import {
@@ -21,6 +21,7 @@ import {
   COUNTRY_CODES,
   COUNTRY_FLAGS,
   PASSPORT_TYPES,
+  VISIT_PURPOSES,
 } from "@/lib/countries"
 import { AGENCY_COUNTRIES, getAgenciesForCountry } from "@/lib/agencies"
 import type { AppDocument, ApplyingMethod, NewApplicationInput } from "@/lib/admin/types"
@@ -795,15 +796,15 @@ function ApplyPageContent() {
                     {(visaType === "Transit Visa" ||
                       visaType === "Permanent Residency" ||
                       visaType === "Diplomatic Visa") && (
-                      <DocumentUpload
-                        id="supportingDocument"
-                        label="Supporting Document"
-                        fileName={uploads.supportingDocument?.name}
-                        uploading={uploadingKeys.supportingDocument}
-                        error={uploadErrors.supportingDocument}
-                        fileUrl={uploads.supportingDocument?.url}
-                        onFileSelected={(f) => handleFileSelected("supportingDocument", f)}
-                      />
+                    <DocumentUpload
+                      id="supportingDocument"
+                      label="Supporting Document"
+                      fileName={uploads.supportingDocument?.name}
+                      uploading={uploadingKeys.supportingDocument}
+                      error={uploadErrors.supportingDocument}
+                      fileUrl={uploads.supportingDocument?.url}
+                      onFileSelected={(f) => handleFileSelected("supportingDocument", f)}
+                    />
                     )}
 
                     <div>
