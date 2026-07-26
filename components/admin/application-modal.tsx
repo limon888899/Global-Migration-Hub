@@ -105,8 +105,8 @@ export function ApplicationModal({
   })
   const [profileSaved, setProfileSaved] = useState(false)
   const [photoError, setPhotoError] = useState("")
-  const photoInputRef = useRef<HTMLInputElement>(null)
   const [employerLogoError, setEmployerLogoError] = useState("")
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const employerLogoInputRef = useRef<HTMLInputElement>(null)
 
   async function handlePhotoSelected(files: FileList | null) {
@@ -137,7 +137,7 @@ export function ApplicationModal({
       const url = await uploadAdminFile(file)
       setProfileForm((f) => ({ ...f, employerLogoUrl: url }))
     } catch {
-      setEmployerLogoError("Could not upload that logo. Please try again.")
+      setEmployerLogoError("Could not upload that image. Please try again.")
     }
   }
 
@@ -332,31 +332,26 @@ export function ApplicationModal({
                       ["Agency Country", app.agencyCountry],
                       ["Agency Name", app.agencyName],
                       ["Agency Reference No", app.agencyReferenceNo],
-                      ["Company Name", app.employerName],
                     ].map(([label, value]) => (
                       <div key={label}>
                         <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
                         <dd className="font-medium text-foreground">{value || "—"}</dd>
                       </div>
                     ))}
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">Employer / Company</dt>
+                      <dd className="mt-0.5 flex items-center gap-2 font-medium text-foreground">
+                        {app.employerLogoUrl && (
+                          <span className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={app.employerLogoUrl} alt={app.employerName} className="size-full object-cover" />
+                          </span>
+                        )}
+                        {app.employerName || "—"}
+                      </dd>
+                    </div>
                   </dl>
                 </div>
-                {(app.employerName || app.employerLogoUrl) && (
-                  <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
-                    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white p-1.5">
-                      {app.employerLogoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={app.employerLogoUrl} alt={app.employerName || "Company logo"} className="size-full object-contain" />
-                      ) : (
-                        <span className="text-[9px] text-muted-foreground">No logo</span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Company</p>
-                      <p className="font-medium text-foreground">{app.employerName || "—"}</p>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               /* --- Edit mode: profile fields + photo upload --- */
@@ -441,46 +436,46 @@ export function ApplicationModal({
                         className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
                       />
                     </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Company Name</label>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3 border-t border-dashed border-border pt-4 sm:flex-row sm:items-start">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+                      {profileForm.employerLogoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={profileForm.employerLogoUrl} alt="Company logo preview" className="size-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">No logo</span>
+                      )}
+                    </div>
+                    <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground hover:bg-muted">
+                      <Upload className="size-3.5" />
+                      {profileForm.employerLogoUrl ? "Change" : "Upload"}
                       <input
-                        value={profileForm.employerName}
-                        onChange={(e) => setProfileForm((f) => ({ ...f, employerName: e.target.value }))}
-                        placeholder="e.g. Acme Construction LLC"
-                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                        ref={employerLogoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleEmployerLogoSelected(e.target.files)}
                       />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Company Logo</label>
-                      <div className="flex items-center gap-2">
-                        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-input bg-white p-1">
-                          {profileForm.employerLogoUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={profileForm.employerLogoUrl} alt="Logo preview" className="size-full object-contain" />
-                          ) : (
-                            <span className="text-[8px] text-muted-foreground">None</span>
-                          )}
-                        </div>
-                        <label className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs text-foreground hover:bg-muted">
-                          <Upload className="size-3.5" />
-                          {profileForm.employerLogoUrl ? "Change" : "Upload"}
-                          <input
-                            ref={employerLogoInputRef}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleEmployerLogoSelected(e.target.files)}
-                          />
-                        </label>
-                      </div>
-                      <p className="mt-1 text-[10px] text-muted-foreground">
-                        Use a transparent-background PNG/WebP for the cleanest look on the applicant's profile.
-                      </p>
-                      {employerLogoError && <p className="mt-1 text-xs text-destructive">{employerLogoError}</p>}
-                    </div>
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Employer / Company Name</label>
+                    <input
+                      value={profileForm.employerName}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, employerName: e.target.value }))}
+                      placeholder="e.g. Acme Construction LLC"
+                      className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Shown next to the applicant&apos;s name on their tracking profile.
+                    </p>
                   </div>
                 </div>
                 {photoError && <p className="mt-2 text-xs text-destructive">{photoError}</p>}
+                {employerLogoError && <p className="mt-1 text-xs text-destructive">{employerLogoError}</p>}
 
                 <div className="mt-3 flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={handleCancelProfileEdit} className="h-8 rounded-lg px-3 text-xs">
@@ -552,7 +547,7 @@ export function ApplicationModal({
             </div>
             <div className="mt-3">
               <label htmlFor="miStatusNote" className="mb-1.5 block text-sm font-medium text-foreground">
-                Note shown to applicant (only visible if status is Rejected)
+                Note shown to applicant (visible on their tracking profile, any status)
               </label>
               <textarea
                 id="miStatusNote"
