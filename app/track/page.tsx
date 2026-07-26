@@ -333,10 +333,10 @@ function ApplicantProfile({ app }: { app: Application }) {
             </p>
             {app.employerName && (
               <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-secondary/60 py-1.5 pl-1.5 pr-4 shadow-sm">
-                <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background">
+                <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background p-0.5 ring-1 ring-border/60">
                   {app.employerLogoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={app.employerLogoUrl} alt={app.employerName} className="size-full object-cover" />
+                    <img src={app.employerLogoUrl} alt={app.employerName} className="size-full object-contain" />
                   ) : (
                     <Building2 className="size-3.5 text-muted-foreground" aria-hidden="true" />
                   )}
