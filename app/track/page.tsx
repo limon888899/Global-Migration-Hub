@@ -13,6 +13,7 @@ import {
   Circle,
   Clock,
   XCircle,
+  Plane,
   Globe,
   Mail,
   Phone,
@@ -50,23 +51,14 @@ function initials(name: string) {
     .join("")
 }
 
-/**
- * A detailed, solid airplane silhouette (the kind used in real flight-tracker
- * apps like FlightRadar) — deliberately more realistic than a generic line
- * icon. Nose points right by default, matching the left-to-right progress bar.
- */
-function RealisticPlaneIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2.5 1.5V22l4-1 4 1v-1.5L13 19v-5.5l8 2.5z" />
-    </svg>
-  )
-}
-
 function TrackPageContent() {
   const searchParams = useSearchParams()
   const expectedCountry = searchParams.get("country") || ""
   const passportParam = searchParams.get("passport") || ""
+  const nationalIdParam = searchParams.get("nationalId") || ""
+  // Whichever identifier the user searched with (passport or national ID)
+  const identifierParam = passportParam || nationalIdParam
+  const identifierLabel = passportParam ? "passport number" : "national ID number"
 
   const [result, setResult] = useState<Application | null>(null)
   const [error, setError] = useState("")
@@ -75,7 +67,7 @@ function TrackPageContent() {
   const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
-    if (!passportParam) return
+    if (!identifierParam) return
     let cancelled = false
 
     async function run() {
@@ -83,7 +75,9 @@ function TrackPageContent() {
       setError("")
       setHasSearched(false)
       try {
-        const params = new URLSearchParams({ passport: passportParam })
+        const params = new URLSearchParams(
+          passportParam ? { passport: passportParam } : { nationalId: nationalIdParam },
+        )
         if (expectedCountry) params.set("country", expectedCountry)
         const res = await fetch(`/api/visa-status?${params.toString()}`)
         if (cancelled) return
@@ -94,10 +88,10 @@ function TrackPageContent() {
           setResult(null)
           if (body?.error === "country_mismatch" && expectedCountry) {
             setError(
-              `No ${expectedCountry} application was found for that passport number. Please check the country you applied for and try again.`,
+              `No ${expectedCountry} application was found for that ${identifierLabel}. Please check the country you applied for and try again.`,
             )
           } else {
-            setError("No record found for that passport number. Please check and try again.")
+            setError(`No record found for that ${identifierLabel}. Please check and try again.`)
           }
         }
       } catch {
@@ -117,7 +111,7 @@ function TrackPageContent() {
     return () => {
       cancelled = true
     }
-  }, [passportParam, expectedCountry])
+  }, [identifierParam, passportParam, nationalIdParam, expectedCountry, identifierLabel])
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-secondary">
@@ -172,7 +166,7 @@ function TrackPageContent() {
         </div>
       ) : result ? (
         <ApplicantProfile app={result} />
-      ) : passportParam && hasSearched ? (
+      ) : identifierParam && hasSearched ? (
         <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
           <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
             <AlertCircle className="size-7" aria-hidden="true" />
@@ -195,8 +189,8 @@ function TrackPageContent() {
           <h1 className="mt-5 font-serif text-3xl font-semibold text-foreground">Track your application</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {expectedCountry
-              ? `Check your ${expectedCountry} application status using your passport number.`
-              : "Enter the passport number used on your application to view real-time status updates."}
+              ? `Check your ${expectedCountry} application status using your passport number or national ID number.`
+              : "Enter the passport number or national ID number used on your application to view real-time status updates."}
           </p>
           <button
             type="button"
@@ -337,6 +331,19 @@ function ApplicantProfile({ app }: { app: Application }) {
             <p className="mt-1.5 break-all font-mono text-sm tracking-widest text-muted-foreground">
               {app.passportNumber}
             </p>
+            {app.employerName && (
+              <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-secondary/60 py-1.5 pl-1.5 pr-4 shadow-sm">
+                <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-background">
+                  {app.employerLogoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={app.employerLogoUrl} alt={app.employerName} className="size-full object-cover" />
+                  ) : (
+                    <Building2 className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="truncate text-xs font-medium text-foreground sm:text-sm">{app.employerName}</span>
+              </div>
+            )}
           </div>
 
           <div className="grid w-full grid-cols-1 gap-4 border-t border-dashed border-border pt-5 text-left sm:grid-cols-3">
@@ -355,27 +362,6 @@ function ApplicantProfile({ app }: { app: Application }) {
               </p>
             </div>
           </div>
-
-          {(app.employerName || app.employerLogoUrl) && (
-            <div className="flex w-full items-center justify-center gap-3 border-t border-dashed border-border pt-5">
-              <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 shadow-sm">
-                {app.employerLogoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={app.employerLogoUrl}
-                    alt={app.employerName || "Company logo"}
-                    className="size-full object-contain"
-                  />
-                ) : (
-                  <Building2 className="size-5 text-muted-foreground" aria-hidden="true" />
-                )}
-              </div>
-              <div className="text-left">
-                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Working At</p>
-                <p className="text-sm font-semibold text-foreground">{app.employerName || "—"}</p>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="relative border-t border-dashed border-border">
@@ -415,19 +401,12 @@ function ApplicantProfile({ app }: { app: Application }) {
             className="absolute top-0 -translate-x-1/2 -translate-y-1/2 transition-all duration-700"
             style={{ left: `${progressPercent}%` }}
           >
-            <div className="relative flex size-9 items-center justify-center">
-              {!isRejected && stageIndex < STAGE_LABELS.length - 1 && (
-                <span className="absolute inset-0 animate-ping rounded-full bg-primary/50" aria-hidden="true" />
-              )}
-              <div
-                className={`relative flex size-9 items-center justify-center rounded-full shadow-lg ring-2 ring-card ${
-                  isRejected
-                    ? "bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground"
-                    : "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground"
-                }`}
-              >
-                <RealisticPlaneIcon className="size-5 rotate-90 drop-shadow-sm" />
-              </div>
+            <div
+              className={`flex size-8 items-center justify-center rounded-full shadow-md ${
+                isRejected ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
+              }`}
+            >
+              <Plane className="size-4" aria-hidden="true" />
             </div>
           </div>
 
@@ -517,7 +496,7 @@ function ApplicantProfile({ app }: { app: Application }) {
 
       <p className="mt-6 flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-        This profile is only accessible with your correct passport number.
+        This profile is only accessible with your correct passport number or national ID number.
       </p>
 
       {viewDoc && (
