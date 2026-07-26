@@ -14,7 +14,8 @@ interface EnquireModalProps {
 export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
   const router = useRouter()
   const [selectedCountry, setSelectedCountry] = useState("")
-  const [passport, setPassport] = useState("")
+  const [idType, setIdType] = useState<"passport" | "nationalId">("passport")
+  const [identifier, setIdentifier] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -22,19 +23,28 @@ export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
 
   const activeCountry = country || selectedCountry
 
+  function handleIdTypeChange(nextType: "passport" | "nationalId") {
+    setIdType(nextType)
+    setIdentifier("")
+    setError("")
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!activeCountry) {
       setError("Please select a destination country.")
       return
     }
-    if (!passport.trim()) {
-      setError("Please enter your passport number.")
+    if (!identifier.trim()) {
+      setError(idType === "passport" ? "Please enter your passport number." : "Please enter your national ID number.")
       return
     }
     setError("")
     setLoading(true)
-    const params = new URLSearchParams({ country: activeCountry, passport: passport.trim() })
+    const params = new URLSearchParams({
+      country: activeCountry,
+      [idType === "passport" ? "passport" : "nationalId"]: identifier.trim(),
+    })
     router.push(`/track?${params.toString()}`)
     onClose()
   }
@@ -96,8 +106,8 @@ export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
               </h2>
               <p className="mt-2 text-pretty text-sm leading-relaxed text-muted-foreground">
                 {activeCountry
-                  ? `Real-time, secure updates on your journey to ${activeCountry} — enter your passport number to begin.`
-                  : "Select your destination and enter your passport number for a real-time status update."}
+                  ? `Real-time, secure updates on your journey to ${activeCountry} — enter your passport number or national ID to begin.`
+                  : "Select your destination and enter your passport number or national ID for a real-time status update."}
               </p>
             </div>
 
@@ -124,15 +134,43 @@ export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
               )}
 
               <div>
-                <label htmlFor="enquire-passport" className="block text-xs font-medium text-foreground">
-                  Passport Number
+                <span className="block text-xs font-medium text-foreground">Search By</span>
+                <div className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl bg-secondary/60 p-1">
+                  <button
+                    type="button"
+                    onClick={() => handleIdTypeChange("passport")}
+                    className={`rounded-lg py-2 text-xs font-semibold transition ${
+                      idType === "passport"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Passport Number
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleIdTypeChange("nationalId")}
+                    className={`rounded-lg py-2 text-xs font-semibold transition ${
+                      idType === "nationalId"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    National ID Number
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="enquire-identifier" className="block text-xs font-medium text-foreground">
+                  {idType === "passport" ? "Passport Number" : "National ID Number"}
                 </label>
                 <input
-                  id="enquire-passport"
-                  value={passport}
-                  onChange={(e) => setPassport(e.target.value)}
+                  id="enquire-identifier"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   autoFocus
-                  placeholder="e.g. A12345678"
+                  placeholder={idType === "passport" ? "e.g. A12345678" : "e.g. 1990123456789"}
                   className="mt-1.5 w-full rounded-xl border border-input bg-background px-4 py-3 text-center font-mono text-sm tracking-wider text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
                 />
               </div>
