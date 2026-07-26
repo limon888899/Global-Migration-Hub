@@ -385,8 +385,14 @@ function ApplicantProfile({ app }: { app: Application }) {
       <div className="mt-10 animate-in overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:p-8" style={{ animationDelay: "150ms" }}>
         <h2 className="mb-8 text-sm font-semibold text-foreground">Application Journey</h2>
 
-        {isRejected && app.statusNote && (
-          <p className="mb-6 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{app.statusNote}</p>
+        {app.statusNote && (
+          <p
+            className={`mb-6 rounded-lg p-3 text-sm ${
+              isRejected ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-foreground"
+            }`}
+          >
+            {app.statusNote}
+          </p>
         )}
 
         <div className="relative">
