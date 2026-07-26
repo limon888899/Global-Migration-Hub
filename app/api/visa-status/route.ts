@@ -9,16 +9,23 @@ const KEY = "gmh:applications"
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const passport = searchParams.get("passport")?.trim().toUpperCase()
+  const nationalId = searchParams.get("nationalId")?.trim().toUpperCase()
   const country = searchParams.get("country")?.trim().toLowerCase()
 
-  if (!passport) {
-    return NextResponse.json({ error: "Missing passport number" }, { status: 400 })
+  if (!passport && !nationalId) {
+    return NextResponse.json({ error: "Missing passport number or national ID" }, { status: 400 })
   }
 
   const redis = await getRedis()
   const raw = await redis.get(KEY)
   const apps: Application[] = raw ? JSON.parse(raw) : []
-  const match = apps.find((a) => a.passportNumber.trim().toUpperCase() === passport)
+
+  // Match by whichever identifier was provided: passport number OR national ID number
+  const match = apps.find((a) => {
+    if (passport && a.passportNumber.trim().toUpperCase() === passport) return true
+    if (nationalId && (a.nationalId ?? "").trim().toUpperCase() === nationalId) return true
+    return false
+  })
 
   if (!match) {
     return NextResponse.json({ error: "not_found" }, { status: 404 })
