@@ -26,6 +26,7 @@ const emptyForm: Omit<NewApplicationInput, "photoUrl" | "documents" | "visaDetai
   agencyName: "",
   agencyReferenceNo: "",
   travelDate: "",
+  employerName: "",
 }
 
 type SlotFile = { name: string; dataUrl: string } | null
@@ -48,11 +49,14 @@ export function NewApplicationModal({
 }) {
   const [form, setForm] = useState(emptyForm)
   const [photo, setPhoto] = useState<SlotFile>(null)
+  const [employerLogo, setEmployerLogo] = useState<SlotFile>(null)
+  const [employerLogoError, setEmployerLogoError] = useState("")
   const [groups, setGroups] = useState<DraftGroup[]>([])
   const [newGroupName, setNewGroupName] = useState("")
   const [renamingGroup, setRenamingGroup] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const [fileError, setFileError] = useState("")
+  const [formError, setFormError] = useState("")
   const newGroupFileInputRef = useRef<HTMLInputElement>(null)
 
   function update<K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) {
@@ -74,6 +78,24 @@ export function NewApplicationModal({
       setPhoto({ name: file.name, dataUrl: url })
     } catch {
       setFileError("Could not upload that photo. Please try again.")
+    }
+  }
+
+  async function handleEmployerLogoChange(file: File | null) {
+    setEmployerLogoError("")
+    if (!file) {
+      setEmployerLogo(null)
+      return
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setEmployerLogoError("Logo is too large. Please use a file under 4 MB.")
+      return
+    }
+    try {
+      const url = await uploadAdminFile(file)
+      setEmployerLogo({ name: file.name, dataUrl: url })
+    } catch {
+      setEmployerLogoError("Could not upload that logo. Please try again.")
     }
   }
 
@@ -171,7 +193,15 @@ export function NewApplicationModal({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.fullName || !form.passportNumber || !form.destinationCountry) return
+    if (!form.fullName.trim() || !form.destinationCountry) {
+      setFormError("Please fill in the applicant's full name and destination country.")
+      return
+    }
+    if (!form.passportNumber.trim() && !form.nationalId.trim()) {
+      setFormError("Please provide either a Passport Number or a National ID Number.")
+      return
+    }
+    setFormError("")
 
     const now = new Date().toISOString()
     const documents: AppDocument[] = []
@@ -203,16 +233,15 @@ export function NewApplicationModal({
       agencyReferenceNo: form.applyingMethod === "agency" ? form.agencyReferenceNo : "",
       visaDetails,
       photoUrl: photo?.dataUrl ?? "",
+      employerLogoUrl: employerLogo?.dataUrl ?? "",
       documents,
     })
     onClose()
   }
 
-  const fields: { key: keyof Omit<typeof emptyForm, "applyingMethod" | "agencyCountry" | "agencyName" | "agencyReferenceNo" | "passportType">; label: string; type?: string }[] = [
+  const fields: { key: keyof Omit<typeof emptyForm, "applyingMethod" | "agencyCountry" | "agencyName" | "agencyReferenceNo" | "passportType" | "passportNumber" | "nationalId">; label: string; type?: string }[] = [
     { key: "fullName", label: "Full Name" },
-    { key: "passportNumber", label: "Passport No." },
     { key: "dateOfBirth", label: "Date of Birth", type: "date" },
-    { key: "nationalId", label: "National ID" },
     { key: "nationality", label: "Nationality" },
     { key: "email", label: "Email", type: "email" },
     { key: "phone", label: "Phone" },
@@ -261,6 +290,49 @@ export function NewApplicationModal({
           </div>
         </div>
 
+        <div className="border-t border-border px-6 py-5">
+          <h4 className="mb-3 text-sm font-semibold text-foreground">Employer / Company (optional)</h4>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="flex items-center gap-4">
+              <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+                {employerLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={employerLogo.dataUrl} alt="Company logo" className="size-full object-cover" />
+                ) : (
+                  <ImageIcon className="size-6 text-muted-foreground" />
+                )}
+              </div>
+              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground hover:bg-muted">
+                <Upload className="size-4" />
+                {employerLogo ? "Change Logo" : "Upload Logo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleEmployerLogoChange(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
+            <div className="flex-1">
+              <label htmlFor="employerName" className="mb-1.5 block text-sm font-medium text-foreground">
+                Company Name
+              </label>
+              <input
+                id="employerName"
+                type="text"
+                value={form.employerName}
+                onChange={(e) => update("employerName", e.target.value)}
+                placeholder="e.g. Acme Construction LLC"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
+            </div>
+          </div>
+          {employerLogoError && <p className="mt-2 text-xs text-destructive">{employerLogoError}</p>}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Shown on the applicant&apos;s tracking profile next to their name. Leave blank if not applicable.
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 gap-4 px-6 py-5">
           <div className="col-span-1">
             <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-foreground">
@@ -276,7 +348,7 @@ export function NewApplicationModal({
           </div>
           <div className="col-span-1">
             <label htmlFor="passportNumber" className="mb-1.5 block text-sm font-medium text-foreground">
-              Passport No.<span className="text-destructive"> *</span>
+              Passport No.
             </label>
             <input
               id="passportNumber"
@@ -286,6 +358,22 @@ export function NewApplicationModal({
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
+          <div className="col-span-1">
+            <label htmlFor="nationalId" className="mb-1.5 block text-sm font-medium text-foreground">
+              National ID
+            </label>
+            <input
+              id="nationalId"
+              type="text"
+              value={form.nationalId}
+              onChange={(e) => update("nationalId", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
+          <p className="col-span-2 -mt-2 text-xs text-muted-foreground">
+            Provide at least one: Passport No. <span className="text-destructive">*</span> or National ID{" "}
+            <span className="text-destructive">*</span>
+          </p>
           <div className="col-span-1">
             <label htmlFor="passportType" className="mb-1.5 block text-sm font-medium text-foreground">
               Passport Type
@@ -306,7 +394,7 @@ export function NewApplicationModal({
           </div>
 
           {fields
-            .filter((f) => f.key !== "fullName" && f.key !== "passportNumber")
+            .filter((f) => f.key !== "fullName")
             .map(({ key, label, type }) => (
               <div key={key} className="col-span-1">
                 <label htmlFor={key} className="mb-1.5 block text-sm font-medium text-foreground">
@@ -315,7 +403,7 @@ export function NewApplicationModal({
                 <input
                   id={key}
                   type={type ?? "text"}
-                  value={form[key]}
+                  value={form[key] as string}
                   onChange={(e) => update(key, e.target.value)}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 />
@@ -324,22 +412,18 @@ export function NewApplicationModal({
 
           <div className="col-span-1">
             <label htmlFor="destinationCountry" className="mb-1.5 block text-sm font-medium text-foreground">
-              Destination Country
-              <span className="text-destructive"> *</span>
+              Destination Country<span className="text-destructive"> *</span>
             </label>
             <select
               id="destinationCountry"
-              required
               value={form.destinationCountry}
               onChange={(e) => update("destinationCountry", e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <option value="" disabled>
-                Select a country
-              </option>
-              {DESTINATION_COUNTRIES.map((country) => (
-                <option key={country} value={country}>
-                  {country}
+              <option value="">Select a country</option>
+              {DESTINATION_COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
@@ -354,10 +438,10 @@ export function NewApplicationModal({
               onChange={(e) => update("visaType", e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <option value="">Select a visa type</option>
-              {VISA_TYPES.map((v) => (
-                <option key={v} value={v}>
-                  {v}
+              <option value="">Select a type</option>
+              {VISA_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>
@@ -373,8 +457,8 @@ export function NewApplicationModal({
               onChange={(e) => update("applyingMethod", e.target.value as ApplyingMethod)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <option value="self">Self-apply</option>
-              <option value="agency">Through an Agency</option>
+              <option value="self">Self</option>
+              <option value="agency">Agency</option>
             </select>
           </div>
 
@@ -387,16 +471,13 @@ export function NewApplicationModal({
                 <select
                   id="agencyCountry"
                   value={form.agencyCountry}
-                  onChange={(e) => {
-                    update("agencyCountry", e.target.value)
-                    update("agencyName", "")
-                  }}
+                  onChange={(e) => update("agencyCountry", e.target.value)}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <option value="">Select a country</option>
-                  {AGENCY_COUNTRIES.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
+                  {AGENCY_COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
                     </option>
                   ))}
                 </select>
@@ -408,6 +489,7 @@ export function NewApplicationModal({
                 <input
                   id="agencyName"
                   list="admin-agency-suggestions"
+                  type="text"
                   value={form.agencyName}
                   onChange={(e) => update("agencyName", e.target.value)}
                   placeholder="Type or select an agency"
@@ -594,13 +676,16 @@ export function NewApplicationModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
-          <Button type="button" variant="outline" onClick={onClose} className="h-9 px-4 text-sm">
-            Cancel
-          </Button>
-          <Button type="submit" className="h-9 px-4 text-sm">
-            Create Application
-          </Button>
+        <div className="flex flex-col gap-2 border-t border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
+          {formError && <p className="text-xs text-destructive sm:mr-auto">{formError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose} className="h-9 px-4 text-sm">
+              Cancel
+            </Button>
+            <Button type="submit" className="h-9 px-4 text-sm">
+              Create Application
+            </Button>
+          </div>
         </div>
       </form>
     </div>
