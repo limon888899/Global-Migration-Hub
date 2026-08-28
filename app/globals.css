@@ -215,3 +215,30 @@ body {
 .animate-float {
   animation: gmh-float 4.5s ease-in-out infinite;
 }
+
+/* Notification bell shake (admin top nav, unread notifications) */
+@keyframes gmh-bell-shake {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(-12deg); }
+  20%, 40% { transform: rotate(12deg); }
+  50%, 100% { transform: rotate(0deg); }
+}
+
+/* Small toast that pops in near the floating message button (/track page) */
+@keyframes gmh-pop-in {
+  0% { transform: scale(0.85) translateY(6px); opacity: 0; }
+  60% { transform: scale(1.03) translateY(0); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.animate-pop-in {
+  animation: gmh-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Gentle ambient drift for background decoration blobs */
+@keyframes gmh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(14px, -18px) scale(1.06); }
+}
+.animate-drift {
+  animation: gmh-drift 9s ease-in-out infinite;
+}
