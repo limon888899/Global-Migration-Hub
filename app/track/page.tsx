@@ -25,6 +25,8 @@ import {
   CreditCard,
   CalendarClock,
   X,
+  MessageCircle,
+  Sparkles,
 } from "lucide-react"
 import { EnquireModal } from "@/components/enquire-modal"
 import { COUNTRY_FLAGS } from "@/lib/countries"
@@ -86,7 +88,15 @@ function TrackPageContent() {
         const res = await fetch(`/api/visa-status?${params.toString()}`)
         if (cancelled) return
         if (res.ok) {
-          setResult(await res.json())
+          const app = (await res.json()) as Application
+          setResult(app)
+          // Fire-and-forget: lets the admin dashboard bell know this applicant is
+          // viewing their status right now. Never blocks or affects the UI.
+          fetch("/api/notifications/visit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ applicationId: app.id }),
+          }).catch(() => {})
         } else {
           const body = await res.json().catch(() => null)
           setResult(null)
@@ -227,6 +237,39 @@ function ApplicantProfile({ app }: { app: Application }) {
 
   const [viewDoc, setViewDoc] = useState<{ doc: AppDocument; label: string } | null>(null)
 
+  // --- Floating "message from your consultant" button -----------------------
+  const [noteOpen, setNoteOpen] = useState(false)
+  const [hasUnreadNote, setHasUnreadNote] = useState(false)
+  const [showNoteToast, setShowNoteToast] = useState(false)
+  const seenKey = `gmh_seen_note_${app.id}`
+
+  useEffect(() => {
+    if (!app.statusNote) return
+    let lastSeen = ""
+    try {
+      lastSeen = window.localStorage.getItem(seenKey) ?? ""
+    } catch {
+      // localStorage unavailable (private mode, etc.) — treat as unseen every time.
+    }
+    if (lastSeen !== app.statusNote) {
+      setHasUnreadNote(true)
+      setShowNoteToast(true)
+      const timer = setTimeout(() => setShowNoteToast(false), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [app.statusNote, seenKey])
+
+  function openNote() {
+    setNoteOpen(true)
+    setShowNoteToast(false)
+    setHasUnreadNote(false)
+    try {
+      window.localStorage.setItem(seenKey, app.statusNote ?? "")
+    } catch {
+      // Ignore — worst case the badge reappears next visit.
+    }
+  }
+
   const groupedDocuments = useMemo(() => {
     const map = new Map<string, AppDocument[]>()
     for (const doc of app.documents) {
@@ -250,11 +293,11 @@ function ApplicantProfile({ app }: { app: Application }) {
     ? new Date(app.dateOfBirth).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
     : "—"
 
-  const details: { icon: typeof Mail; label: string; value: string }[] = [
+  const details: { icon: typeof Mail; label: string; value: string; wide?: boolean }[] = [
     { icon: Globe, label: "Nationality", value: app.nationality || "—" },
-    { icon: Mail, label: "Email", value: app.email || "—" },
-    { icon: Phone, label: "Phone", value: app.phone || "—" },
     { icon: CreditCard, label: "Passport Type", value: app.passportType || "—" },
+    { icon: Mail, label: "Email", value: app.email || "—", wide: true },
+    { icon: Phone, label: "Phone", value: app.phone || "—" },
     { icon: Hash, label: "App. ID", value: app.id.slice(0, 8).toUpperCase() },
     {
       icon: Clock,
@@ -279,15 +322,28 @@ function ApplicantProfile({ app }: { app: Application }) {
         ]
       : []),
     ...(app.applyingMethod === "agency" && app.agencyName
-      ? [{ icon: Building2, label: "Agency Name", value: app.agencyName }]
+      ? [{ icon: Building2, label: "Agency Name", value: app.agencyName, wide: true }]
       : []),
     ...(app.applyingMethod === "agency" && app.agencyReferenceNo
-      ? [{ icon: Hash, label: "Agency Reference No.", value: app.agencyReferenceNo }]
+      ? [{ icon: Hash, label: "Agency Reference No.", value: app.agencyReferenceNo, wide: true }]
       : []),
   ]
 
   return (
-    <div className="mx-auto max-w-4xl animate-in px-4 py-10 fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6 sm:py-14">
+    <div className="relative mx-auto max-w-4xl animate-in px-4 py-10 fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6 sm:py-14">
+      {/* Ambient decoration — soft drifting color blobs behind the profile */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div className="animate-drift absolute -left-16 top-10 size-56 rounded-full bg-primary/10 blur-3xl" />
+        <div
+          className="animate-drift absolute -right-10 top-1/3 size-64 rounded-full bg-accent/10 blur-3xl"
+          style={{ animationDelay: "2.5s" }}
+        />
+        <div
+          className="animate-drift absolute bottom-0 left-1/3 size-48 rounded-full bg-tip-green/20 blur-3xl"
+          style={{ animationDelay: "5s" }}
+        />
+      </div>
+
       <div className="relative overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-xl">
         <Image
           src="/images/gmh-watermark.webp"
@@ -314,7 +370,7 @@ function ApplicantProfile({ app }: { app: Application }) {
           </div>
 
           <div className="relative">
-            <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary/20 bg-primary/10 text-2xl font-semibold text-primary shadow-xl sm:size-28">
+            <div className="flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-primary/20 bg-primary/10 text-2xl font-semibold text-primary shadow-xl transition duration-500 hover:scale-105 sm:size-28">
               {app.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
@@ -323,7 +379,8 @@ function ApplicantProfile({ app }: { app: Application }) {
               )}
             </div>
             <span className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border-2 border-card bg-tip-green text-tip-green-foreground shadow-md">
-              <ShieldCheck className="size-4" aria-hidden="true" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-tip-green/50" style={{ animationDuration: "2.5s" }} />
+              <ShieldCheck className="relative size-4" aria-hidden="true" />
             </span>
           </div>
 
@@ -332,9 +389,6 @@ function ApplicantProfile({ app }: { app: Application }) {
             <h1 className="mt-1 break-words font-serif text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
               {app.fullName}
             </h1>
-            <p className="mt-1.5 break-all font-mono text-sm tracking-widest text-muted-foreground">
-              {app.passportNumber}
-            </p>
             {app.employerName && (
               <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-secondary/60 py-1.5 pl-1.5 pr-4 shadow-sm">
                 <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-background p-0.5 ring-1 ring-border/60">
@@ -350,16 +404,24 @@ function ApplicantProfile({ app }: { app: Application }) {
             )}
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-4 border-t border-dashed border-border pt-5 text-left sm:grid-cols-3">
+          <div className="grid w-full grid-cols-2 gap-x-4 gap-y-4 border-t border-dashed border-border pt-5 text-left">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Passport No.</p>
+              <p className="mt-0.5 break-all text-sm font-semibold text-foreground">{app.passportNumber || "—"}</p>
+            </div>
             <div>
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Date of Birth</p>
               <p className="mt-0.5 text-sm font-semibold text-foreground">{dobFormatted}</p>
             </div>
             <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">National ID</p>
+              <p className="mt-0.5 break-all text-sm font-semibold text-foreground">{app.nationalId || "—"}</p>
+            </div>
+            <div>
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Visa Type</p>
               <p className="mt-0.5 text-sm font-semibold text-foreground">{app.visaType || "—"}</p>
             </div>
-            <div>
+            <div className="col-span-2">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Destination</p>
               <p className="mt-0.5 break-words text-sm font-semibold text-foreground">
                 {app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ${app.destinationCountry}` : "—"}
@@ -389,16 +451,6 @@ function ApplicantProfile({ app }: { app: Application }) {
       <div className="mt-10 animate-in overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:p-8" style={{ animationDelay: "150ms" }}>
         <h2 className="mb-8 text-sm font-semibold text-foreground">Application Journey</h2>
 
-        {app.statusNote && (
-          <p
-            className={`mb-6 rounded-lg p-3 text-sm ${
-              isRejected ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-foreground"
-            }`}
-          >
-            {app.statusNote}
-          </p>
-        )}
-
         <div className="relative">
           <div className="absolute left-0 right-0 top-4 h-0.5 border-t-2 border-dashed border-border" />
           <div
@@ -414,7 +466,7 @@ function ApplicantProfile({ app }: { app: Application }) {
             <div
               className={`flex size-8 items-center justify-center rounded-full shadow-md ${
                 isRejected ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
-              }`}
+              } ${!isRejected && progressPercent < 100 ? "animate-pulse" : ""}`}
             >
               <Plane className="size-4" aria-hidden="true" />
             </div>
@@ -464,15 +516,21 @@ function ApplicantProfile({ app }: { app: Application }) {
         </div>
       </div>
 
-      <div className="mt-6 grid animate-in grid-cols-1 gap-3 fade-in-0 slide-in-from-bottom-4 duration-700 fill-mode-both sm:grid-cols-2" style={{ animationDelay: "250ms" }}>
-        {details.map(({ icon: Icon, label, value }) => (
-          <div key={label} className="flex min-w-0 items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Icon className="size-4" aria-hidden="true" />
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        {details.map(({ icon: Icon, label, value, wide }, i) => (
+          <div
+            key={label}
+            className={`flex min-w-0 animate-in items-start gap-2.5 rounded-xl border border-border bg-card p-3.5 shadow-sm fade-in-0 slide-in-from-bottom-3 fill-mode-both transition duration-500 hover:-translate-y-0.5 hover:shadow-md sm:gap-3 sm:p-4 ${
+              wide ? "col-span-2" : ""
+            }`}
+            style={{ animationDelay: `${250 + i * 45}ms` }}
+          >
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:size-9">
+              <Icon className="size-3.5 sm:size-4" aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-              <p className="break-words text-sm font-medium text-foreground">{value}</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">{label}</p>
+              <p className="break-words text-xs font-medium text-foreground sm:text-sm">{value}</p>
             </div>
           </div>
         ))}
@@ -543,6 +601,77 @@ function ApplicantProfile({ app }: { app: Application }) {
                 <div className="flex items-center justify-center p-16">
                   <FileText className="size-10 text-muted-foreground" aria-hidden="true" />
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating message button — bobs gently; badges + auto-toast when the
+          admin has left a new note (app.statusNote) that hasn't been opened yet. */}
+      <div className="fixed bottom-5 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-8 sm:right-8">
+        {showNoteToast && (
+          <button
+            type="button"
+            onClick={openNote}
+            className="animate-pop-in flex max-w-[220px] items-center gap-2 rounded-2xl border border-border bg-card px-3.5 py-2.5 text-left shadow-lg"
+          >
+            <Sparkles className="size-4 shrink-0 text-accent-foreground" aria-hidden="true" />
+            <span className="text-xs font-medium text-foreground">New message from your consultant</span>
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={openNote}
+          aria-label="View message from Global Migration Hub"
+          className="animate-float relative flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 transition hover:scale-105 active:scale-95"
+        >
+          <MessageCircle className="size-6" aria-hidden="true" />
+          {hasUnreadNote && (
+            <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/70" />
+              <span className="relative size-3 rounded-full border-2 border-card bg-destructive" />
+            </span>
+          )}
+        </button>
+      </div>
+
+      {noteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center"
+          onClick={() => setNoteOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm animate-in overflow-hidden rounded-t-3xl border border-border bg-card shadow-2xl fade-in-0 slide-in-from-bottom-8 duration-300 sm:rounded-3xl sm:slide-in-from-bottom-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border bg-primary/5 px-5 py-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 items-center justify-center rounded-full bg-primary/15 text-primary">
+                  <MessageCircle className="size-4.5" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Message from your consultant</p>
+                  <p className="text-[11px] text-muted-foreground">Global Migration Hub</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNoteOpen(false)}
+                aria-label="Close"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="px-5 py-6">
+              {app.statusNote ? (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">{app.statusNote}</p>
+              ) : (
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  No messages yet — your consultant will post updates here as your application progresses. Check
+                  back anytime.
+                </p>
               )}
             </div>
           </div>
