@@ -1,5 +1,19 @@
 export type ManualStatus = "auto" | "0" | "1" | "2" | "3" | "rejected"
 
+// Which identifier is used to look up this application on the public /track page.
+// This is set/changed ONLY from the admin panel — applicants cannot choose it themselves.
+export type TrackingMethod = "passport" | "nationalId"
+
+export const TRACKING_METHOD_LABELS: Record<TrackingMethod, string> = {
+  passport: "Passport Number",
+  nationalId: "National ID Number",
+}
+
+/** Returns the effective tracking method for an application, defaulting to "passport". */
+export function getTrackingMethod(app: Pick<Application, "trackingMethod">): TrackingMethod {
+  return app.trackingMethod === "nationalId" ? "nationalId" : "passport"
+}
+
 export const STAGE_LABELS = ["Submitted", "Processing", "Document Verified", "Visa Approved"] as const
 
 export const DEFAULT_DOCUMENT_GROUPS = [
@@ -34,6 +48,10 @@ export interface Application {
   passportType: string
   dateOfBirth: string
   nationalId: string
+  // Which of passportNumber / nationalId is used to match this applicant on /track.
+  // Optional so existing/older records and the public apply form (which never sets
+  // this) keep working — getTrackingMethod() treats a missing value as "passport".
+  trackingMethod?: TrackingMethod
   nationality: string
   email: string
   phone: string
