@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getRedis } from "@/lib/admin/redis"
-import type { Application } from "@/lib/admin/types"
+import { getTrackingMethod, type Application } from "@/lib/admin/types"
 
 export const dynamic = "force-dynamic"
 
@@ -20,11 +20,17 @@ export async function GET(request: Request) {
   const raw = await redis.get(KEY)
   const apps: Application[] = raw ? JSON.parse(raw) : []
 
-  // Match by whichever identifier was provided: passport number OR national ID number
+  // Each application has its own tracking method (set by admin — see lib/admin/types.ts
+  // -> getTrackingMethod). An application only matches a search that used ITS selected
+  // identifier: if the admin set this application to be tracked by Passport Number,
+  // a search by National ID will never match it (even if a National ID is on file for
+  // it), and vice versa.
   const match = apps.find((a) => {
-    if (passport && a.passportNumber.trim().toUpperCase() === passport) return true
-    if (nationalId && (a.nationalId ?? "").trim().toUpperCase() === nationalId) return true
-    return false
+    const method = getTrackingMethod(a)
+    if (method === "passport") {
+      return !!passport && a.passportNumber.trim().toUpperCase() === passport
+    }
+    return !!nationalId && (a.nationalId ?? "").trim().toUpperCase() === nationalId
   })
 
   if (!match) {
