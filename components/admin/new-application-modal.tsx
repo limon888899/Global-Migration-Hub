@@ -401,8 +401,8 @@ export function NewApplicationModal({
               ))}
             </select>
             <p className="mt-1.5 text-xs text-muted-foreground">
-              On the public /track page, this applicant&apos;s status will only be found using this identifier —
-              even though both fields above are stored on the record.
+              On the public /track page, the applicant must enter this identifier AND their Date of Birth
+              together — even though both Passport No. and National ID stay saved on the record.
             </p>
           </div>
           <div className="col-span-1">
