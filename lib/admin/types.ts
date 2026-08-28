@@ -105,3 +105,18 @@ export function stageLabel(app: Application): string {
   if (stage === "rejected") return "Rejected"
   return STAGE_LABELS[stage]
 }
+
+// --- Admin "profile viewed" notifications -----------------------------------
+// Logged (server-side, in Redis) every time a visitor successfully opens their
+// status on the public /track page, so the admin dashboard bell can show it.
+export interface VisitNotification {
+  id: string
+  applicationId: string
+  applicantName: string
+  passportNumber: string
+  destinationCountry: string
+  viewedAt: string
+}
+
+export const MAX_VISIT_NOTIFICATIONS = 50
+
