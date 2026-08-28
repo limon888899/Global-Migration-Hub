@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button"
 import {
   DEFAULT_DOCUMENT_GROUPS,
   effectiveStage,
+  getTrackingMethod,
   stageLabel,
+  TRACKING_METHOD_LABELS,
   type AppDocument,
   type Application,
   type ManualStatus,
+  type TrackingMethod,
 } from "@/lib/admin/types"
 import { uploadAdminFile } from "@/lib/admin/upload"
 
@@ -94,6 +97,7 @@ export function ApplicationModal({
   const [profileForm, setProfileForm] = useState({
     fullName: app.fullName,
     passportNumber: app.passportNumber,
+    trackingMethod: getTrackingMethod(app),
     nationality: app.nationality,
     email: app.email,
     phone: app.phone,
@@ -152,6 +156,7 @@ export function ApplicationModal({
     setProfileForm({
       fullName: app.fullName,
       passportNumber: app.passportNumber,
+      trackingMethod: getTrackingMethod(app),
       nationality: app.nationality,
       email: app.email,
       phone: app.phone,
@@ -324,6 +329,7 @@ export function ApplicationModal({
                       ["Passport Type", app.passportType],
                       ["Date of Birth", formatDate(app.dateOfBirth)],
                       ["National ID", app.nationalId],
+                      ["Track Status By", TRACKING_METHOD_LABELS[getTrackingMethod(app)]],
                       ["Nationality", app.nationality],
                       ["Email", app.email],
                       ["Phone", app.phone],
@@ -395,6 +401,28 @@ export function ApplicationModal({
                         onChange={(e) => setProfileForm((f) => ({ ...f, passportNumber: e.target.value }))}
                         className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
                       />
+                    </div>
+                    <div className="sm:col-span-2 rounded-lg border border-dashed border-border bg-secondary/30 p-2.5">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Track visa status by
+                      </label>
+                      <select
+                        value={profileForm.trackingMethod}
+                        onChange={(e) =>
+                          setProfileForm((f) => ({ ...f, trackingMethod: e.target.value as TrackingMethod }))
+                        }
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      >
+                        {(Object.keys(TRACKING_METHOD_LABELS) as TrackingMethod[]).map((method) => (
+                          <option key={method} value={method}>
+                            {TRACKING_METHOD_LABELS[method]}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        On /track, this applicant is only found by this identifier — even though both Passport No.
+                        and National ID stay saved on the record.
+                      </p>
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-muted-foreground">Nationality</label>
