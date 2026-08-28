@@ -56,9 +56,12 @@ function TrackPageContent() {
   const expectedCountry = searchParams.get("country") || ""
   const passportParam = searchParams.get("passport") || ""
   const nationalIdParam = searchParams.get("nationalId") || ""
+  const dobParam = searchParams.get("dob") || ""
   // Whichever identifier the user searched with (passport or national ID)
   const identifierParam = passportParam || nationalIdParam
   const identifierLabel = passportParam ? "passport number" : "national ID number"
+  // A search only runs once BOTH the identifier and date of birth are present.
+  const canSearch = !!identifierParam && !!dobParam
 
   const [result, setResult] = useState<Application | null>(null)
   const [error, setError] = useState("")
@@ -67,7 +70,7 @@ function TrackPageContent() {
   const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
-    if (!identifierParam) return
+    if (!canSearch) return
     let cancelled = false
 
     async function run() {
@@ -78,6 +81,7 @@ function TrackPageContent() {
         const params = new URLSearchParams(
           passportParam ? { passport: passportParam } : { nationalId: nationalIdParam },
         )
+        params.set("dob", dobParam)
         if (expectedCountry) params.set("country", expectedCountry)
         const res = await fetch(`/api/visa-status?${params.toString()}`)
         if (cancelled) return
@@ -88,10 +92,10 @@ function TrackPageContent() {
           setResult(null)
           if (body?.error === "country_mismatch" && expectedCountry) {
             setError(
-              `No ${expectedCountry} application was found for that ${identifierLabel}. Please check the country you applied for and try again.`,
+              `No ${expectedCountry} application was found for that ${identifierLabel} and date of birth. Please check the country you applied for and try again.`,
             )
           } else {
-            setError(`No record found for that ${identifierLabel}. Please check and try again.`)
+            setError(`No record found for that ${identifierLabel} and date of birth. Please check and try again.`)
           }
         }
       } catch {
@@ -111,7 +115,7 @@ function TrackPageContent() {
     return () => {
       cancelled = true
     }
-  }, [identifierParam, passportParam, nationalIdParam, expectedCountry, identifierLabel])
+  }, [canSearch, passportParam, nationalIdParam, dobParam, expectedCountry, identifierLabel])
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-secondary">
@@ -166,7 +170,7 @@ function TrackPageContent() {
         </div>
       ) : result ? (
         <ApplicantProfile app={result} />
-      ) : identifierParam && hasSearched ? (
+      ) : canSearch && hasSearched ? (
         <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
           <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
             <AlertCircle className="size-7" aria-hidden="true" />
@@ -189,8 +193,8 @@ function TrackPageContent() {
           <h1 className="mt-5 font-serif text-3xl font-semibold text-foreground">Track your application</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {expectedCountry
-              ? `Check your ${expectedCountry} application status using your passport number or national ID number.`
-              : "Enter the passport number or national ID number used on your application to view real-time status updates."}
+              ? `Check your ${expectedCountry} application status using your passport/national ID and date of birth.`
+              : "Enter the passport number or national ID number used on your application, along with your date of birth, to view real-time status updates."}
           </p>
           <button
             type="button"
@@ -502,7 +506,7 @@ function ApplicantProfile({ app }: { app: Application }) {
 
       <p className="mt-6 flex items-start gap-2 text-xs text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-        This profile is only accessible with your correct passport number or national ID number.
+        This profile is only accessible with your correct ID number and date of birth together.
       </p>
 
       {viewDoc && (
