@@ -16,6 +16,7 @@ export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
   const [selectedCountry, setSelectedCountry] = useState("")
   const [idType, setIdType] = useState<"passport" | "nationalId">("passport")
   const [identifier, setIdentifier] = useState("")
+  const [dob, setDob] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -39,11 +40,16 @@ export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
       setError(idType === "passport" ? "Please enter your passport number." : "Please enter your national ID number.")
       return
     }
+    if (!dob) {
+      setError("Please enter your date of birth.")
+      return
+    }
     setError("")
     setLoading(true)
     const params = new URLSearchParams({
       country: activeCountry,
       [idType === "passport" ? "passport" : "nationalId"]: identifier.trim(),
+      dob,
     })
     router.push(`/track?${params.toString()}`)
     onClose()
@@ -106,8 +112,8 @@ export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
               </h2>
               <p className="mt-2 text-pretty text-sm leading-relaxed text-muted-foreground">
                 {activeCountry
-                  ? `Real-time, secure updates on your journey to ${activeCountry} — enter your passport number or national ID to begin.`
-                  : "Select your destination and enter your passport number or national ID for a real-time status update."}
+                  ? `Real-time, secure updates on your journey to ${activeCountry} — enter your passport/national ID and date of birth to begin.`
+                  : "Select your destination and enter your ID number and date of birth for a real-time status update."}
               </p>
             </div>
 
@@ -173,6 +179,22 @@ export function EnquireModal({ country, open, onClose }: EnquireModalProps) {
                   placeholder={idType === "passport" ? "e.g. A12345678" : "e.g. 1990123456789"}
                   className="mt-1.5 w-full rounded-xl border border-input bg-background px-4 py-3 text-center font-mono text-sm tracking-wider text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="enquire-dob" className="block text-xs font-medium text-foreground">
+                  Date of Birth
+                </label>
+                <input
+                  id="enquire-dob"
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-input bg-background px-4 py-2.5 text-center text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  For your security, both your ID number and date of birth are required to view status.
+                </p>
               </div>
 
               {error && (
