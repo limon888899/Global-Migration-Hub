@@ -97,6 +97,8 @@ export function ApplicationModal({
   const [profileForm, setProfileForm] = useState({
     fullName: app.fullName,
     passportNumber: app.passportNumber,
+    nationalId: app.nationalId,
+    dateOfBirth: app.dateOfBirth,
     trackingMethod: getTrackingMethod(app),
     nationality: app.nationality,
     email: app.email,
@@ -156,6 +158,8 @@ export function ApplicationModal({
     setProfileForm({
       fullName: app.fullName,
       passportNumber: app.passportNumber,
+      nationalId: app.nationalId,
+      dateOfBirth: app.dateOfBirth,
       trackingMethod: getTrackingMethod(app),
       nationality: app.nationality,
       email: app.email,
@@ -329,7 +333,7 @@ export function ApplicationModal({
                       ["Passport Type", app.passportType],
                       ["Date of Birth", formatDate(app.dateOfBirth)],
                       ["National ID", app.nationalId],
-                      ["Track Status By", TRACKING_METHOD_LABELS[getTrackingMethod(app)]],
+                      ["Track Status By", `${TRACKING_METHOD_LABELS[getTrackingMethod(app)]} + Date of Birth`],
                       ["Nationality", app.nationality],
                       ["Email", app.email],
                       ["Phone", app.phone],
@@ -402,6 +406,23 @@ export function ApplicationModal({
                         className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
                       />
                     </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">National ID</label>
+                      <input
+                        value={profileForm.nationalId}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, nationalId: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={profileForm.dateOfBirth}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, dateOfBirth: e.target.value }))}
+                        className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground"
+                      />
+                    </div>
                     <div className="sm:col-span-2 rounded-lg border border-dashed border-border bg-secondary/30 p-2.5">
                       <label className="mb-1 block text-xs font-medium text-muted-foreground">
                         Track visa status by
@@ -420,8 +441,8 @@ export function ApplicationModal({
                         ))}
                       </select>
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        On /track, this applicant is only found by this identifier — even though both Passport No.
-                        and National ID stay saved on the record.
+                        On /track, this applicant must enter this identifier AND their Date of Birth together —
+                        both Passport No. and National ID stay saved on the record either way.
                       </p>
                     </div>
                     <div>
