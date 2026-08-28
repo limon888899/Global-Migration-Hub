@@ -1,13 +1,66 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, ChevronDown, HelpCircle, LogOut, Settings } from "lucide-react"
+import { Bell, ChevronDown, Eye, HelpCircle, LogOut, Settings } from "lucide-react"
 import { logout } from "@/lib/admin/auth"
+import type { VisitNotification } from "@/lib/admin/types"
+
+const POLL_INTERVAL_MS = 20_000
+
+function timeAgo(iso: string): string {
+  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
+  if (seconds < 5) return "just now"
+  if (seconds < 60) return `${seconds}s ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
 
 export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }) {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [notifications, setNotifications] = useState<VisitNotification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  async function fetchNotifications() {
+    try {
+      const res = await fetch("/api/admin/notifications", { cache: "no-store" })
+      if (!res.ok) return
+      const data = (await res.json()) as { notifications: VisitNotification[]; unreadCount: number }
+      setNotifications(data.notifications)
+      setUnreadCount(data.unreadCount)
+    } catch {
+      // Silent — the bell just won't update this cycle.
+    }
+  }
+
+  useEffect(() => {
+    fetchNotifications()
+    pollRef.current = setInterval(fetchNotifications, POLL_INTERVAL_MS)
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [])
+
+  async function handleBellClick() {
+    const next = !notifOpen
+    setNotifOpen(next)
+    setMenuOpen(false)
+    if (next && unreadCount > 0) {
+      setUnreadCount(0)
+      try {
+        await fetch("/api/admin/notifications", { method: "POST" })
+      } catch {
+        // Non-critical — worst case the badge reappears next poll.
+      }
+    }
+  }
 
   const initials = adminName
     .split(" ")
@@ -42,19 +95,65 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
         </nav>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <Bell className="size-4.5" />
-            <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-destructive" />
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={handleBellClick}
+              aria-label="Notifications"
+              className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            >
+              <Bell className={`size-4.5 ${unreadCount > 0 ? "animate-[gmh-bell-shake_1.8s_ease-in-out_infinite]" : ""}`} />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 flex size-4 items-center justify-center">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/60" />
+                  <span className="relative flex size-3.5 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 top-11 w-80 max-w-[85vw] animate-in overflow-hidden rounded-xl border border-border bg-popover shadow-lg fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200">
+                <div className="border-b border-border px-4 py-3">
+                  <p className="text-sm font-semibold text-foreground">Profile Views</p>
+                  <p className="text-xs text-muted-foreground">Applicants currently checking their status</p>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <p className="px-4 py-8 text-center text-xs text-muted-foreground">No activity yet.</p>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {notifications.map((n) => (
+                        <li key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-muted/40">
+                          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <Eye className="size-3.5" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm text-foreground">
+                              <span className="font-medium">{n.applicantName}</span> viewed their status page
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {n.destinationCountry ? `${n.destinationCountry} · ` : ""}
+                              {timeAgo(n.viewedAt)}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="relative">
             <button
               type="button"
-              onClick={() => setMenuOpen((v) => !v)}
+              onClick={() => {
+                setMenuOpen((v) => !v)
+                setNotifOpen(false)
+              }}
               className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-muted"
             >
               <span className="flex size-7 items-center justify-center rounded-full bg-tip-peach text-xs font-semibold text-tip-peach-foreground">
