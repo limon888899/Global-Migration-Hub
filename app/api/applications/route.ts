@@ -91,6 +91,9 @@ export async function POST(request: Request) {
     agencyName: input.agencyName ?? "",
     agencyReferenceNo: input.agencyReferenceNo ?? "",
     nationalId: input.nationalId ?? "",
+    // Public applicants never choose this — it always defaults to "passport" on
+    // submission. Admin can change it afterwards from the application detail modal.
+    trackingMethod: input.trackingMethod === "nationalId" ? "nationalId" : "passport",
     visaDetails: input.visaDetails ?? {},
     employerName: input.employerName ?? "",
     employerLogoUrl: input.employerLogoUrl ?? "",
