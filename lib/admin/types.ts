@@ -1,7 +1,8 @@
 export type ManualStatus = "auto" | "0" | "1" | "2" | "3" | "rejected"
 
-// Which identifier is used to look up this application on the public /track page.
-// This is set/changed ONLY from the admin panel — applicants cannot choose it themselves.
+// Which identifier is used (together with Date of Birth) to look up an application on
+// the public /track page. Set/changed ONLY from the admin panel — applicants never
+// choose this themselves.
 export type TrackingMethod = "passport" | "nationalId"
 
 export const TRACKING_METHOD_LABELS: Record<TrackingMethod, string> = {
@@ -48,9 +49,10 @@ export interface Application {
   passportType: string
   dateOfBirth: string
   nationalId: string
-  // Which of passportNumber / nationalId is used to match this applicant on /track.
-  // Optional so existing/older records and the public apply form (which never sets
-  // this) keep working — getTrackingMethod() treats a missing value as "passport".
+  // Which of passportNumber / nationalId is used (together with Date of Birth) to match
+  // this applicant on /track. Optional so existing/older records and the public apply
+  // form (which never sets this) keep working — getTrackingMethod() treats a missing
+  // value as "passport".
   trackingMethod?: TrackingMethod
   nationality: string
   email: string
