@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Search } from "lucide-react"
+import { ChevronRight, FileStack, Hourglass, Search, ShieldX, Sparkles, User, XCircle } from "lucide-react"
 import { ApplicationModal } from "@/components/admin/application-modal"
 import { NewApplicationModal } from "@/components/admin/new-application-modal"
 import { AdminTopNav } from "@/components/admin/admin-top-nav"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { isLoggedIn } from "@/lib/admin/auth"
+import { COUNTRY_FLAGS } from "@/lib/countries"
 import {
   getApplications,
   addApplication,
@@ -33,6 +34,15 @@ function statusBadgeClass(app: Application) {
   if (stage === 3) return "bg-tip-green text-tip-green-foreground"
   if (stage === 0) return "bg-muted text-muted-foreground"
   return "bg-tip-yellow text-tip-yellow-foreground"
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
 }
 
 export default function AdminDashboardPage() {
@@ -123,41 +133,60 @@ export default function AdminDashboardPage() {
   const selectedApp = apps.find((a) => a.id === selectedId) ?? null
 
   if (!ready) {
-    return <main className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Loading…</main>
+    return (
+      <main className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading…
+      </main>
+    )
   }
 
   const statTiles = [
-    { label: "Total Applications", value: stats.total, tone: "bg-tip-blue text-tip-blue-foreground" },
-    { label: "Processing", value: stats.processing, tone: "bg-tip-yellow text-tip-yellow-foreground" },
-    { label: "Document Verified", value: stats.verified, tone: "bg-tip-purple text-tip-purple-foreground" },
-    { label: "Approved", value: stats.approved, tone: "bg-tip-green text-tip-green-foreground" },
-    { label: "Rejected", value: stats.rejected, tone: "bg-tip-peach text-tip-peach-foreground" },
+    { label: "Total Applications", value: stats.total, icon: FileStack, tone: "bg-tip-blue text-tip-blue-foreground" },
+    { label: "Processing", value: stats.processing, icon: Hourglass, tone: "bg-tip-yellow text-tip-yellow-foreground" },
+    { label: "Document Verified", value: stats.verified, icon: Sparkles, tone: "bg-tip-purple text-tip-purple-foreground" },
+    { label: "Approved", value: stats.approved, icon: ShieldX, tone: "bg-tip-green text-tip-green-foreground" },
+    { label: "Rejected", value: stats.rejected, icon: XCircle, tone: "bg-tip-peach text-tip-peach-foreground" },
   ]
 
   return (
-    <main className="min-h-screen bg-secondary/30 pb-16">
+    <main className="min-h-screen overflow-x-hidden bg-secondary/30 pb-16">
       <AdminTopNav />
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <div className="flex flex-col gap-6 lg:flex-row">
+      <div className="mx-auto max-w-7xl min-w-0 px-4 py-6 sm:px-6">
+        <div className="flex min-w-0 flex-col gap-6 lg:flex-row">
           <AdminSidebar active="overview" onNewApplication={() => setShowNewModal(true)} />
 
           <div className="min-w-0 flex-1">
-            {refreshing && <p className="mb-3 text-xs text-muted-foreground">Syncing…</p>}
+            {refreshing && (
+              <p className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="size-1.5 animate-pulse rounded-full bg-primary" /> Syncing…
+              </p>
+            )}
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
               {statTiles.map((s) => (
-                <div key={s.label} className={`rounded-2xl p-4 ${s.tone}`}>
-                  <div className="text-xs opacity-80">{s.label}</div>
-                  <div className="mt-1 text-2xl font-semibold">{s.value}</div>
+                <div
+                  key={s.label}
+                  className={`min-w-0 rounded-2xl p-3.5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 ${s.tone}`}
+                >
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <s.icon className="size-3.5 shrink-0 opacity-80 sm:size-4" />
+                    <div className="min-w-0 truncate text-[11px] opacity-80 sm:text-xs">{s.label}</div>
+                  </div>
+                  <div className="mt-1 text-xl font-bold sm:text-2xl">{s.value}</div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-                <h3 className="font-serif text-base font-semibold text-foreground">All Applications</h3>
-                <div className="relative w-full max-w-xs">
+            <div className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <h3 className="min-w-0 truncate font-serif text-base font-semibold text-foreground">
+                  All Applications
+                  <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    {filtered.length}
+                  </span>
+                </h3>
+                <div className="relative w-full sm:max-w-xs">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
@@ -172,76 +201,50 @@ export default function AdminDashboardPage() {
               {filtered.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-muted-foreground">No applications found yet.</p>
               ) : (
-                <>
-                  <div className="divide-y divide-border sm:hidden">
-                    {filtered.map((app) => (
-                      <button
-                        key={app.id}
-                        type="button"
-                        onClick={() => setSelectedId(app.id)}
-                        className="flex w-full flex-col gap-2 px-4 py-3.5 text-left active:bg-muted/40"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="font-medium text-foreground">{app.fullName}</span>
-                          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
-                            {stageLabel(app)}
-                          </span>
+                <div className="grid min-w-0 grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">
+                  {filtered.map((app, i) => (
+                    <button
+                      key={app.id}
+                      type="button"
+                      onClick={() => setSelectedId(app.id)}
+                      style={{ animationDelay: `${Math.min(i, 12) * 40}ms` }}
+                      className="group flex min-w-0 animate-in flex-col gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-sm fade-in-0 slide-in-from-bottom-2 fill-mode-both transition duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md active:translate-y-0"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-primary/10 text-sm font-semibold text-primary">
+                          {app.photoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
+                          ) : (
+                            <span>{initials(app.fullName) || <User className="size-5" />}</span>
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{app.fullName}</p>
+                          <p className="truncate font-mono text-xs tracking-wide text-muted-foreground">
+                            {app.passportNumber || app.nationalId || "No ID on file"}
+                          </p>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                          <span>{app.passportNumber}</span>
-                          <span>·</span>
-                          <span>{app.destinationCountry}</span>
-                          <span>·</span>
-                          <span>{app.visaType}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Submitted {formatDate(app.submittedAt)}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </div>
 
-                  <div className="hidden overflow-x-auto sm:block">
-                    <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-                          <th className="px-5 py-3 font-medium">Applicant</th>
-                          <th className="px-5 py-3 font-medium">Passport No.</th>
-                          <th className="px-5 py-3 font-medium">Country</th>
-                          <th className="px-5 py-3 font-medium">Visa Type</th>
-                          <th className="px-5 py-3 font-medium">Status</th>
-                          <th className="px-5 py-3 font-medium">Submitted</th>
-                          <th className="px-5 py-3 font-medium">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filtered.map((app) => (
-                          <tr key={app.id} className="border-b border-border last:border-0 hover:bg-muted/40">
-                            <td className="px-5 py-3 font-medium text-foreground">{app.fullName}</td>
-                            <td className="px-5 py-3 text-muted-foreground">{app.passportNumber}</td>
-                            <td className="px-5 py-3 text-muted-foreground">{app.destinationCountry}</td>
-                            <td className="px-5 py-3 text-muted-foreground">{app.visaType}</td>
-                            <td className="px-5 py-3">
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusBadgeClass(app)}`}>
-                                {stageLabel(app)}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3 text-muted-foreground">{formatDate(app.submittedAt)}</td>
-                            <td className="px-5 py-3">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedId(app.id)}
-                                className="text-sm font-medium text-primary hover:underline"
-                              >
-                                Manage
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
+                      <div className="flex min-w-0 items-center justify-between gap-2 border-t border-dashed border-border pt-3">
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${statusBadgeClass(app)}`}>
+                          {stageLabel(app)}
+                        </span>
+                        <span className="min-w-0 truncate text-right text-xs text-muted-foreground">
+                          {app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ` : ""}
+                          {app.destinationCountry || "—"}
+                        </span>
+                      </div>
+
+                      <div className="flex min-w-0 items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <span className="min-w-0 truncate">{app.visaType || "—"}</span>
+                        <span className="shrink-0">Submitted {formatDate(app.submittedAt)}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -265,3 +268,4 @@ export default function AdminDashboardPage() {
     </main>
   )
 }
+
