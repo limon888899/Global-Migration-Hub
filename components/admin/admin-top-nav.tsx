@@ -73,14 +73,16 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 px-4 py-3 backdrop-blur sm:px-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary">
+          <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary shadow-md shadow-primary/20 ring-1 ring-primary/20">
             <img src="/icon.png" alt="Global Migration Hub" className="size-full object-cover" />
           </span>
           <div className="min-w-0 leading-tight">
-            <div className="truncate font-serif text-sm font-semibold text-foreground sm:text-base">
+            <div className="truncate font-serif text-sm font-bold uppercase tracking-wider text-foreground sm:text-base">
               Global Migration Hub
             </div>
-            <div className="text-xs text-muted-foreground">Admin Panel</div>
+            <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-primary">
+              Control Panel
+            </div>
           </div>
         </div>
 
