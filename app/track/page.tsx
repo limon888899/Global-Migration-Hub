@@ -293,12 +293,12 @@ function ApplicantProfile({ app }: { app: Application }) {
     ? new Date(app.dateOfBirth).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
     : "—"
 
-  const details: { icon: typeof Mail; label: string; value: string; wide?: boolean }[] = [
+  const rawDetails: { icon: typeof Mail; label: string; value: string; wide?: boolean }[] = [
     { icon: Globe, label: "Nationality", value: app.nationality || "—" },
     { icon: CreditCard, label: "Passport Type", value: app.passportType || "—" },
     { icon: Mail, label: "Email", value: app.email || "—", wide: true },
     { icon: Phone, label: "Phone", value: app.phone || "—" },
-    { icon: Hash, label: "App. ID", value: app.id.slice(0, 8).toUpperCase() },
+    { icon: Hash, label: "App. ID", value: `GMH-${app.id.replace(/\D/g, "").slice(-6) || "000000"}` },
     {
       icon: Clock,
       label: "Submitted",
@@ -328,6 +328,19 @@ function ApplicantProfile({ app }: { app: Application }) {
       ? [{ icon: Hash, label: "Agency Reference No.", value: app.agencyReferenceNo, wide: true }]
       : []),
   ]
+
+  // If an odd number of "paired" (non-wide) cards end up in the grid, the last one
+  // is left alone in its row with an empty cell beside it. Auto-widen it instead of
+  // leaving that gap — this adapts automatically to whichever optional fields
+  // (Travel Date, Agency info, etc.) happen to be present for a given application.
+  const pairedIndices = rawDetails.reduce<number[]>((acc, d, i) => {
+    if (!d.wide) acc.push(i)
+    return acc
+  }, [])
+  const details =
+    pairedIndices.length % 2 === 1
+      ? rawDetails.map((d, i) => (i === pairedIndices[pairedIndices.length - 1] ? { ...d, wide: true } : d))
+      : rawDetails
 
   return (
     <div className="relative mx-auto max-w-4xl animate-in px-4 py-10 fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6 sm:py-14">
