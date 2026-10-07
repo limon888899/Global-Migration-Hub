@@ -11,7 +11,7 @@ import {
   type NewApplicationInput,
   type TrackingMethod,
 } from "@/lib/admin/types"
-import { DESTINATION_COUNTRIES, PASSPORT_TYPES, VISA_TYPES } from "@/lib/countries"
+import { DESTINATION_COUNTRIES, PASSPORT_TYPES, VISA_TYPES, formatCountry } from "@/lib/countries"
 import { AGENCY_COUNTRIES, getAgenciesForCountry } from "@/lib/agencies"
 import { uploadAdminFile } from "@/lib/admin/upload"
 
@@ -454,7 +454,7 @@ export function NewApplicationModal({
               <option value="">Select a country</option>
               {DESTINATION_COUNTRIES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {formatCountry(c)}
                 </option>
               ))}
             </select>
@@ -508,7 +508,7 @@ export function NewApplicationModal({
                   <option value="">Select a country</option>
                   {AGENCY_COUNTRIES.map((c) => (
                     <option key={c} value={c}>
-                      {c}
+                      {formatCountry(c)}
                     </option>
                   ))}
                 </select>
