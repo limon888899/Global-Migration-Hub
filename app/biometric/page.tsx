@@ -100,6 +100,11 @@ export default function BiometricAppointmentPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <div className="mb-8 text-center">
+        <img
+          src="/images/vfs-global-logo.png"
+          alt="VFS.GLOBAL"
+          className="mx-auto mb-5 h-12 w-auto object-contain"
+        />
         <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <Fingerprint className="size-7" />
         </span>
