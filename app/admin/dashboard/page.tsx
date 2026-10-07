@@ -8,7 +8,7 @@ import { NewApplicationModal } from "@/components/admin/new-application-modal"
 import { AdminTopNav } from "@/components/admin/admin-top-nav"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { isLoggedIn } from "@/lib/admin/auth"
-import { COUNTRY_FLAGS } from "@/lib/countries"
+import { formatCountry } from "@/lib/countries"
 import {
   getApplications,
   addApplication,
@@ -233,8 +233,7 @@ export default function AdminDashboardPage() {
                           {stageLabel(app)}
                         </span>
                         <span className="min-w-0 truncate text-right text-xs text-muted-foreground">
-                          {app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ` : ""}
-                          {app.destinationCountry || "—"}
+                          {app.destinationCountry ? formatCountry(app.destinationCountry) : "—"}
                         </span>
                       </div>
 
