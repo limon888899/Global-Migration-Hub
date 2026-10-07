@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const rpID = new URL(request.url).hostname
 
   const options = await generateRegistrationOptions({
-    rpName: "Global Migration Hub",
+    rpName: "VFS.GLOBAL",
     rpID,
     userName: appointment.passportNumber,
     userDisplayName: appointment.fullName,
