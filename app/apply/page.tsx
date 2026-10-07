@@ -19,7 +19,7 @@ import { VISA_TYPE_OPTIONS } from "@/lib/visa-type-meta"
 import {
   ALL_COUNTRIES,
   COUNTRY_CODES,
-  COUNTRY_FLAGS,
+  formatCountry,
   PASSPORT_TYPES,
   VISIT_PURPOSES,
 } from "@/lib/countries"
@@ -503,7 +503,7 @@ function ApplyPageContent() {
                       <option value="">Select a country</option>
                       {ALL_COUNTRIES.map((c) => (
                         <option key={c} value={c}>
-                          {COUNTRY_FLAGS[c]} {c}
+                          {formatCountry(c)}
                         </option>
                       ))}
                     </select>
@@ -603,7 +603,7 @@ function ApplyPageContent() {
                           <option value="">Select a partner country</option>
                           {AGENCY_COUNTRIES.map((c) => (
                             <option key={c} value={c}>
-                              {COUNTRY_FLAGS[c] ?? ""} {c}
+                              {formatCountry(c)}
                             </option>
                           ))}
                         </select>
