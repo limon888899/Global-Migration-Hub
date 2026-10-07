@@ -1,107 +1,102 @@
-"use client"
-
-import { useState } from "react"
 import Link from "next/link"
-import { Menu, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Globe } from "lucide-react"
 
-const navLinks = [
-  { label: "Work Permits", href: "#services" },
-  { label: "Biometric Appointment", href: "/biometric" },
-  { label: "PR Calculator", href: "/calculator" },
-  { label: "Immigration News", href: "#news" },
-  { label: "Contact", href: "#contact" },
+const columns = [
+  {
+    heading: "Services",
+    links: [
+      { label: "Skilled Worker Visas", href: "#services" },
+      { label: "Employer Sponsorship", href: "#services" },
+      { label: "Family Permits", href: "#services" },
+      { label: "Compliance & Renewals", href: "#services" },
+    ],
+  },
+  {
+    heading: "Tools",
+    links: [
+      { label: "PR Points Calculator", href: "/calculator" },
+      { label: "Track Your Application", href: "/track" },
+      { label: "Biometric Appointment", href: "/biometric" },
+      { label: "Apply Now", href: "/apply" },
+    ],
+  },
+  {
+    heading: "Company",
+    links: [
+      { label: "About Us", href: "#top" },
+      { label: "Our Advisors", href: "#top" },
+      { label: "Immigration News", href: "#news" },
+      { label: "Contact", href: "#contact" },
+    ],
+  },
+  {
+    heading: "Support",
+    links: [
+      { label: "Client Portal", href: "/track" },
+      { label: "Contact", href: "#contact" },
+      { label: "Privacy Policy", href: "#top" },
+      { label: "Terms of Service", href: "#top" },
+    ],
+  },
 ]
 
-export function SiteHeader() {
-  const [open, setOpen] = useState(false)
-
+export function SiteFooter() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <a href="#top" className="flex items-center gap-3" aria-label="Global Migration Hub home">
-          <span className="flex size-11 items-center justify-center overflow-hidden rounded-2xl bg-primary shadow-md shadow-primary/20 ring-1 ring-primary/10">
-            <img src="/icon.png" alt="Global Migration Hub" className="size-full object-cover" />
-          </span>
-          <span className="flex flex-col leading-tight">
-            <span className="font-serif text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-              Global Migration Hub
-            </span>
-            <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Visa &amp; Immigration Consultancy
-            </span>
-          </span>
-        </a>
+    <footer className="border-t border-border bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                <Globe className="size-5" aria-hidden="true" />
+              </span>
+              <span className="font-serif text-lg font-semibold text-foreground">
+                Global Migration Hub
+              </span>
+            </div>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              Licensed immigration advisors helping individuals and businesses move
+              across borders with confidence.
+            </p>
+          </div>
 
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
-          {navLinks.map((link) =>
-            link.href.startsWith("/") ? (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                {link.label}
-              </a>
-            ),
-          )}
-        </nav>
-
-        <div className="hidden md:block">
-          <Button asChild className="h-10 rounded-full px-5">
-            <Link href="/apply">Apply Now</Link>
-          </Button>
+          {columns.map((col) => (
+            <div key={col.heading}>
+              <h3 className="text-sm font-semibold text-foreground">{col.heading}</h3>
+              <ul className="mt-4 space-y-3">
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    {link.href.startsWith("/") ? (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                      >
+                        {link.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-xl p-2 text-foreground md:hidden"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X className="size-6" /> : <Menu className="size-6" />}
-        </button>
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 sm:flex-row">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Global Migration Hub. All rights reserved.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Regulated by the Office of the Immigration Services Commissioner.
+          </p>
+        </div>
       </div>
-
-      {open && (
-        <div className="border-t border-border bg-background md:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4" aria-label="Mobile">
-            {navLinks.map((link) =>
-              link.href.startsWith("/") ? (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-                >
-                  {link.label}
-                </a>
-              ),
-            )}
-            <Button asChild className="mt-2 h-10 rounded-full px-5" onClick={() => setOpen(false)}>
-              <Link href="/apply">Apply Now</Link>
-            </Button>
-          </nav>
-        </div>
-      )}
-    </header>
+    </footer>
   )
 }
