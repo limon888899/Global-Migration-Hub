@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 const navLinks = [
   { label: "Work Permits", href: "#services" },
   { label: "Biometric Appointment", href: "/biometric" },
+  { label: "PR Calculator", href: "/calculator" },
   { label: "Immigration News", href: "#news" },
   { label: "Contact", href: "#contact" },
 ]
