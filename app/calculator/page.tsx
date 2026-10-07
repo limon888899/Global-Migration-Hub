@@ -51,7 +51,7 @@ function calcCanadaCRS(i: CanadaInputs, hasSpouse: boolean): { total: number; br
   const maxAge = hasSpouse ? 100 : 110
   const ageActual = Math.min(ageScore, maxAge)
   total += ageActual
-  breakdown.push({ label: "বয়স", score: ageActual, max: maxAge, detail: `${i.age} বছর` })
+  breakdown.push({ label: "Age", score: ageActual, max: maxAge, detail: `${i.age} years` })
 
   // Education
   const eduMap: Record<string, number> = {
@@ -61,7 +61,7 @@ function calcCanadaCRS(i: CanadaInputs, hasSpouse: boolean): { total: number; br
   }
   const eduScore = eduMap[i.education] ?? 0
   total += eduScore
-  breakdown.push({ label: "শিক্ষাগত যোগ্যতা", score: eduScore, max: hasSpouse ? 140 : 150, detail: i.education || "নির্বাচন করুন" })
+  breakdown.push({ label: "Education", score: eduScore, max: hasSpouse ? 140 : 150, detail: i.education || "Select" })
 
   // Language (CLB → CRS)
   const clbToCRS = (clb: string): number => {
@@ -79,52 +79,52 @@ function calcCanadaCRS(i: CanadaInputs, hasSpouse: boolean): { total: number; br
   const maxLang = hasSpouse ? 128 : 136
   const langActual = Math.min(langScore, maxLang)
   total += langActual
-  breakdown.push({ label: "প্রথম ভাষা (CLB)", score: langActual, max: maxLang, detail: `CLB ${i.clbFirst}` })
+  breakdown.push({ label: "First language (CLB)", score: langActual, max: maxLang, detail: `CLB ${i.clbFirst}` })
 
   // Second language
   if (i.clbSecond) {
     const lang2Score = Math.min(clbToCRS(i.clbSecond) * 4, hasSpouse ? 20 : 24)
     total += lang2Score
-    breakdown.push({ label: "দ্বিতীয় ভাষা (CLB)", score: lang2Score, max: hasSpouse ? 20 : 24, detail: `CLB ${i.clbSecond}` })
+    breakdown.push({ label: "Second language (CLB)", score: lang2Score, max: hasSpouse ? 20 : 24, detail: `CLB ${i.clbSecond}` })
   }
 
   // Canadian work experience
   const canExpMap: Record<string, number> = { "0": 0, "1": hasSpouse ? 35 : 40, "2": hasSpouse ? 46 : 53, "3": hasSpouse ? 56 : 64, "4": hasSpouse ? 63 : 72, "5+": hasSpouse ? 70 : 80 }
   const canExpScore = canExpMap[i.canadianExp] ?? 0
   total += canExpScore
-  breakdown.push({ label: "কানাডায় কাজের অভিজ্ঞতা", score: canExpScore, max: hasSpouse ? 70 : 80, detail: `${i.canadianExp} বছর` })
+  breakdown.push({ label: "Canadian work experience", score: canExpScore, max: hasSpouse ? 70 : 80, detail: `${i.canadianExp} years` })
 
   // Foreign work experience
   const forExpMap: Record<string, number> = { "0": 0, "1-2": 13, "3+": 25 }
   const forExpScore = forExpMap[i.foreignExp] ?? 0
   total += forExpScore
-  breakdown.push({ label: "বিদেশে কাজের অভিজ্ঞতা", score: forExpScore, max: 25, detail: `${i.foreignExp} বছর` })
+  breakdown.push({ label: "Foreign work experience", score: forExpScore, max: 25, detail: `${i.foreignExp} years` })
 
   // Job offer
-  if (i.hasJobOffer === "yes-noc00") { total += 200; breakdown.push({ label: "কানাডায় জব অফার (NOC 00)", score: 200, max: 200, detail: "আছে" }) }
-  else if (i.hasJobOffer === "yes-other") { total += 50; breakdown.push({ label: "কানাডায় জব অফার (অন্যান্য)", score: 50, max: 200, detail: "আছে" }) }
+  if (i.hasJobOffer === "yes-noc00") { total += 200; breakdown.push({ label: "Canadian job offer (NOC 00)", score: 200, max: 200, detail: "Yes" }) }
+  else if (i.hasJobOffer === "yes-other") { total += 50; breakdown.push({ label: "Canadian job offer (other)", score: 50, max: 200, detail: "Yes" }) }
 
   // Provincial nomination
-  if (i.hasProvincialNomination === "yes") { total += 600; breakdown.push({ label: "Provincial Nomination", score: 600, max: 600, detail: "আছে — প্রায় নিশ্চিত ITA" }) }
+  if (i.hasProvincialNomination === "yes") { total += 600; breakdown.push({ label: "Provincial Nomination", score: 600, max: 600, detail: "Yes — near-certain ITA" }) }
 
   // Sibling in Canada
-  if (i.hasSibling === "yes") { total += 15; breakdown.push({ label: "কানাডায় ভাই/বোন", score: 15, max: 15, detail: "আছে" }) }
+  if (i.hasSibling === "yes") { total += 15; breakdown.push({ label: "Sibling in Canada", score: 15, max: 15, detail: "Yes" }) }
 
   // Spouse factors
   if (hasSpouse) {
     const spouseEduMap: Record<string, number> = { none: 0, secondary: 2, "one-year": 6, "two-year": 7, bachelors: 8, two_or_more: 9, masters: 10, phd: 10 }
     const spouseEduScore = spouseEduMap[i.spouseEducation] ?? 0
     total += spouseEduScore
-    breakdown.push({ label: "伴侶 শিক্ষা", score: spouseEduScore, max: 10, detail: i.spouseEducation })
+    breakdown.push({ label: "Spouse education", score: spouseEduScore, max: 10, detail: i.spouseEducation })
 
     const spouseLangScore = Math.min(clbToCRS(i.spouseClb) * 4, 20)
     total += spouseLangScore
-    breakdown.push({ label: "সঙ্গীর ভাষা (CLB)", score: spouseLangScore, max: 20, detail: `CLB ${i.spouseClb}` })
+    breakdown.push({ label: "Spouse language (CLB)", score: spouseLangScore, max: 20, detail: `CLB ${i.spouseClb}` })
 
     const spouseCanExpMap: Record<string, number> = { "0": 0, "1": 5, "2": 7, "3": 8, "4": 9, "5+": 10 }
     const spouseCanExpScore = spouseCanExpMap[i.spouseCanadianExp] ?? 0
     total += spouseCanExpScore
-    breakdown.push({ label: "সঙ্গীর কানাডায় অভিজ্ঞতা", score: spouseCanExpScore, max: 10, detail: `${i.spouseCanadianExp} বছর` })
+    breakdown.push({ label: "Spouse Canadian experience", score: spouseCanExpScore, max: 10, detail: `${i.spouseCanadianExp} years` })
   }
 
   return { total, breakdown, cutoff: 491 } // ~recent average cutoff
@@ -154,45 +154,45 @@ function calcAustraliaPoints(i: AustraliaInputs): { total: number; breakdown: Sc
   const ageScoreMap: Record<string, number> = { "18-24": 25, "25-32": 30, "33-39": 25, "40-44": 15, "45-49": 0 }
   const ageScore = ageScoreMap[i.age] ?? 0
   total += ageScore
-  breakdown.push({ label: "বয়স", score: ageScore, max: 30, detail: `${i.age} বছর` })
+  breakdown.push({ label: "Age", score: ageScore, max: 30, detail: `${i.age} years` })
 
   // English
   const engMap: Record<string, number> = { "competent": 0, "proficient": 10, "superior": 20 }
   const engScore = engMap[i.englishLevel] ?? 0
   total += engScore
-  breakdown.push({ label: "ইংরেজি দক্ষতা", score: engScore, max: 20, detail: i.englishLevel })
+  breakdown.push({ label: "English proficiency", score: engScore, max: 20, detail: i.englishLevel })
 
   // Overseas qual
   const eduMap: Record<string, number> = { none: 0, diploma: 10, bachelors: 15, phd: 20 }
   const eduScore = eduMap[i.education] ?? 0
   total += eduScore
-  breakdown.push({ label: "শিক্ষাগত যোগ্যতা", score: eduScore, max: 20, detail: i.education })
+  breakdown.push({ label: "Education", score: eduScore, max: 20, detail: i.education })
 
   // Australian skilled employment
   const auExpMap: Record<string, number> = { "0": 0, "1-2": 5, "3-4": 10, "5-7": 15, "8+": 20 }
   const auExpScore = auExpMap[i.australianExp] ?? 0
   total += auExpScore
-  breakdown.push({ label: "অস্ট্রেলিয়ায় কাজের অভিজ্ঞতা", score: auExpScore, max: 20, detail: `${i.australianExp} বছর` })
+  breakdown.push({ label: "Australian work experience", score: auExpScore, max: 20, detail: `${i.australianExp} years` })
 
   // Overseas employment
   const ovExpMap: Record<string, number> = { "0": 0, "3-4": 5, "5-7": 10, "8+": 15 }
   const ovExpScore = ovExpMap[i.overseasExp] ?? 0
   total += ovExpScore
-  breakdown.push({ label: "বিদেশে কাজের অভিজ্ঞতা", score: ovExpScore, max: 15, detail: `${i.overseasExp} বছর` })
+  breakdown.push({ label: "Foreign work experience", score: ovExpScore, max: 15, detail: `${i.overseasExp} years` })
 
   // Australian study
-  if (i.australianStudy === "yes") { total += 5; breakdown.push({ label: "অস্ট্রেলিয়ায় পড়াশোনা (≥2 বছর)", score: 5, max: 5, detail: "আছে" }) }
+  if (i.australianStudy === "yes") { total += 5; breakdown.push({ label: "Australian study (≥2 years)", score: 5, max: 5, detail: "Yes" }) }
 
   // Partner skills
   const partnerMap: Record<string, number> = { none: 0, competent: 5, nominated: 10 }
   const partnerScore = partnerMap[i.partnerSkills] ?? 0
-  if (partnerScore > 0) { total += partnerScore; breakdown.push({ label: "সঙ্গীর দক্ষতা", score: partnerScore, max: 10, detail: i.partnerSkills }) }
+  if (partnerScore > 0) { total += partnerScore; breakdown.push({ label: "Partner skills", score: partnerScore, max: 10, detail: i.partnerSkills }) }
 
   // Other bonuses
-  if (i.regionalStudy === "yes") { total += 5; breakdown.push({ label: "আঞ্চলিক এলাকায় পড়াশোনা", score: 5, max: 5, detail: "আছে" }) }
-  if (i.professionalYear === "yes") { total += 5; breakdown.push({ label: "Professional Year", score: 5, max: 5, detail: "সম্পন্ন" }) }
-  if (i.communityLanguage === "yes") { total += 5; breakdown.push({ label: "NAATI Community Language", score: 5, max: 5, detail: "আছে" }) }
-  if (i.educationInRegional === "yes") { total += 5; breakdown.push({ label: "আঞ্চলিক এলাকায় শিক্ষাগত যোগ্যতা", score: 5, max: 5, detail: "আছে" }) }
+  if (i.regionalStudy === "yes") { total += 5; breakdown.push({ label: "Regional area study", score: 5, max: 5, detail: "Yes" }) }
+  if (i.professionalYear === "yes") { total += 5; breakdown.push({ label: "Professional Year", score: 5, max: 5, detail: "Completed" }) }
+  if (i.communityLanguage === "yes") { total += 5; breakdown.push({ label: "NAATI Community Language", score: 5, max: 5, detail: "Yes" }) }
+  if (i.educationInRegional === "yes") { total += 5; breakdown.push({ label: "Regional area qualification", score: 5, max: 5, detail: "Yes" }) }
 
   return { total, breakdown, cutoff: 65 }
 }
@@ -217,7 +217,7 @@ function SelectField({ label, id, value, onChange, options, hint }: {
         onChange={e => onChange(e.target.value)}
         className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/30"
       >
-        <option value="">— নির্বাচন করুন —</option>
+        <option value="">— Select —</option>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
@@ -282,23 +282,23 @@ export default function CalculatorPage() {
   }
 
   const ageLabel = country === "canada"
-    ? [18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43].map(n => ({ value: String(n), label: `${n} বছর` }))
-    : [{ value: "18-24", label: "18–24 বছর" }, { value: "25-32", label: "25–32 বছর" }, { value: "33-39", label: "33–39 বছর" }, { value: "40-44", label: "40–44 বছর" }, { value: "45-49", label: "45–49 বছর (পয়েন্ট নেই)" }]
+    ? [18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43].map(n => ({ value: String(n), label: `${n} years` }))
+    : [{ value: "18-24", label: "18–24 years" }, { value: "25-32", label: "25–32 years" }, { value: "33-39", label: "33–39 years" }, { value: "40-44", label: "40–44 years" }, { value: "45-49", label: "45–49 years (no points)" }]
 
   const eduOptions = country === "canada"
     ? [
-        { value: "secondary", label: "মাধ্যমিক / উচ্চমাধ্যমিক" },
-        { value: "one-year", label: "১ বছরের ডিপ্লোমা / সার্টিফিকেট" },
-        { value: "two-year", label: "২ বছরের ডিপ্লোমা" },
-        { value: "bachelors", label: "স্নাতক (Bachelor's)" },
-        { value: "two_or_more", label: "দুটি বা বেশি ডিগ্রি" },
-        { value: "masters", label: "স্নাতকোত্তর (Master's)" },
-        { value: "phd", label: "পিএইচডি" },
+        { value: "secondary", label: "Secondary / Higher secondary" },
+        { value: "one-year", label: "1-year diploma / certificate" },
+        { value: "two-year", label: "2-year diploma" },
+        { value: "bachelors", label: "Bachelor's degree" },
+        { value: "two_or_more", label: "Two or more degrees" },
+        { value: "masters", label: "Master's degree" },
+        { value: "phd", label: "PhD" },
       ]
     : [
-        { value: "diploma", label: "ডিপ্লোমা" },
-        { value: "bachelors", label: "স্নাতক (Bachelor's)" },
-        { value: "phd", label: "পিএইচডি" },
+        { value: "diploma", label: "Diploma" },
+        { value: "bachelors", label: "Bachelor's degree" },
+        { value: "phd", label: "PhD" },
       ]
 
   return (
@@ -310,7 +310,7 @@ export default function CalculatorPage() {
           <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-5 sm:px-6">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="size-4" /> হোমে ফিরুন
+                <ArrowLeft className="size-4" /> Back to home
               </Link>
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function CalculatorPage() {
               PR Points Calculator
             </h1>
             <p className="mt-3 text-sm text-muted-foreground max-w-xl mx-auto">
-              কানাডা CRS স্কোর বা অস্ট্রেলিয়া পয়েন্ট টেস্ট — নিজেই হিসাব করুন এবং জানুন আপনার PR-এর সম্ভাবনা কতটুকু।
+              Canada CRS score or Australia points test — calculate it yourself and find out your chances of PR.
             </p>
           </div>
 
@@ -357,7 +357,7 @@ export default function CalculatorPage() {
               {country === "canada" && (
                 <>
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">ব্যক্তিগত তথ্য</h2>
+                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">Personal information</h2>
 
                     {/* Spouse toggle */}
                     <div className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-secondary/50 p-4">
@@ -370,14 +370,14 @@ export default function CalculatorPage() {
                       >
                         <span className={`pointer-events-none inline-block size-5 rounded-full bg-white shadow-lg transition-transform ${hasSpouse ? "translate-x-5" : "translate-x-0"}`} />
                       </button>
-                      <span className="text-sm font-medium text-foreground">বিবাহিত / কমন-ল পার্টনার আছেন</span>
+                      <span className="text-sm font-medium text-foreground">Married / have a common-law partner</span>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <SelectField label="বয়স" id="ca-age" value={ca.age} onChange={v => updateCa("age", v)} options={ageLabel} />
-                      <SelectField label="সর্বোচ্চ শিক্ষাগত যোগ্যতা" id="ca-edu" value={ca.education} onChange={v => updateCa("education", v)} options={eduOptions} />
+                      <SelectField label="Age" id="ca-age" value={ca.age} onChange={v => updateCa("age", v)} options={ageLabel} />
+                      <SelectField label="Highest level of education" id="ca-edu" value={ca.education} onChange={v => updateCa("education", v)} options={eduOptions} />
                       <SelectField
-                        label="প্রথম ভাষার CLB স্কোর"
+                        label="First language CLB score"
                         id="ca-clb1"
                         value={ca.clbFirst}
                         onChange={v => updateCa("clbFirst", v)}
@@ -385,34 +385,34 @@ export default function CalculatorPage() {
                         options={[4,5,6,7,8,9,10].map(n => ({ value: String(n), label: `CLB ${n}` }))}
                       />
                       <SelectField
-                        label="দ্বিতীয় ভাষার CLB (ঐচ্ছিক)"
+                        label="Second language CLB (optional)"
                         id="ca-clb2"
                         value={ca.clbSecond}
                         onChange={v => updateCa("clbSecond", v)}
-                        options={[{ value: "", label: "নেই" }, ...[4,5,6,7,8,9,10].map(n => ({ value: String(n), label: `CLB ${n}` }))]}
+                        options={[{ value: "", label: "None" }, ...[4,5,6,7,8,9,10].map(n => ({ value: String(n), label: `CLB ${n}` }))]}
                       />
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">কাজের অভিজ্ঞতা</h2>
+                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">Work experience</h2>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <SelectField label="কানাডায় দক্ষ কাজের অভিজ্ঞতা" id="ca-canexp" value={ca.canadianExp} onChange={v => updateCa("canadianExp", v)}
-                        options={[{ value: "0", label: "নেই" }, { value: "1", label: "১ বছর" }, { value: "2", label: "২ বছর" }, { value: "3", label: "৩ বছর" }, { value: "4", label: "৪ বছর" }, { value: "5+", label: "৫+ বছর" }]} />
-                      <SelectField label="বিদেশে দক্ষ কাজের অভিজ্ঞতা" id="ca-forexp" value={ca.foreignExp} onChange={v => updateCa("foreignExp", v)}
-                        options={[{ value: "0", label: "নেই" }, { value: "1-2", label: "১–২ বছর" }, { value: "3+", label: "৩+ বছর" }]} />
+                      <SelectField label="Skilled work experience in Canada" id="ca-canexp" value={ca.canadianExp} onChange={v => updateCa("canadianExp", v)}
+                        options={[{ value: "0", label: "None" }, { value: "1", label: "1 year" }, { value: "2", label: "2 years" }, { value: "3", label: "3 years" }, { value: "4", label: "4 years" }, { value: "5+", label: "5+ years" }]} />
+                      <SelectField label="Skilled work experience abroad" id="ca-forexp" value={ca.foreignExp} onChange={v => updateCa("foreignExp", v)}
+                        options={[{ value: "0", label: "None" }, { value: "1-2", label: "1–2 years" }, { value: "3+", label: "3+ years" }]} />
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">বোনাস পয়েন্ট</h2>
+                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">Bonus points</h2>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <SelectField label="কানাডায় জব অফার" id="ca-job" value={ca.hasJobOffer} onChange={v => updateCa("hasJobOffer", v)}
-                        options={[{ value: "no", label: "নেই" }, { value: "yes-noc00", label: "আছে (NOC TEER 0 — +200)" }, { value: "yes-other", label: "আছে (অন্যান্য — +50)" }]} />
+                      <SelectField label="Job offer in Canada" id="ca-job" value={ca.hasJobOffer} onChange={v => updateCa("hasJobOffer", v)}
+                        options={[{ value: "no", label: "None" }, { value: "yes-noc00", label: "Yes (NOC TEER 0 — +200)" }, { value: "yes-other", label: "Yes (other — +50)" }]} />
                       <SelectField label="Provincial Nomination" id="ca-pnp" value={ca.hasProvincialNomination} onChange={v => updateCa("hasProvincialNomination", v)}
-                        options={[{ value: "no", label: "নেই" }, { value: "yes", label: "আছে (+600)" }]} />
-                      <SelectField label="কানাডায় ভাই/বোন (PR/Citizen)" id="ca-sib" value={ca.hasSibling} onChange={v => updateCa("hasSibling", v)}
-                        options={[{ value: "no", label: "নেই" }, { value: "yes", label: "আছে (+15)" }]} />
+                        options={[{ value: "no", label: "None" }, { value: "yes", label: "Yes (+600)" }]} />
+                      <SelectField label="Sibling in Canada (PR/Citizen)" id="ca-sib" value={ca.hasSibling} onChange={v => updateCa("hasSibling", v)}
+                        options={[{ value: "no", label: "None" }, { value: "yes", label: "Yes (+15)" }]} />
                     </div>
                   </div>
 
@@ -424,16 +424,16 @@ export default function CalculatorPage() {
                         onClick={() => setShowSpouse(v => !v)}
                         className="flex w-full items-center justify-between text-left"
                       >
-                        <h2 className="font-serif text-lg font-semibold text-foreground">সঙ্গীর তথ্য</h2>
+                        <h2 className="font-serif text-lg font-semibold text-foreground">Spouse / partner information</h2>
                         {showSpouse ? <ChevronUp className="size-5 text-muted-foreground" /> : <ChevronDown className="size-5 text-muted-foreground" />}
                       </button>
                       {showSpouse && (
                         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                          <SelectField label="সঙ্গীর শিক্ষাগত যোগ্যতা" id="sp-edu" value={ca.spouseEducation} onChange={v => updateCa("spouseEducation", v)} options={eduOptions} />
-                          <SelectField label="সঙ্গীর CLB স্কোর" id="sp-clb" value={ca.spouseClb} onChange={v => updateCa("spouseClb", v)}
-                            options={[{ value: "0", label: "নেই / CLB 4 এর নিচে" }, ...[4,5,6,7,8,9,10].map(n => ({ value: String(n), label: `CLB ${n}` }))]} />
-                          <SelectField label="সঙ্গীর কানাডায় কাজের অভিজ্ঞতা" id="sp-exp" value={ca.spouseCanadianExp} onChange={v => updateCa("spouseCanadianExp", v)}
-                            options={[{ value: "0", label: "নেই" }, { value: "1", label: "১ বছর" }, { value: "2", label: "২ বছর" }, { value: "3", label: "৩ বছর" }, { value: "4", label: "৪ বছর" }, { value: "5+", label: "৫+ বছর" }]} />
+                          <SelectField label="Spouse's education" id="sp-edu" value={ca.spouseEducation} onChange={v => updateCa("spouseEducation", v)} options={eduOptions} />
+                          <SelectField label="Spouse's CLB score" id="sp-clb" value={ca.spouseClb} onChange={v => updateCa("spouseClb", v)}
+                            options={[{ value: "0", label: "None / below CLB 4" }, ...[4,5,6,7,8,9,10].map(n => ({ value: String(n), label: `CLB ${n}` }))]} />
+                          <SelectField label="Spouse's Canadian work experience" id="sp-exp" value={ca.spouseCanadianExp} onChange={v => updateCa("spouseCanadianExp", v)}
+                            options={[{ value: "0", label: "None" }, { value: "1", label: "1 year" }, { value: "2", label: "2 years" }, { value: "3", label: "3 years" }, { value: "4", label: "4 years" }, { value: "5+", label: "5+ years" }]} />
                         </div>
                       )}
                     </div>
@@ -445,12 +445,12 @@ export default function CalculatorPage() {
               {country === "australia" && (
                 <>
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">ব্যক্তিগত তথ্য</h2>
+                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">Personal information</h2>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <SelectField label="বয়স" id="au-age" value={au.age} onChange={v => updateAu("age", v)} options={ageLabel} />
-                      <SelectField label="সর্বোচ্চ বিদেশি শিক্ষাগত যোগ্যতা" id="au-edu" value={au.education} onChange={v => updateAu("education", v)} options={eduOptions} />
+                      <SelectField label="Age" id="au-age" value={au.age} onChange={v => updateAu("age", v)} options={ageLabel} />
+                      <SelectField label="Highest overseas qualification" id="au-edu" value={au.education} onChange={v => updateAu("education", v)} options={eduOptions} />
                       <SelectField
-                        label="ইংরেজি দক্ষতা"
+                        label="English proficiency"
                         id="au-eng"
                         value={au.englishLevel}
                         onChange={v => updateAu("englishLevel", v)}
@@ -465,26 +465,26 @@ export default function CalculatorPage() {
                   </div>
 
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">কাজের অভিজ্ঞতা</h2>
+                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">Work experience</h2>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <SelectField label="অস্ট্রেলিয়ায় দক্ষ কাজের অভিজ্ঞতা" id="au-auexp" value={au.australianExp} onChange={v => updateAu("australianExp", v)}
-                        options={[{ value: "0", label: "নেই" }, { value: "1-2", label: "১–২ বছর (+5)" }, { value: "3-4", label: "৩–৪ বছর (+10)" }, { value: "5-7", label: "৫–৭ বছর (+15)" }, { value: "8+", label: "৮+ বছর (+20)" }]} />
-                      <SelectField label="বিদেশে দক্ষ কাজের অভিজ্ঞতা" id="au-ovexp" value={au.overseasExp} onChange={v => updateAu("overseasExp", v)}
-                        options={[{ value: "0", label: "নেই" }, { value: "3-4", label: "৩–৪ বছর (+5)" }, { value: "5-7", label: "৫–৭ বছর (+10)" }, { value: "8+", label: "৮+ বছর (+15)" }]} />
+                      <SelectField label="Skilled work experience in Australia" id="au-auexp" value={au.australianExp} onChange={v => updateAu("australianExp", v)}
+                        options={[{ value: "0", label: "None" }, { value: "1-2", label: "1–2 years (+5)" }, { value: "3-4", label: "3–4 years (+10)" }, { value: "5-7", label: "5–7 years (+15)" }, { value: "8+", label: "8+ years (+20)" }]} />
+                      <SelectField label="Skilled work experience abroad" id="au-ovexp" value={au.overseasExp} onChange={v => updateAu("overseasExp", v)}
+                        options={[{ value: "0", label: "None" }, { value: "3-4", label: "3–4 years (+5)" }, { value: "5-7", label: "5–7 years (+10)" }, { value: "8+", label: "8+ years (+15)" }]} />
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">বোনাস পয়েন্ট</h2>
+                    <h2 className="mb-5 font-serif text-lg font-semibold text-foreground">Bonus points</h2>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <SelectField label="সঙ্গীর দক্ষতা" id="au-partner" value={au.partnerSkills} onChange={v => updateAu("partnerSkills", v)}
-                        options={[{ value: "none", label: "নেই / বিবাহিত নন" }, { value: "competent", label: "Competent English (+5)" }, { value: "nominated", label: "Nominated occupation (+10)" }]} />
+                      <SelectField label="Partner skills" id="au-partner" value={au.partnerSkills} onChange={v => updateAu("partnerSkills", v)}
+                        options={[{ value: "none", label: "None / not married" }, { value: "competent", label: "Competent English (+5)" }, { value: "nominated", label: "Nominated occupation (+10)" }]} />
                       {[
-                        { key: "australianStudy" as const, label: "অস্ট্রেলিয়ায় ২+ বছর পড়াশোনা (+5)" },
-                        { key: "regionalStudy" as const, label: "আঞ্চলিক এলাকায় পড়াশোনা (+5)" },
-                        { key: "professionalYear" as const, label: "Professional Year সম্পন্ন (+5)" },
+                        { key: "australianStudy" as const, label: "2+ years of study in Australia (+5)" },
+                        { key: "regionalStudy" as const, label: "Study in a regional area (+5)" },
+                        { key: "professionalYear" as const, label: "Professional Year completed (+5)" },
                         { key: "communityLanguage" as const, label: "NAATI Community Language (+5)" },
-                        { key: "educationInRegional" as const, label: "আঞ্চলিক এলাকায় শিক্ষাগত যোগ্যতা (+5)" },
+                        { key: "educationInRegional" as const, label: "Qualification from a regional area (+5)" },
                       ].map(({ key, label }) => (
                         <div key={key}>
                           <span className="block text-sm font-medium text-foreground">{label}</span>
@@ -498,7 +498,7 @@ export default function CalculatorPage() {
                                   au[key] === v ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background text-foreground hover:bg-secondary"
                                 }`}
                               >
-                                {v === "yes" ? "আছে" : "নেই"}
+                                {v === "yes" ? "Yes" : "No"}
                               </button>
                             ))}
                           </div>
@@ -515,7 +515,7 @@ export default function CalculatorPage() {
               <div className="sticky top-24">
                 {/* Score card */}
                 <div className={`rounded-2xl border p-6 shadow-md ${isEligible ? "border-tip-green bg-tip-green/5" : "border-border bg-card"}`}>
-                  <p className="text-sm font-medium text-muted-foreground">আপনার স্কোর</p>
+                  <p className="text-sm font-medium text-muted-foreground">Your score</p>
                   <div className="mt-2 flex items-end gap-2">
                     <span className="font-serif text-6xl font-bold text-foreground">{result.total}</span>
                     <span className="mb-2 text-sm text-muted-foreground">/ {country === "canada" ? "1200" : "130"}</span>
@@ -534,18 +534,18 @@ export default function CalculatorPage() {
                       : <AlertCircle className="mt-0.5 size-4 shrink-0 text-destructive" />}
                     <div>
                       <p className={`text-sm font-semibold ${isEligible ? "text-tip-green-foreground" : "text-destructive"}`}>
-                        {isEligible ? "আপনি সম্ভবত যোগ্য! 🎉" : "আরও পয়েন্ট প্রয়োজন"}
+                        {isEligible ? "You are likely eligible! 🎉" : "More points needed"}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        সাম্প্রতিক কাটঅফ: <strong>{result.cutoff}</strong> পয়েন্ট
-                        {!isEligible && ` — আর ${result.cutoff - result.total} পয়েন্ট দরকার`}
+                        Recent cutoff: <strong>{result.cutoff}</strong> points
+                        {!isEligible && ` — ${result.cutoff - result.total} more points needed`}
                       </p>
                     </div>
                   </div>
 
                   <div className="mt-4 rounded-xl border border-border bg-secondary/40 p-3.5 text-xs text-muted-foreground flex gap-2">
                     <Info className="mt-0.5 size-3.5 shrink-0" />
-                    <span>এটি একটি আনুমানিক হিসাব। কাটঅফ প্রতি draw/round-এ পরিবর্তন হয়।</span>
+                    <span>This is an estimate. The cutoff changes with every draw/round.</span>
                   </div>
                 </div>
 
@@ -557,7 +557,7 @@ export default function CalculatorPage() {
                       onClick={() => setShowBreakdown(v => !v)}
                       className="flex w-full items-center justify-between px-5 py-4 text-sm font-semibold text-foreground hover:bg-secondary/50 transition"
                     >
-                      বিস্তারিত ব্রেকডাউন
+                      Detailed breakdown
                       {showBreakdown ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                     </button>
                     {showBreakdown && (
@@ -571,11 +571,11 @@ export default function CalculatorPage() {
                 {/* CTA */}
                 <Button asChild className="h-12 w-full rounded-full text-base">
                   <Link href="/apply">
-                    এখনই আবেদন করুন <ArrowRight className="ml-2 size-4" />
+                    Apply now <ArrowRight className="ml-2 size-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-11 w-full rounded-full">
-                  <Link href="/biometric">বায়োমেট্রিক অ্যাপয়েন্টমেন্ট</Link>
+                  <Link href="/biometric">Biometric appointment</Link>
                 </Button>
               </div>
             </div>
