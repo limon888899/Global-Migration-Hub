@@ -15,6 +15,7 @@ import {
   type TrackingMethod,
 } from "@/lib/admin/types"
 import { uploadAdminFile } from "@/lib/admin/upload"
+import { formatCountry } from "@/lib/countries"
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB per file
 
@@ -283,7 +284,7 @@ export function ApplicationModal({
                   Ref: {app.passportNumber || "—"}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {app.visaType || "Visa"} Application · {app.destinationCountry}
+                  {app.visaType || "Visa"} Application · {formatCountry(app.destinationCountry)}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -339,7 +340,7 @@ export function ApplicationModal({
                       ["Phone", app.phone],
                       ["Travel Date", formatDate(app.travelDate)],
                       ["Applying Method", app.applyingMethod === "agency" ? "Through an Agency" : "Self-apply"],
-                      ["Agency Country", app.agencyCountry],
+                      ["Agency Country", app.agencyCountry ? formatCountry(app.agencyCountry) : app.agencyCountry],
                       ["Agency Name", app.agencyName],
                       ["Agency Reference No", app.agencyReferenceNo],
                     ].map(([label, value]) => (
