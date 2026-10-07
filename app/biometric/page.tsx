@@ -65,7 +65,7 @@ export default function BiometricAppointmentPage() {
   async function handleSubmit() {
     setError("")
     if (!fullName || !passportNumber || !phone) {
-      setError("অনুগ্রহ করে সব আবশ্যক তথ্য পূরণ করুন")
+      setError("Please fill in all required fields")
       return
     }
     setSubmitting(true)
@@ -78,20 +78,20 @@ export default function BiometricAppointmentPage() {
       const text = await res.text()
       if (!res.ok) {
         console.error("Booking failed:", res.status, text)
-        let msg = `বুকিং ব্যর্থ হয়েছে (${res.status})`
+        let msg = `Booking failed (${res.status})`
         try {
           const body = JSON.parse(text)
-          if (body?.error === "slot_full") msg = "এই স্লটটি পূর্ণ হয়ে গেছে, অন্য সময় বেছে নিন"
-          else if (body?.error) msg = `বুকিং ব্যর্থ হয়েছে: ${body.error}`
+          if (body?.error === "slot_full") msg = "This slot is full, please choose another time"
+          else if (body?.error) msg = `Booking failed: ${body.error}`
         } catch {
-          msg = `বুকিং ব্যর্থ হয়েছে (${res.status}): ${text.slice(0, 200)}`
+          msg = `Booking failed (${res.status}): ${text.slice(0, 200)}`
         }
         throw new Error(msg)
       }
       const appointment = JSON.parse(text)
       router.push(`/biometric/verify?id=${appointment.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "কিছু একটা সমস্যা হয়েছে")
+      setError(err instanceof Error ? err.message : "Something went wrong")
     } finally {
       setSubmitting(false)
     }
@@ -104,23 +104,23 @@ export default function BiometricAppointmentPage() {
           <Fingerprint className="size-7" />
         </span>
         <h1 className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
-          বায়োমেট্রিক অ্যাপয়েন্টমেন্ট বুকিং
+          Biometric Appointment Booking
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          আপনার পছন্দের সেন্টার ও সময় বেছে বায়োমেট্রিক অ্যাপয়েন্টমেন্ট বুক করুন
+          Choose your preferred center and time to book a biometric appointment
         </p>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <Building2 className="size-4" /> সেন্টার বেছে নিন
+            <Building2 className="size-4" /> Choose a center
           </label>
           <CustomSelect
             value={centerId}
             onChange={setCenterId}
             options={centerOptions}
-            placeholder="সেন্টার নির্বাচন করুন"
+            placeholder="Select a center"
             className="mt-1.5"
           />
         </div>
@@ -128,10 +128,10 @@ export default function BiometricAppointmentPage() {
         {centerId && (
           <div className="mt-6">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Calendar className="size-4" /> তারিখ বেছে নিন
+              <Calendar className="size-4" /> Choose a date
             </label>
             {loadingDates ? (
-              <p className="mt-2 text-sm text-muted-foreground">লোড হচ্ছে...</p>
+              <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
             ) : (
               <div className="mt-2 flex flex-wrap gap-2">
                 {dates.map((d) => (
@@ -145,7 +145,7 @@ export default function BiometricAppointmentPage() {
                         : "border-input bg-background text-foreground hover:border-primary/50"
                     }`}
                   >
-                    {new Date(d).toLocaleDateString("bn-BD", { day: "numeric", month: "short", weekday: "short" })}
+                    {new Date(d).toLocaleDateString("en-US", { day: "numeric", month: "short", weekday: "short" })}
                   </button>
                 ))}
               </div>
@@ -156,10 +156,10 @@ export default function BiometricAppointmentPage() {
         {date && (
           <div className="mt-6">
             <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Clock className="size-4" /> সময় বেছে নিন
+              <Clock className="size-4" /> Choose a time
             </label>
             {loadingSlots ? (
-              <p className="mt-2 text-sm text-muted-foreground">লোড হচ্ছে...</p>
+              <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
             ) : (
               <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {slots.map((s) => (
@@ -185,20 +185,20 @@ export default function BiometricAppointmentPage() {
         {time && (
           <div className="mt-8 space-y-4 border-t border-border pt-6">
             <div>
-              <label className="text-sm font-medium text-foreground">পূর্ণ নাম *</label>
+              <label className="text-sm font-medium text-foreground">Full name *</label>
               <input className={fieldClass()} value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground">পাসপোর্ট নম্বর *</label>
+              <label className="text-sm font-medium text-foreground">Passport number *</label>
               <input className={fieldClass()} value={passportNumber} onChange={(e) => setPassportNumber(e.target.value)} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-foreground">ফোন নম্বর *</label>
+                <label className="text-sm font-medium text-foreground">Phone number *</label>
                 <input className={fieldClass()} value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground">ইমেইল</label>
+                <label className="text-sm font-medium text-foreground">Email</label>
                 <input className={fieldClass()} value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
             </div>
@@ -206,7 +206,7 @@ export default function BiometricAppointmentPage() {
             {error && <p className="text-sm text-destructive">{error}</p>}
 
             <Button className="w-full" disabled={submitting} onClick={handleSubmit}>
-              {submitting ? <Loader2 className="size-4 animate-spin" /> : "অ্যাপয়েন্টমেন্ট নিশ্চিত করুন"}
+              {submitting ? <Loader2 className="size-4 animate-spin" /> : "Confirm appointment"}
             </Button>
           </div>
         )}
