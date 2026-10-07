@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "not_found" }, { status: 404 })
   }
 
-  // sensitive/internal fields ক্লায়েন্টে পাঠানো হবে না
+  // sensitive/internal fields are not sent to the client
   const { pendingChallenge, webauthnPublicKey, webauthnCounter, ...safe } = appointment
   return NextResponse.json(safe)
 }
