@@ -4,33 +4,28 @@ import { Suspense, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import {
-  ArrowLeft,
-  ShieldCheck,
-  AlertCircle,
-  Loader2,
-  CheckCircle2,
-  Circle,
-  Clock,
-  XCircle,
-  Plane,
-  Globe,
-  Mail,
-  Phone,
-  FileText,
-  User,
-  Search,
-  Building2,
-  Hash,
-  CreditCard,
-  CalendarClock,
-  X,
-  MessageCircle,
-  Sparkles,
-} from "lucide-react"
+import { ArrowLeft, Loader2, Search, X, Sparkles } from "lucide-react"
 import { EnquireModal } from "@/components/enquire-modal"
-import { COUNTRY_FLAGS } from "@/lib/countries"
+import { formatCountry } from "@/lib/countries"
 import { effectiveStage, STAGE_LABELS, type Application, type AppDocument } from "@/lib/admin/types"
+
+type IconName =
+  | "globe" | "passport" | "mail" | "phone" | "id" | "clock" | "calendar" | "building"
+  | "plane" | "check" | "rejected" | "pending" | "shield" | "user" | "document" | "chat" | "alert"
+
+// Realistic image icons live in /public/images/icons/<name>.svg
+function Icon3D({ name, className = "size-full" }: { name: IconName; className?: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/images/icons/${name}.svg`}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      className={`${className} select-none object-contain`}
+    />
+  )
+}
 
 function isImageDataUrl(url?: string) {
   if (!url) return false
@@ -182,8 +177,8 @@ function TrackPageContent() {
         <ApplicantProfile app={result} />
       ) : canSearch && hasSearched ? (
         <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
-          <div className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <AlertCircle className="size-7" aria-hidden="true" />
+          <div className="flex size-16 items-center justify-center">
+            <Icon3D name="alert" />
           </div>
           <h1 className="mt-5 font-serif text-2xl font-semibold text-foreground">No application found</h1>
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>
@@ -197,8 +192,8 @@ function TrackPageContent() {
         </div>
       ) : (
         <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
-          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <ShieldCheck className="size-7" aria-hidden="true" />
+          <div className="flex size-16 items-center justify-center">
+            <Icon3D name="shield" />
           </div>
           <h1 className="mt-5 font-serif text-3xl font-semibold text-foreground">Track your application</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -214,7 +209,7 @@ function TrackPageContent() {
             Check My Status
           </button>
           <p className="mt-5 flex items-start justify-center gap-2 text-center text-xs text-muted-foreground">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+            <Icon3D name="shield" className="mt-0.5 size-5 shrink-0" />
             Bank-grade encryption on every lookup.
           </p>
         </div>
@@ -293,14 +288,14 @@ function ApplicantProfile({ app }: { app: Application }) {
     ? new Date(app.dateOfBirth).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
     : "—"
 
-  const rawDetails: { icon: typeof Mail; label: string; value: string; wide?: boolean }[] = [
-    { icon: Globe, label: "Nationality", value: app.nationality || "—" },
-    { icon: CreditCard, label: "Passport Type", value: app.passportType || "—" },
-    { icon: Mail, label: "Email", value: app.email || "—", wide: true },
-    { icon: Phone, label: "Phone", value: app.phone || "—" },
-    { icon: Hash, label: "App. ID", value: `GMH-${app.id.replace(/\D/g, "").slice(-6) || "000000"}` },
+  const rawDetails: { icon: IconName; label: string; value: string; wide?: boolean }[] = [
+    { icon: "globe", label: "Nationality", value: app.nationality || "—" },
+    { icon: "passport", label: "Passport Type", value: app.passportType || "—" },
+    { icon: "mail", label: "Email", value: app.email || "—", wide: true },
+    { icon: "phone", label: "Phone", value: app.phone || "—" },
+    { icon: "id", label: "App. ID", value: `GMH-${app.id.replace(/\D/g, "").slice(-6) || "000000"}` },
     {
-      icon: Clock,
+      icon: "clock",
       label: "Submitted",
       value: new Date(app.submittedAt).toLocaleDateString(undefined, {
         year: "numeric",
@@ -311,7 +306,7 @@ function ApplicantProfile({ app }: { app: Application }) {
     ...(app.travelDate
       ? [
           {
-            icon: CalendarClock,
+            icon: "calendar",
             label: "Travel Date",
             value: new Date(app.travelDate).toLocaleDateString(undefined, {
               year: "numeric",
@@ -322,10 +317,10 @@ function ApplicantProfile({ app }: { app: Application }) {
         ]
       : []),
     ...(app.applyingMethod === "agency" && app.agencyName
-      ? [{ icon: Building2, label: "Agency Name", value: app.agencyName, wide: true }]
+      ? [{ icon: "building", label: "Agency Name", value: app.agencyName, wide: true }]
       : []),
     ...(app.applyingMethod === "agency" && app.agencyReferenceNo
-      ? [{ icon: Hash, label: "Agency Reference No.", value: app.agencyReferenceNo, wide: true }]
+      ? [{ icon: "id", label: "Agency Reference No.", value: app.agencyReferenceNo, wide: true }]
       : []),
   ]
 
@@ -388,12 +383,12 @@ function ApplicantProfile({ app }: { app: Application }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={app.photoUrl} alt={app.fullName} className="size-full object-cover" />
               ) : (
-                <span>{initials(app.fullName) || <User className="size-10" />}</span>
+                <span>{initials(app.fullName) || <Icon3D name="user" className="size-14" />}</span>
               )}
             </div>
-            <span className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border-2 border-card bg-tip-green text-tip-green-foreground shadow-md">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-tip-green/50" style={{ animationDuration: "2.5s" }} />
-              <ShieldCheck className="relative size-4" aria-hidden="true" />
+            <span className="absolute -bottom-2 -right-2 flex size-10 items-center justify-center">
+              <span className="absolute inline-flex size-8 animate-ping rounded-full bg-tip-green/40" style={{ animationDuration: "2.5s" }} />
+              <Icon3D name="shield" className="relative size-10 drop-shadow-md" />
             </span>
           </div>
 
@@ -409,7 +404,7 @@ function ApplicantProfile({ app }: { app: Application }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={app.employerLogoUrl} alt={app.employerName} className="size-full object-contain" />
                   ) : (
-                    <Building2 className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                    <Icon3D name="building" className="size-5" />
                   )}
                 </span>
                 <span className="truncate text-xs font-medium text-foreground sm:text-sm">{app.employerName}</span>
@@ -437,7 +432,7 @@ function ApplicantProfile({ app }: { app: Application }) {
             <div className="col-span-2">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Destination</p>
               <p className="mt-0.5 break-words text-sm font-semibold text-foreground">
-                {app.destinationCountry ? `${COUNTRY_FLAGS[app.destinationCountry] || ""} ${app.destinationCountry}` : "—"}
+                {app.destinationCountry ? formatCountry(app.destinationCountry) : "—"}
               </p>
             </div>
           </div>
@@ -451,11 +446,11 @@ function ApplicantProfile({ app }: { app: Application }) {
         <div className="relative flex items-center justify-center gap-2 bg-secondary/40 px-6 py-3 text-xs font-medium text-muted-foreground sm:px-8">
           {isRejected ? (
             <>
-              <XCircle className="size-3.5 text-destructive" aria-hidden="true" /> Application Rejected
+              <Icon3D name="rejected" className="size-5" /> Application Rejected
             </>
           ) : (
             <>
-              <CheckCircle2 className="size-3.5 text-primary" aria-hidden="true" /> Current Stage: {STAGE_LABELS[stageIndex]}
+              <Icon3D name="check" className="size-5" /> Current Stage: {STAGE_LABELS[stageIndex]}
             </>
           )}
         </div>
@@ -477,11 +472,11 @@ function ApplicantProfile({ app }: { app: Application }) {
             style={{ left: `${progressPercent}%` }}
           >
             <div
-              className={`flex size-8 items-center justify-center rounded-full shadow-md ${
-                isRejected ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"
+              className={`flex size-10 items-center justify-center rounded-full border-2 bg-card shadow-md ${
+                isRejected ? "border-destructive" : "border-primary"
               } ${!isRejected && progressPercent < 100 ? "animate-pulse" : ""}`}
             >
-              <Plane className="size-4" aria-hidden="true" />
+              <Icon3D name="plane" className="size-7" />
             </div>
           </div>
 
@@ -498,22 +493,11 @@ function ApplicantProfile({ app }: { app: Application }) {
                     : "upcoming"
               return (
                 <div key={label} className="flex flex-col items-center text-center">
-                  <span
-                    className={`flex size-6 items-center justify-center rounded-full ${
-                      state === "done"
-                        ? "bg-primary/15 text-primary"
-                        : state === "current"
-                          ? "bg-accent/15 text-accent-foreground"
-                          : "bg-muted text-muted-foreground/50"
-                    }`}
-                  >
-                    {state === "done" ? (
-                      <CheckCircle2 className="size-4" aria-hidden="true" />
-                    ) : state === "current" ? (
-                      <Clock className="size-3.5" aria-hidden="true" />
-                    ) : (
-                      <Circle className="size-3.5" aria-hidden="true" />
-                    )}
+                  <span className="flex size-8 items-center justify-center">
+                    <Icon3D
+                      name={state === "done" ? "check" : state === "current" ? "clock" : "pending"}
+                      className={`size-8 ${state === "upcoming" ? "opacity-70" : ""}`}
+                    />
                   </span>
                   <span
                     className={`mt-2 text-[10px] font-medium leading-tight sm:text-xs ${
@@ -530,7 +514,7 @@ function ApplicantProfile({ app }: { app: Application }) {
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
-        {details.map(({ icon: Icon, label, value, wide }, i) => (
+        {details.map(({ icon, label, value, wide }, i) => (
           <div
             key={label}
             className={`flex min-w-0 animate-in items-start gap-2.5 rounded-xl border border-border bg-card p-3.5 shadow-sm fade-in-0 slide-in-from-bottom-3 fill-mode-both transition duration-500 hover:-translate-y-0.5 hover:shadow-md sm:gap-3 sm:p-4 ${
@@ -538,8 +522,8 @@ function ApplicantProfile({ app }: { app: Application }) {
             }`}
             style={{ animationDelay: `${250 + i * 45}ms` }}
           >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:size-9">
-              <Icon className="size-3.5 sm:size-4" aria-hidden="true" />
+            <div className="flex size-9 shrink-0 items-center justify-center sm:size-11">
+              <Icon3D name={icon} />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-xs">{label}</p>
@@ -576,7 +560,7 @@ function ApplicantProfile({ app }: { app: Application }) {
       </div>
 
       <p className="mt-6 flex items-start gap-2 text-xs text-muted-foreground">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+        <Icon3D name="shield" className="mt-0.5 size-5 shrink-0" />
         This profile is only accessible with your correct ID number and date of birth together.
       </p>
 
@@ -612,7 +596,7 @@ function ApplicantProfile({ app }: { app: Application }) {
                 <embed src={viewDoc.doc.dataUrl} type="application/pdf" className="h-[75vh] w-full" />
               ) : (
                 <div className="flex items-center justify-center p-16">
-                  <FileText className="size-10 text-muted-foreground" aria-hidden="true" />
+                  <Icon3D name="document" className="size-16" />
                 </div>
               )}
             </div>
@@ -639,7 +623,7 @@ function ApplicantProfile({ app }: { app: Application }) {
           aria-label="View message from Global Migration Hub"
           className="animate-float relative flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 transition hover:scale-105 active:scale-95"
         >
-          <MessageCircle className="size-6" aria-hidden="true" />
+          <Icon3D name="chat" className="size-8" />
           {hasUnreadNote && (
             <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive/70" />
@@ -660,8 +644,8 @@ function ApplicantProfile({ app }: { app: Application }) {
           >
             <div className="flex items-center justify-between border-b border-border bg-primary/5 px-5 py-4">
               <div className="flex items-center gap-2.5">
-                <span className="flex size-9 items-center justify-center rounded-full bg-primary/15 text-primary">
-                  <MessageCircle className="size-4.5" aria-hidden="true" />
+                <span className="flex size-10 items-center justify-center">
+                  <Icon3D name="chat" />
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-foreground">Message from your consultant</p>
@@ -698,7 +682,7 @@ function DocumentThumbnail({ doc, label, onOpen }: { doc: AppDocument; label: st
   if (!doc.dataUrl) {
     return (
       <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-3 text-center">
-        <FileText className="size-6 text-muted-foreground" aria-hidden="true" />
+        <Icon3D name="document" className="size-10" />
         <p className="text-xs font-medium leading-tight text-muted-foreground">{label}</p>
         <p className="text-[10px] text-muted-foreground">Pending upload</p>
       </div>
@@ -721,12 +705,12 @@ function DocumentThumbnail({ doc, label, onOpen }: { doc: AppDocument; label: st
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
+            <Icon3D name="document" className="size-12" />
           </div>
         )}
       </div>
       <div className="flex items-center gap-1.5 border-t border-border bg-card px-2.5 py-2">
-        <FileText className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <Icon3D name="document" className="size-4 shrink-0" />
         <span className="truncate text-xs font-medium text-foreground">{label}</span>
       </div>
     </button>
