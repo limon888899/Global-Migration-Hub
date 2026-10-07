@@ -84,6 +84,13 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   "Oman": "🇴🇲",
 }
 
+/** Flag emoji + COUNTRY NAME IN CAPITALS, e.g. "🇺🇸 UNITED STATES". Display only — keep the raw name as the stored/option value. */
+export function formatCountry(name?: string | null): string {
+  if (!name) return ""
+  const flag = COUNTRY_FLAGS[name]
+  return `${flag ? flag + " " : ""}${name.toUpperCase()}`
+}
+
 export const COUNTRY_IMAGES: Record<string, string> = {
   "United States": "/images/countries/united-states.png",
   "United Kingdom": "/images/countries/united-kingdom.png",
