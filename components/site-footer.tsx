@@ -1,5 +1,3 @@
-import { Globe } from "lucide-react"
-
 const columns = [
   {
     heading: "Services",
@@ -22,8 +20,9 @@ export function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <Globe className="size-5" aria-hidden="true" />
+              <span className="flex size-11 items-center justify-center overflow-hidden rounded-2xl bg-primary shadow-md shadow-primary/20 ring-1 ring-primary/10">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/icon.png" alt="Global Migration Hub" className="size-full object-cover" />
               </span>
               <span className="font-serif text-lg font-semibold text-foreground">
                 Global Migration Hub
