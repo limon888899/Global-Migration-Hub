@@ -1,17 +1,19 @@
 "use client"
 
-import { ExternalLink, LayoutGrid, ListChecks, Plus, ShieldCheck } from "lucide-react"
+import Link from "next/link"
+import { ExternalLink, FileStack, LayoutGrid, ListChecks, Plus, ShieldCheck } from "lucide-react"
 
 export function AdminSidebar({
   active,
   onNewApplication,
 }: {
-  active: "overview" | "applications"
+  active: "overview" | "applications" | "documents"
   onNewApplication?: () => void
 }) {
   const navItems = [
-    { key: "overview", label: "Overview", icon: LayoutGrid },
-    { key: "applications", label: "All Applications", icon: ListChecks },
+    { key: "overview", label: "Overview", icon: LayoutGrid, href: "/admin/dashboard" },
+    { key: "applications", label: "All Applications", icon: ListChecks, href: "/admin/dashboard" },
+    { key: "documents", label: "Documents", icon: FileStack, href: "/admin/documents" },
   ] as const
 
   return (
@@ -38,8 +40,9 @@ export function AdminSidebar({
         <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Menu</p>
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           {navItems.map((item) => (
-            <div
+            <Link
               key={item.key}
+              href={item.href}
               className={`relative flex items-center gap-2.5 border-b border-border px-4 py-3 text-sm font-medium transition-colors last:border-0 ${
                 active === item.key
                   ? "bg-primary/8 text-primary"
@@ -49,7 +52,7 @@ export function AdminSidebar({
               {active === item.key && <span className="absolute inset-y-0 left-0 w-1 rounded-r-full bg-primary" />}
               <item.icon className="size-4 shrink-0" />
               <span className="truncate">{item.label}</span>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
