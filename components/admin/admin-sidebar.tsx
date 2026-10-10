@@ -10,7 +10,7 @@ import {
   ExternalLink 
 } from "lucide-react";
 
-export default function AdminSidebar() {
+export function AdminSidebar() {
   const pathname = usePathname();
 
   const navItems = [
@@ -89,3 +89,6 @@ export default function AdminSidebar() {
     </aside>
   );
 }
+
+// ডিফল্ট এক্সপোর্ট হিসেবেও যুক্ত করা হলো, যাতে কোনো ফাইল থেকে ডিফল্ট ইম্পোর্ট করলেও সমস্যা না হয়
+export default AdminSidebar;
