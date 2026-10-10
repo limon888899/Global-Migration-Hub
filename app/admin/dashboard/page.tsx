@@ -157,6 +157,13 @@ export default function AdminDashboardPage() {
           <AdminSidebar active="overview" onNewApplication={() => setShowNewModal(true)} />
 
           <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => setShowNewModal(true)}
+              className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 lg:hidden"
+            >
+              + New application
+            </button>
             {refreshing && (
               <p className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className="size-1.5 animate-pulse rounded-full bg-primary" /> Syncing…
