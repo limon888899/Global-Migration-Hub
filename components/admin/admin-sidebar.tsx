@@ -55,11 +55,19 @@ export default function AdminSidebar() {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
-              <Link "bg-blue-600 "hover:bg-slate-800 ${ : ? className="{`relative" flex font-medium gap-2.5 hover:text-white" href="{item.href}" isActive items-center key="{item.key}" px-3 py-2.5 rounded-lg text-slate-300 text-sm text-white" transition-colors }`}>
+              <Link
+                key={item.key}
+                href={item.href}
+                className={`relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
                 {isActive && (
                   <span className="absolute inset-y-0 left-0 w-1 bg-white rounded-r" />
                 )}
-                <Icon className="size-4 shrink-0"/>
+                <Icon className="size-4 shrink-0" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -75,7 +83,7 @@ export default function AdminSidebar() {
           className="flex items-center justify-between px-3 py-2 text-xs text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
         >
           <span>USCIS Resources</span>
-          <ExternalLink className="size-3.5"/>
+          <ExternalLink className="size-3.5" />
         </a>
       </div>
     </aside>
