@@ -95,7 +95,9 @@ function TrackPageContent() {
         } else {
           const body = await res.json().catch(() => null)
           setResult(null)
-          if (body?.error === "country_mismatch" && expectedCountry) {
+          if (res.status === 429) {
+            setError("Too many attempts. Please wait a few minutes and try again.")
+          } else if (body?.error === "country_mismatch" && expectedCountry) {
             setError(
               `No ${expectedCountry} application was found for that ${identifierLabel} and date of birth. Please check the country you applied for and try again.`,
             )
