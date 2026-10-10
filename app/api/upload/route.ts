@@ -1,11 +1,16 @@
 import { put } from "@vercel/blob"
 import { NextResponse } from "next/server"
+import { rateLimit } from "@/lib/rate-limit"
 
 export const dynamic = "force-dynamic"
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB per file
 
 export async function POST(request: Request) {
+  // Max 20 uploads per IP per hour.
+  const limited = await rateLimit(request, "upload", 20, 60 * 60)
+  if (limited) return limited
+
   const form = await request.formData()
   const file = form.get("file")
 
