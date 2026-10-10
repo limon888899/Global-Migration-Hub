@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getRedis } from "@/lib/admin/redis"
 import { getTrackingMethod, type Application } from "@/lib/admin/types"
+import { rateLimit } from "@/lib/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -12,6 +13,10 @@ function normalizeDate(value?: string) {
 }
 
 export async function GET(request: Request) {
+  // Max 15 lookups per IP every 15 minutes (stops guessing passport + date of birth).
+  const limited = await rateLimit(request, "visa-status", 15, 15 * 60)
+  if (limited) return limited
+
   const { searchParams } = new URL(request.url)
   const passport = searchParams.get("passport")?.trim().toUpperCase()
   const nationalId = searchParams.get("nationalId")?.trim().toUpperCase()
@@ -54,5 +59,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "country_mismatch" }, { status: 404 })
   }
 
-  return NextResponse.json(match)
+  // Never send internal admin notes to the applicant.
+  const { internalNotes, ...publicApplication } = match
+  void internalNotes
+  return NextResponse.json(publicApplication)
 }
