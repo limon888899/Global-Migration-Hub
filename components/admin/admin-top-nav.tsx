@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, ChevronDown, Eye, HelpCircle, LogOut, Settings } from "lucide-react"
+import { Bell, ChevronDown, Eye, HelpCircle, LogOut, Menu, Settings } from "lucide-react"
+import { AdminDrawer } from "@/components/admin/admin-drawer"
 import { logout } from "@/lib/admin/auth"
 import type { VisitNotification } from "@/lib/admin/types"
 
@@ -23,6 +25,7 @@ function timeAgo(iso: string): string {
 export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }) {
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifications, setNotifications] = useState<VisitNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -70,9 +73,18 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
     .toUpperCase()
 
   return (
+    <>
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 px-4 py-3 backdrop-blur sm:px-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-foreground transition hover:bg-muted"
+          >
+            <Menu className="size-5" />
+          </button>
           <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary shadow-md shadow-primary/20 ring-1 ring-primary/20">
             <img src="/icon.png" alt="Global Migration Hub" className="size-full object-cover" />
           </span>
@@ -87,7 +99,12 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
         </div>
 
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Admin">
-          <span className="text-sm font-medium text-primary">Applications</span>
+          <Link href="/admin/dashboard" className="text-sm font-medium text-muted-foreground hover:text-primary">
+            Applications
+          </Link>
+          <Link href="/admin/documents" className="text-sm font-medium text-muted-foreground hover:text-primary">
+            Documents
+          </Link>
           <a href="#" className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary">
             <Settings className="size-4" /> Settings
           </a>
@@ -183,5 +200,7 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
         </div>
       </div>
     </header>
+    <AdminDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} adminName={adminName} />
+    </>
   )
 }
