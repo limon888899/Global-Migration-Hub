@@ -1,87 +1,79 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Users, 
-  ExternalLink 
-} from "lucide-react";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { LayoutDashboard, FileText, Plus, ExternalLink } from "lucide-react"
 
-export function AdminSidebar() {
-  const pathname = usePathname();
+type SidebarKey = "overview" | "documents"
 
-  const navItems = [
-    {
-      key: "dashboard",
-      label: "Overview",
-      href: "/admin/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      key: "applications",
-      label: "All Applications",
-      href: "/admin/applications",
-      icon: Users,
-    },
-    {
-      key: "documents",
-      label: "Documents",
-      href: "/admin/documents",
-      icon: FileText,
-    },
-  ];
+interface AdminSidebarProps {
+  /** Which item is highlighted. Falls back to the current URL when omitted. */
+  active?: SidebarKey
+  /** When provided, shows a "New application" button at the top. */
+  onNewApplication?: () => void
+}
+
+const NAV_ITEMS: { key: SidebarKey; label: string; href: string; icon: typeof FileText }[] = [
+  { key: "overview", label: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
+  { key: "documents", label: "Documents", href: "/admin/documents", icon: FileText },
+]
+
+/**
+ * Desktop-only sidebar. On phones and tablets (below the `lg` breakpoint) it is hidden,
+ * because the top-bar hamburger menu (AdminDrawer) already provides the same navigation.
+ */
+export function AdminSidebar({ active, onNewApplication }: AdminSidebarProps) {
+  const pathname = usePathname()
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 min-h-screen p-4 flex flex-col justify-between">
-      <div>
-        <div className="mb-8 px-3 py-2">
-          <h1 className="text-xl font-bold text-white tracking-wide">
-            Migration Hub
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">Admin Control Panel</p>
-        </div>
-
-        <nav className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={`relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                }`}
-              >
-                {isActive && (
-                  <span className="absolute inset-y-0 left-0 w-1 bg-white rounded-r" />
-                )}
-                <Icon className="size-4 shrink-0" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+    <aside className="hidden w-60 shrink-0 flex-col self-start rounded-2xl bg-slate-900 p-4 text-slate-300 shadow-sm lg:sticky lg:top-24 lg:flex">
+      <div className="mb-5 px-2 pt-1">
+        <h1 className="text-lg font-bold tracking-wide text-white">Migration Hub</h1>
+        <p className="mt-0.5 text-xs text-slate-400">Admin Control Panel</p>
       </div>
 
-      <div className="border-t border-slate-800 pt-4 mt-6">
+      {onNewApplication && (
+        <button
+          type="button"
+          onClick={onNewApplication}
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
+        >
+          <Plus className="size-4" /> New application
+        </button>
+      )}
+
+      <nav className="space-y-1" aria-label="Admin sections">
+        {NAV_ITEMS.map((item) => {
+          const isActive = active ? active === item.key : pathname === item.href
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                isActive ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Icon className="size-4 shrink-0" />
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div className="mt-6 border-t border-slate-800 pt-4">
         <a
           href="https://www.uscis.gov"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between px-3 py-2 text-xs text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+          className="flex items-center justify-between rounded-lg px-3 py-2 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-white"
         >
           <span>USCIS Resources</span>
           <ExternalLink className="size-3.5" />
         </a>
       </div>
     </aside>
-  );
+  )
 }
 
-// ডিফল্ট এক্সপোর্ট হিসেবেও যুক্ত করা হলো, যাতে কোনো ফাইল থেকে ডিফল্ট ইম্পোর্ট করলেও সমস্যা না হয়
-export default AdminSidebar;
+export default AdminSidebar
