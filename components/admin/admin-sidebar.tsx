@@ -6,7 +6,6 @@ import {
   LayoutDashboard, 
   FileText, 
   Users, 
-  FileCode, 
   ExternalLink 
 } from "lucide-react";
 
@@ -31,12 +30,6 @@ export function AdminSidebar() {
       label: "Documents",
       href: "/admin/documents",
       icon: FileText,
-    },
-    {
-      key: "generator",
-      label: "Document Generator",
-      href: "/admin/documents/generator",
-      icon: FileCode,
     },
   ];
 
