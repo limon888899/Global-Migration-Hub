@@ -75,8 +75,8 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
   return (
     <>
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 px-4 py-3 backdrop-blur sm:px-6">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
@@ -90,9 +90,10 @@ export function AdminTopNav({ adminName = "Admin User" }: { adminName?: string }
           </span>
           <div className="min-w-0 leading-tight">
             <div className="truncate font-serif text-sm font-bold uppercase tracking-wider text-foreground sm:text-base">
-              Global Migration Hub
+              <span className="sm:hidden">Migration Hub</span>
+              <span className="hidden sm:inline">Global Migration Hub</span>
             </div>
-            <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-primary">
+            <div className="mt-0.5 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-primary">
               Control Panel
             </div>
           </div>
