@@ -10,13 +10,22 @@
  * These helpers just call those endpoints; no secret ever ships to the browser.
  */
 
-export async function login(username: string, password: string): Promise<boolean> {
-  const res = await fetch("/api/admin/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  })
-  return res.ok
+/** Returns null on success, otherwise a message to show the user. */
+export async function login(username: string, password: string): Promise<string | null> {
+  try {
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ username, password }),
+    })
+    if (res.ok) return null
+    if (res.status === 401) return "Incorrect username or password."
+    const data = await res.json().catch(() => ({}))
+    return data?.error || `Login failed (${res.status}).`
+  } catch {
+    return "Network error. Please try again."
+  }
 }
 
 export async function logout(): Promise<void> {

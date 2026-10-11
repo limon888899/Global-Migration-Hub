@@ -10,7 +10,7 @@ export default function AdminLoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     isLoggedIn().then((ok) => {
@@ -20,11 +20,11 @@ export default function AdminLoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const ok = await login(username, password)
-    if (ok) {
-      router.push("/admin/dashboard")
+    const err = await login(username, password)
+    if (!err) {
+      window.location.href = "/admin/dashboard"
     } else {
-      setError(true)
+      setError(err)
     }
   }
 
@@ -55,7 +55,7 @@ export default function AdminLoginPage() {
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value)
-                setError(false)
+                setError(null)
               }}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             />
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value)
-                setError(false)
+                setError(null)
               }}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             />
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
 
         {error && (
           <p className="mt-4 text-sm text-destructive" role="alert">
-            Incorrect username or password.
+            {error}
           </p>
         )}
 
