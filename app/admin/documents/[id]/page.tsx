@@ -3,7 +3,7 @@
 import { use, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Download, ExternalLink, FileText, Loader2, Trash2, Upload } from "lucide-react"
+import { ArrowLeft, Download, ExternalLink, Loader2, Upload } from "lucide-react"
 import { AdminTopNav } from "@/components/admin/admin-top-nav"
 import { isLoggedIn } from "@/lib/admin/auth"
 import { getApplications, updateApplication } from "@/lib/admin/data"
@@ -19,16 +19,17 @@ import {
   PREFIX_CHECKLIST,
   PREFIX_COMBINED,
   PREFIX_SERVICE_AGREEMENT,
+  PREFIX_BY_DOCUMENT_SLOT,
   SLOT_NAMES,
   VISA_DOCUMENT_SLOTS,
 } from "@/lib/admin/document-slots"
 import {
+  buildAgencyDraft,
   buildApplicationForm,
   buildChecklist,
   buildServiceAgreement,
   combineDocuments,
   downloadBytes,
-  downloadFromUrl,
   safeFileName,
 } from "@/lib/admin/pdf-tools"
 
@@ -39,10 +40,10 @@ const btnPrimary =
 const btnOutline =
   "inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
 
-type Kind = "form" | "agreement" | "checklist" | "combined"
+type Kind = "form" | "agreement" | "checklist" | "combined" | (typeof VISA_DOCUMENT_SLOTS)[number]["name"]
 type Notice = { type: "ok" | "error"; text: string } | null
 
-const KIND_META: Record<Kind, { label: string; group: string; prefix: string; hint: string }> = {
+const KIND_META: Record<Exclude<Kind, (typeof VISA_DOCUMENT_SLOTS)[number]["name"]>, { label: string; group: string; prefix: string; hint: string }> = {
   form: {
     label: "Application form",
     group: GROUP_APPLICATION_FORM,
@@ -67,6 +68,18 @@ const KIND_META: Record<Kind, { label: string; group: string; prefix: string; hi
     prefix: PREFIX_COMBINED,
     hint: "All uploaded files merged page by page.",
   },
+}
+
+function getKindMeta(kind: Kind) {
+  if (kind in KIND_META) return KIND_META[kind as Exclude<Kind, (typeof VISA_DOCUMENT_SLOTS)[number]["name"]>]
+  const slot = VISA_DOCUMENT_SLOTS.find((item) => item.name === kind)
+  if (!slot) throw new Error("Unknown document type.")
+  return {
+    label: slot.name,
+    group: slot.name,
+    prefix: PREFIX_BY_DOCUMENT_SLOT[slot.name],
+    hint: "Internal draft only. Replace it with the original document issued by the authorised organisation.",
+  }
 }
 
 export default function AdminApplicationDocumentsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -175,12 +188,13 @@ export default function AdminApplicationDocumentsPage({ params }: { params: Prom
     if (kind === "form") return { bytes: await buildApplicationForm(source) }
     if (kind === "agreement") return { bytes: await buildServiceAgreement(source, { fee }) }
     if (kind === "checklist") return { bytes: await buildChecklist(source) }
+    if (kind !== "combined") return { bytes: await buildAgencyDraft(source, getKindMeta(kind).label) }
     const combined = await combineDocuments(source)
     return { bytes: combined.bytes, files: combined.files, pages: combined.pages, skipped: combined.skipped }
   }
 
   function handleGenerate(kind: Kind, mode: "download" | "profile") {
-    const meta = KIND_META[kind]
+    const meta = getKindMeta(kind)
     run(`${kind}:${mode}`, null, async () => {
       const source = await freshApp()
       const built = await buildBytes(kind, source)
@@ -231,6 +245,7 @@ export default function AdminApplicationDocumentsPage({ params }: { params: Prom
   }
 
   const isBusy = (key: string) => busy === key
+  const agencyKinds = [...(["form", "agreement", "checklist"] as const), ...VISA_DOCUMENT_SLOTS.map((slot) => slot.name)] as Kind[]
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-secondary/30 pb-16">
@@ -260,111 +275,10 @@ export default function AdminApplicationDocumentsPage({ params }: { params: Prom
           </div>
         )}
 
-        {/* Visa documents: upload the original files */}
-        <section className="mb-5 rounded-2xl border border-border bg-card p-4">
-          <h2 className="font-serif text-lg font-bold text-foreground">Visa documents</h2>
-          <p className="mb-2 text-xs text-muted-foreground">
-            Upload the original files issued by the authority or employer. PDF or images, up to 4 MB each. You can add
-            several images to one document.
-          </p>
-
-          <ul className="divide-y divide-border">
-            {VISA_DOCUMENT_SLOTS.map((slot) => {
-              const docs = byGroup.get(slot.name) ?? []
-              const uploading = isBusy(`upload:${slot.name}`)
-              return (
-                <li key={slot.name} className="py-3">
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full ${
-                        docs.length ? "bg-tip-green text-tip-green-foreground" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      <FileText className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">{slot.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {docs.length ? `${docs.length} file${docs.length === 1 ? "" : "s"} uploaded` : slot.hint}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={uploading}
-                      onClick={() => fileInputs.current[slot.name]?.click()}
-                      className={btnOutline}
-                    >
-                      {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-                      Upload
-                    </button>
-                    <input
-                      ref={(el) => {
-                        fileInputs.current[slot.name] = el
-                      }}
-                      type="file"
-                      multiple
-                      accept=".pdf,image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        handleUpload(slot.name, e.target.files)
-                        e.target.value = ""
-                      }}
-                    />
-                  </div>
-
-                  {docs.length > 0 && (
-                    <ul className="ml-11 mt-2 space-y-1.5">
-                      {docs.map((doc) => (
-                        <li
-                          key={doc.id}
-                          className="flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5 text-xs"
-                        >
-                          <span className="min-w-0 flex-1 truncate text-foreground">{doc.name}</span>
-                          {doc.dataUrl && (
-                            <>
-                              <a
-                                href={doc.dataUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`Open ${doc.name}`}
-                                className="text-primary hover:underline"
-                              >
-                                <ExternalLink className="size-3.5" />
-                              </a>
-                              <button
-                                type="button"
-                                aria-label={`Download ${doc.name}`}
-                                onClick={() => downloadFromUrl(doc.dataUrl as string, doc.name)}
-                                className="text-primary hover:underline"
-                              >
-                                <Download className="size-3.5" />
-                              </button>
-                            </>
-                          )}
-                          <button
-                            type="button"
-                            aria-label={`Remove ${doc.name}`}
-                            disabled={isBusy(`remove:${doc.id}`)}
-                            onClick={() => handleRemove(doc)}
-                            className="text-destructive hover:opacity-70"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-
-        {/* Agency documents: generated PDFs */}
         <section className="mb-5 rounded-2xl border border-border bg-card p-4">
           <h2 className="font-serif text-lg font-bold text-foreground">Agency documents</h2>
           <p className="mb-3 text-xs text-muted-foreground">
-            Filled in automatically from this application. Download a PDF, or add it to the applicant&apos;s profile.
+            Every document is generated from this application. Official documents are internal drafts only and must be replaced with the original issued file.
           </p>
 
           <label className="mb-3 block">
@@ -380,15 +294,44 @@ export default function AdminApplicationDocumentsPage({ params }: { params: Prom
           </label>
 
           <ul className="divide-y divide-border">
-            {(["form", "agreement", "checklist"] as Kind[]).map((kind) => {
-              const meta = KIND_META[kind]
+            {agencyKinds.map((kind) => {
+              const meta = getKindMeta(kind)
+              const slot = VISA_DOCUMENT_SLOTS.find((item) => item.name === kind)
+              const docs = slot ? byGroup.get(slot.name) ?? [] : []
+              const uploading = slot ? isBusy(`upload:${slot.name}`) : false
               const onProfile = (byGroup.get(meta.group) ?? []).some((d) => d.name.startsWith(meta.prefix))
               return (
                 <li key={kind} className="flex flex-wrap items-center gap-2 py-3">
                   <div className="min-w-0 flex-1 basis-40">
                     <p className="text-sm font-semibold text-foreground">{meta.label}</p>
-                    <p className="text-xs text-muted-foreground">{onProfile ? "On the applicant's profile" : meta.hint}</p>
+                    <p className="text-xs text-muted-foreground">{onProfile ? "Generated on the applicant's profile" : meta.hint}</p>
                   </div>
+                  {slot && (
+                    <>
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        onClick={() => fileInputs.current[slot.name]?.click()}
+                        className={btnOutline}
+                      >
+                        {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+                        Upload original
+                      </button>
+                      <input
+                        ref={(element) => {
+                          fileInputs.current[slot.name] = element
+                        }}
+                        type="file"
+                        multiple
+                        accept=".pdf,image/*"
+                        className="hidden"
+                        onChange={(event) => {
+                          handleUpload(slot.name, event.target.files)
+                          event.target.value = ""
+                        }}
+                      />
+                    </>
+                  )}
                   <button
                     type="button"
                     disabled={busy !== null}
@@ -396,7 +339,7 @@ export default function AdminApplicationDocumentsPage({ params }: { params: Prom
                     className={btnOutline}
                   >
                     {isBusy(`${kind}:download`) ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-                    Download
+                    Download draft
                   </button>
                   <button
                     type="button"
@@ -407,6 +350,11 @@ export default function AdminApplicationDocumentsPage({ params }: { params: Prom
                     {isBusy(`${kind}:profile`) ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
                     Add to profile
                   </button>
+                  {docs.length > 0 && (
+                    <span className="basis-full pl-1 text-xs text-muted-foreground">
+                      {docs.length} file{docs.length === 1 ? "" : "s"} currently attached
+                    </span>
+                  )}
                 </li>
               )
             })}

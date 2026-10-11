@@ -27,3 +27,14 @@ export const PREFIX_APPLICATION_FORM = "Application-Form-"
 export const PREFIX_SERVICE_AGREEMENT = "Service-Agreement-"
 export const PREFIX_CHECKLIST = "Document-Checklist-"
 export const PREFIX_COMBINED = "Combined-Documents-"
+
+export const PREFIX_BY_DOCUMENT_SLOT: Record<string, string> = {
+  "Application Form": PREFIX_APPLICATION_FORM,
+  "Job Offer Letter": "Job-Offer-Letter-",
+  "Police Clearance": "Police-Clearance-",
+  "E-Medical Report": "E-Medical-Report-",
+  "Visa Grant": "Visa-Grant-",
+  "Visa Notification": "Visa-Notification-",
+  "Plane Ticket": "Plane-Ticket-",
+  Visa: "Visa-",
+}

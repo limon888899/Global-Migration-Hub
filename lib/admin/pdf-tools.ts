@@ -18,7 +18,7 @@ import { PAGE_W, PAGE_H, clean, fetchBytes } from "./pdf-builder"
  * they are uploaded as the original files issued by the authority.
  */
 
-export { buildApplicationForm, buildServiceAgreement, buildChecklist } from "./templates"
+export { buildAgencyDraft, buildApplicationForm, buildServiceAgreement, buildChecklist } from "./templates"
 
 // ---------------------------------------------------------------------------
 // Combine uploaded files (PDFs + images) into one PDF
