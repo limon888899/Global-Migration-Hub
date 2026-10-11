@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   LogOut,
   Search,
+  Wallet,
   X,
 } from "lucide-react"
 import { logout } from "@/lib/admin/auth"
@@ -31,6 +32,10 @@ const SECTIONS: { title: string; links: DrawerLink[] }[] = [
   {
     title: "Documents",
     links: [{ label: "Documents", href: "/admin/documents", icon: FileStack }],
+  },
+  {
+    title: "Payments",
+    links: [{ label: "Payments", href: "/admin/payments", icon: Wallet }],
   },
   {
     title: "Public site",

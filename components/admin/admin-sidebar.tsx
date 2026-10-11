@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, FileText, Plus, ExternalLink } from "lucide-react"
+import { LayoutDashboard, FileText, Plus, ExternalLink, Wallet } from "lucide-react"
 
-type SidebarKey = "overview" | "documents"
+type SidebarKey = "overview" | "documents" | "payments"
 
 interface AdminSidebarProps {
   /** Which item is highlighted. Falls back to the current URL when omitted. */
@@ -16,6 +16,7 @@ interface AdminSidebarProps {
 const NAV_ITEMS: { key: SidebarKey; label: string; href: string; icon: typeof FileText }[] = [
   { key: "overview", label: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
   { key: "documents", label: "Documents", href: "/admin/documents", icon: FileText },
+  { key: "payments", label: "Payments", href: "/admin/payments", icon: Wallet },
 ]
 
 /**

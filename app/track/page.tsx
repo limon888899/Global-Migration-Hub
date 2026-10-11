@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowLeft, Loader2, Search, X, Sparkles } from "lucide-react"
 import { EnquireModal } from "@/components/enquire-modal"
+import { PaymentSection, type PaymentCredentials } from "@/components/payment-section"
 import { formatCountry } from "@/lib/countries"
 import { effectiveStage, STAGE_LABELS, type Application, type AppDocument } from "@/lib/admin/types"
 
@@ -176,7 +177,14 @@ function TrackPageContent() {
           </p>
         </div>
       ) : result ? (
-        <ApplicantProfile app={result} />
+        <ApplicantProfile
+          app={result}
+          credentials={{
+            passport: passportParam || undefined,
+            nationalId: nationalIdParam || undefined,
+            dob: dobParam,
+          }}
+        />
       ) : canSearch && hasSearched ? (
         <div className="mx-auto flex min-h-[calc(100vh-73px)] max-w-md animate-in flex-col items-center justify-center px-4 py-14 text-center fade-in-0 slide-in-from-bottom-4 duration-700 sm:px-6">
           <div className="flex size-16 items-center justify-center">
@@ -226,7 +234,7 @@ function TrackPageContent() {
   )
 }
 
-function ApplicantProfile({ app }: { app: Application }) {
+function ApplicantProfile({ app, credentials }: { app: Application; credentials: PaymentCredentials }) {
   const stage = effectiveStage(app)
   const isRejected = stage === "rejected"
   const stageIndex = typeof stage === "number" ? stage : STAGE_LABELS.length - 1
@@ -560,6 +568,8 @@ function ApplicantProfile({ app }: { app: Application }) {
           </div>
         )}
       </div>
+
+      <PaymentSection app={app} credentials={credentials} />
 
       <p className="mt-6 flex items-start gap-2 text-xs text-muted-foreground">
         <Icon3D name="shield" className="mt-0.5 size-5 shrink-0" />
